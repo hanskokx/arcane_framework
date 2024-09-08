@@ -1,6 +1,4 @@
 import "package:arcane_framework/arcane_framework.dart";
-import "package:arcane_framework/src/config.dart";
-import "package:arcane_framework/src/services/service_provider.dart";
 import "package:flutter/foundation.dart";
 
 class ArcaneFeatureFlags extends ArcaneService {

@@ -2,8 +2,6 @@ import "dart:io" show Platform;
 
 import "package:app_tracking_transparency/app_tracking_transparency.dart";
 import "package:arcane_framework/arcane_framework.dart";
-import "package:arcane_framework/src/config.dart";
-import "package:arcane_framework/src/extensions/string.dart";
 import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 
