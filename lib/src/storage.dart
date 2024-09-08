@@ -3,14 +3,22 @@ import "package:flutter/foundation.dart";
 import "package:flutter_secure_storage/flutter_secure_storage.dart";
 
 class ArcaneSecureStorage {
-  final FlutterSecureStorage _storage;
+  static final ArcaneSecureStorage _instance = ArcaneSecureStorage._internal();
+  static ArcaneSecureStorage get I => _instance;
+  ArcaneSecureStorage._internal();
 
-  ArcaneSecureStorage(this._storage);
+  late final FlutterSecureStorage _storage;
 
   String? _emailCache;
   String? get cachedEmail => _emailCache;
 
   static const String emailKey = "email";
+  static const String installIdKey = "installId";
+
+  ArcaneSecureStorage init(FlutterSecureStorage storage) {
+    I._storage = storage;
+    return I;
+  }
 
   Future<bool> deleteAll() async {
     try {
@@ -24,22 +32,12 @@ class ArcaneSecureStorage {
   }
 
   Future<String?> getValue(String key) async {
-    if (ArcaneFeature.secureStorageLogging.enabled) {
-      Arcane.log(
-        "Value requested from secure storage",
-        level: Level.debug,
-        metadata: {
-          "key": key,
-        },
-      );
-    }
-
     String? value;
 
     try {
       value = await _storage.read(key: key);
-      if (value.isNullOrEmpty && ArcaneFeature.secureStorageLogging.enabled) {
-        Arcane.log(
+      if (value.isNullOrEmpty) {
+        Arcane.logger.log(
           "Value retrieved from secure storage is empty",
           level: Level.info,
           metadata: {
@@ -51,18 +49,16 @@ class ArcaneSecureStorage {
       // Cache the email for future use
       if (key == emailKey) _emailCache = value;
 
-      if (ArcaneFeature.secureStorageLogging.enabled) {
-        Arcane.log(
-          "Successfully retrived value from secure storage",
-          level: Level.debug,
-          metadata: {
-            "key": key,
-            if (kDebugMode) "value": "$value",
-          },
-        );
-      }
+      Arcane.logger.log(
+        "Successfully retrived value from secure storage",
+        level: Level.debug,
+        metadata: {
+          "key": key,
+          if (kDebugMode) "value": "$value",
+        },
+      );
     } catch (e) {
-      Arcane.log(
+      Arcane.logger.log(
         "Unable to retrieve value from secure storage",
         level: Level.error,
         metadata: {
@@ -75,34 +71,31 @@ class ArcaneSecureStorage {
   }
 
   Future<bool> setValue(String key, String? value) async {
-    if (ArcaneFeature.secureStorageLogging.enabled) {
-      Arcane.log(
-        "Setting value in secure storage",
-        level: Level.debug,
-        metadata: {
-          "key": key,
-          "value": "$value",
-        },
-      );
-    }
+    Arcane.logger.log(
+      "Setting value in secure storage",
+      level: Level.debug,
+      metadata: {
+        "key": key,
+        if (kDebugMode) "value": "$value",
+      },
+    );
 
     try {
       await _storage.write(key: key, value: value);
       // Cache the email for future use
       if (key == emailKey) _emailCache = value;
-      if (ArcaneFeature.secureStorageLogging.enabled) {
-        Arcane.log(
-          "Successfully set value in secure storage",
-          level: Level.debug,
-          metadata: {
-            "key": key,
-            if (kDebugMode) "value": "$value",
-          },
-        );
-      }
+      Arcane.logger.log(
+        "Successfully set value in secure storage",
+        level: Level.debug,
+        metadata: {
+          "key": key,
+          if (kDebugMode) "value": "$value",
+        },
+      );
+
       return true;
     } catch (e) {
-      Arcane.log(
+      Arcane.logger.log(
         "Unable to set value in secure storage",
         level: Level.error,
         metadata: {

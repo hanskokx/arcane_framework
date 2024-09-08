@@ -3,9 +3,7 @@ import "package:flutter/material.dart";
 
 class ArcaneReactiveTheme extends ArcaneService {
   static final ArcaneReactiveTheme _instance = ArcaneReactiveTheme._internal();
-
   static ArcaneReactiveTheme get I => _instance;
-
   ArcaneReactiveTheme._internal();
 
   bool _isDark = false;

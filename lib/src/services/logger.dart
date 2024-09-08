@@ -2,7 +2,6 @@ import "dart:io" show Platform;
 
 import "package:app_tracking_transparency/app_tracking_transparency.dart";
 import "package:arcane_framework/arcane_framework.dart";
-import "package:collection/collection.dart";
 import "package:flutter/foundation.dart";
 
 export "package:logger/logger.dart" show Level;
@@ -14,13 +13,13 @@ class ArcaneLogger {
   static ArcaneLogger get I => _instance;
 
   final List<LoggingInterface> _interfaces = [];
-  static List<LoggingInterface> get interfaces => I._interfaces;
+  List<LoggingInterface> get interfaces => I._interfaces;
 
   final Map<String, String> _additionalMetadata = {};
   static Map<String, String> get additionalMetadata => I._additionalMetadata;
 
   bool _initialized = false;
-  static bool get initialized => I._initialized;
+  bool get initialized => I._initialized;
 
   @visibleForTesting
   void setMocked() => _mocked = true;
@@ -28,12 +27,11 @@ class ArcaneLogger {
 
   void init() {
     if (_mocked) return;
-    if (initialized) return;
 
     additionalMetadata.clear();
 
     FlutterError.onError = (errorDetails) {
-      I.log(
+      log(
         "UNHANDLED FLUTTER ERROR",
         level: Level.error,
         module: errorDetails.library,
@@ -45,7 +43,7 @@ class ArcaneLogger {
     };
 
     PlatformDispatcher.instance.onError = (error, stack) {
-      I.log(
+      log(
         "UNHANDLED PLATFORM ERROR",
         level: Level.error,
         stackTrace: stack,
@@ -57,10 +55,6 @@ class ArcaneLogger {
     };
 
     I._initialized = true;
-
-    if (!ArcaneFeatureFlags.initialized) {
-      ArcaneFeatureFlags.I.init();
-    }
   }
 
   /// Logs a message with additional contextual information, optionally including
@@ -143,8 +137,8 @@ class ArcaneLogger {
     Map<String, String>? metadata,
   }) {
     if (I._mocked) return;
-    if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return;
+
+    assert(I._initialized, "Logger has not yet been initialized.");
 
     metadata ??= <String, String>{};
 
@@ -173,24 +167,14 @@ class ArcaneLogger {
 
     metadata.addAll(additionalMetadata);
 
-    // Send the logs to the local debug console, if one is registered
-    I._interfaces.firstWhereOrNull((i) => i is ArcaneDebugConsole)?.log(
-          message,
-          level: level,
-          metadata: metadata,
-          stackTrace: stackTrace,
-        );
-
     // Send logs to registered interface(s)
-    if (ArcaneFeature.externalLogging.enabled) {
-      for (final LoggingInterface i in I._interfaces) {
-        i.log(
-          message,
-          level: level,
-          metadata: metadata,
-          stackTrace: stackTrace,
-        );
-      }
+    for (final LoggingInterface i in I._interfaces) {
+      i.log(
+        message,
+        level: level,
+        metadata: metadata,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -203,19 +187,17 @@ class ArcaneLogger {
   ///
   /// Once your [LoggingInterface] has been registered and initialized, logs
   /// will automatically be sent to the interface.
-  ArcaneLogger registerInterface(LoggingInterface i) {
+  Future<ArcaneLogger> registerInterfaces(
+    List<LoggingInterface> interfaces,
+  ) async {
     if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return I;
 
-    if (ArcaneFeature.externalLogging.disabled) {
-      I.log(
-        "External logging is disabled. Ignoring.",
-        level: Level.warning,
-      );
-      return I;
+    for (final LoggingInterface i in interfaces) {
+      I._interfaces.add(i);
+      if (i is ArcaneDebugConsole) {
+        await I._interfaces.firstWhere((x) => x == i).init();
+      }
     }
-
-    I._interfaces.add(i);
 
     return I;
   }
@@ -223,13 +205,8 @@ class ArcaneLogger {
   /// If [Feature.externalLogging] is enabled, this will iterate over all
   /// registered [LoggingInterface]s and run their [init] method.
   Future<ArcaneLogger> initializeInterfaces() async {
-    if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return I;
-
-    if (ArcaneFeature.externalLogging.enabled) {
-      for (final LoggingInterface i in I._interfaces) {
-        await i.init();
-      }
+    for (final LoggingInterface i in I._interfaces) {
+      await i.init();
     }
 
     return I;
@@ -244,17 +221,6 @@ class ArcaneLogger {
   Future<void> initalizeAppTracking({
     Future<void>? trackingDialog,
   }) async {
-    if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return;
-
-    if (ArcaneFeature.externalLogging.disabled) {
-      I.log(
-        "External logging is disabled. Ignoring.",
-        level: Level.warning,
-      );
-      return;
-    }
-
     final TrackingStatus status =
         await AppTrackingTransparency.trackingAuthorizationStatus;
 
@@ -275,9 +241,6 @@ class ArcaneLogger {
   }
 
   ArcaneLogger removePersistentMetadata(String key) {
-    if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return I;
-
     final bool keyPresent = additionalMetadata.containsKey(key);
 
     if (keyPresent) {
@@ -287,21 +250,23 @@ class ArcaneLogger {
     return I;
   }
 
-  ArcaneLogger addPersistentMetadata(String key, String? value) {
-    if (!initialized) init();
-    if (ArcaneFeature.logging.disabled) return I;
+  ArcaneLogger addPersistentMetadata(Map<String, String?> input) {
+    for (final entry in input.entries) {
+      final String key = entry.key;
+      final String? value = entry.value;
 
-    final bool keyPresent = additionalMetadata.containsKey(key);
+      final bool keyPresent = additionalMetadata.containsKey(key);
 
-    if (keyPresent && value.isNullOrEmpty) {
+      if (keyPresent && value.isNullOrEmpty) {
+        additionalMetadata.removeWhere((k, v) => k == key);
+        return I;
+      }
+
+      if (value == null) return I;
+
       additionalMetadata.removeWhere((k, v) => k == key);
-      return I;
+      additionalMetadata.putIfAbsent(key, () => value);
     }
-
-    if (value == null) return I;
-
-    additionalMetadata.removeWhere((k, v) => k == key);
-    additionalMetadata.putIfAbsent(key, () => value);
 
     return I;
   }
@@ -336,3 +301,26 @@ abstract class LoggingInterface {
 /// [Arcane.features.enabledFeatures]. All [LoggingInterface] classes must be
 /// registered using [Arcane.logger.registerInterface()] before use.
 abstract class ArcaneDebugConsole implements LoggingInterface {}
+
+class ArcaneNullLogger implements LoggingInterface {
+  static final ArcaneNullLogger _instance = ArcaneNullLogger._internal();
+  static ArcaneNullLogger get I => _instance;
+
+  ArcaneNullLogger._internal();
+
+  @override
+  void log(
+    String message, {
+    Map<String, dynamic>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+  }) {
+    return;
+  }
+
+  @override
+  bool get _initialized => true;
+
+  @override
+  Future<LoggingInterface?> init() => Future.value(I);
+}

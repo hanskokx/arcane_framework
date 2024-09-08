@@ -3,7 +3,6 @@ import "dart:async";
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/widgets.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
-import "package:get_it/get_it.dart";
 
 class ArcaneAuthenticationService extends ArcaneService {
   ArcaneAuthenticationService._internal();
@@ -25,7 +24,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   Future<String?> get accessToken => authInterface.accessToken;
   Future<String?> get refreshToken => authInterface.refreshToken;
 
-  static ArcaneSecureStorage get _storage => GetIt.I<ArcaneSecureStorage>();
+  static ArcaneSecureStorage get _storage => Arcane.storage;
 
   Future<void> registerInterface(ArcaneAuthInterface authInterface) async {
     _authInterface = authInterface;
@@ -38,9 +37,8 @@ class ArcaneAuthenticationService extends ArcaneService {
     Future<void> Function()? onDebugModeSet,
   ) async {
     if (_mocked) return;
-    if (ArcaneFeature.accountDebugMode.disabled) return;
 
-    Arcane.log(
+    Arcane.logger.log(
       "!!!!! DEBUG MODE ENABLED !!!!!",
       level: Level.fatal,
     );
@@ -98,7 +96,7 @@ class ArcaneAuthenticationService extends ArcaneService {
 
         setUnauthenticated();
 
-        Arcane.log(
+        Arcane.logger.log(
           "Sign out completed successfully",
           level: Level.info,
         );
@@ -106,7 +104,7 @@ class ArcaneAuthenticationService extends ArcaneService {
         onLoggedOut();
       },
       onError: (e) {
-        Arcane.log(
+        Arcane.logger.log(
           "Error signing user out: $e",
           level: Level.error,
         );
@@ -132,7 +130,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result.isFailure) {
-      Arcane.log(
+      Arcane.logger.log(
         "Error signing in: ${result.error}",
         level: Level.error,
       );
@@ -163,7 +161,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result.isFailure) {
-      Arcane.log(
+      Arcane.logger.log(
         "Error signing up: ${result.error}",
         level: Level.error,
       );
@@ -172,7 +170,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     }
 
     if (result.value == SignUpStep.confirmSignUp) {
-      Arcane.log(
+      Arcane.logger.log(
         "User account created successfully but confirmation is required.",
         level: Level.info,
       );
