@@ -34,10 +34,6 @@ class ArcaneFeatureFlags extends ArcaneService {
           feature.name: feature.enabled ? "✅" : "❌",
         },
       );
-    } else {
-      debugPrint(
-        "Feature enabled: ${feature.name} ${feature.enabled ? "✅" : "❌"}",
-      );
     }
 
     notifyListeners();
@@ -50,13 +46,15 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     _enabledFeatures.remove(feature);
 
-    Arcane.logger.log(
-      "Feature disabled",
-      level: Level.debug,
-      metadata: {
-        feature.name: feature.enabled ? "✅" : "❌",
-      },
-    );
+    if (Arcane.logger.initialized) {
+      Arcane.logger.log(
+        "Feature disabled",
+        level: Level.debug,
+        metadata: {
+          feature.name: feature.enabled ? "✅" : "❌",
+        },
+      );
+    }
 
     notifyListeners();
     return I;
