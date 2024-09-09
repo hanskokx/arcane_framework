@@ -5,7 +5,6 @@ import "package:arcane_framework/src/services/id.dart";
 import "package:arcane_framework/src/services/logger.dart";
 import "package:arcane_framework/src/services/theme.dart";
 import "package:arcane_framework/src/storage.dart";
-import "package:flutter_secure_storage/flutter_secure_storage.dart";
 
 class Arcane {
   Arcane._internal();
@@ -25,16 +24,6 @@ class Arcane {
         theme,
         id,
       ];
-
-  static void init({FlutterSecureStorage? storageProvider}) {
-    features.init();
-    logger.init();
-    id.init();
-
-    if (storageProvider != null) {
-      Arcane.storage.init(storageProvider);
-    }
-  }
 
   static void log(
     String message, {

@@ -15,8 +15,12 @@ class ArcaneSecureStorage {
   static const String emailKey = "email";
   static const String installIdKey = "installId";
 
+  bool _initialized = false;
+  bool get initialized => I._initialized;
+
   ArcaneSecureStorage init(FlutterSecureStorage storage) {
     I._storage = storage;
+    I._initialized = true;
     return I;
   }
 

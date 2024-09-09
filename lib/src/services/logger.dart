@@ -137,8 +137,7 @@ class ArcaneLogger {
     Map<String, String>? metadata,
   }) {
     if (I._mocked) return;
-
-    assert(I._initialized, "Logger has not yet been initialized.");
+    if (!I._initialized) init();
 
     metadata ??= <String, String>{};
 
@@ -148,8 +147,8 @@ class ArcaneLogger {
     try {
       final List<String> parts = StackTrace.current
           .toString()
-          .split("\n")[1]
-          .split(RegExp("#1"))[1]
+          .split("\n")[2]
+          .split(RegExp("#2"))[1]
           .trimLeft()
           .split(".");
 
@@ -205,6 +204,12 @@ class ArcaneLogger {
   /// If [Feature.externalLogging] is enabled, this will iterate over all
   /// registered [LoggingInterface]s and run their [init] method.
   Future<ArcaneLogger> initializeInterfaces() async {
+    assert(
+      I._interfaces.isNotEmpty,
+      "No logging interfaces have been registered.",
+    );
+
+    if (!I._initialized) init();
     for (final LoggingInterface i in I._interfaces) {
       await i.init();
     }
@@ -241,6 +246,10 @@ class ArcaneLogger {
   }
 
   ArcaneLogger removePersistentMetadata(String key) {
+    assert(
+      I._interfaces.isNotEmpty,
+      "No logging interfaces have been registered.",
+    );
     final bool keyPresent = additionalMetadata.containsKey(key);
 
     if (keyPresent) {
@@ -251,6 +260,10 @@ class ArcaneLogger {
   }
 
   ArcaneLogger addPersistentMetadata(Map<String, String?> input) {
+    assert(
+      I._interfaces.isNotEmpty,
+      "No logging interfaces have been registered.",
+    );
     for (final entry in input.entries) {
       final String key = entry.key;
       final String? value = entry.value;

@@ -20,6 +20,7 @@ class ArcaneIdService extends ArcaneService {
 
   Future<void> init() async {
     if (_mocked) return;
+    assert(Arcane.storage.initialized, "Storage must be initialized first.");
 
     I._installId =
         await Arcane.storage.getValue(ArcaneSecureStorage.installIdKey);

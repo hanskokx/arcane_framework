@@ -20,6 +20,8 @@ class ArcaneFeatureFlags extends ArcaneService {
   bool isDisabled(Enum feature) => !_enabledFeatures.contains(feature);
 
   ArcaneFeatureFlags enableFeature(Enum feature) {
+    if (!I._initialized) init();
+
     if (_enabledFeatures.contains(feature)) return I;
 
     _enabledFeatures.add(feature);
@@ -43,6 +45,7 @@ class ArcaneFeatureFlags extends ArcaneService {
   }
 
   ArcaneFeatureFlags disableFeature(Enum feature) {
+    if (!I._initialized) init();
     if (!_enabledFeatures.contains(feature)) return I;
 
     _enabledFeatures.remove(feature);
