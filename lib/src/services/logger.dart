@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:io" show Platform;
 
 import "package:app_tracking_transparency/app_tracking_transparency.dart";
@@ -28,7 +29,7 @@ class ArcaneLogger {
   void setMocked() => _mocked = true;
   bool _mocked = false;
 
-  void init() {
+  Future<void> init() async {
     if (_mocked) return;
 
     additionalMetadata.clear();
@@ -57,9 +58,11 @@ class ArcaneLogger {
       return true;
     };
 
-    if (!(Platform.isIOS || Platform.isMacOS)) {
+    I._trackingStatus =
+        await AppTrackingTransparency.trackingAuthorizationStatus;
+
+    if (Platform.isAndroid) {
       I._trackingStatus = TrackingStatus.authorized;
-      return;
     }
 
     I._initialized = true;
@@ -197,7 +200,7 @@ class ArcaneLogger {
   Future<ArcaneLogger> registerInterfaces(
     List<LoggingInterface> interfaces,
   ) async {
-    if (!initialized) init();
+    if (!initialized) await init();
 
     for (final LoggingInterface i in interfaces) {
       I._interfaces.add(i);
@@ -217,11 +220,9 @@ class ArcaneLogger {
       "No logging interfaces have been registered.",
     );
 
-    if (!I._initialized) init();
+    if (!I._initialized) await init();
     for (final LoggingInterface i in I._interfaces) {
-      if (!i.initialized) {
-        await i.init();
-      }
+      if (!i.initialized) await i.init();
     }
 
     return I;
@@ -236,10 +237,7 @@ class ArcaneLogger {
   Future<void> initalizeAppTracking({
     Future<void>? trackingDialog,
   }) async {
-    I._trackingStatus =
-        await AppTrackingTransparency.trackingAuthorizationStatus;
-
-    if (I._trackingStatus == TrackingStatus.authorized || Platform.isAndroid) {
+    if (I._trackingStatus == TrackingStatus.authorized) {
       await initializeInterfaces();
       return;
     }
@@ -253,6 +251,9 @@ class ArcaneLogger {
       // Request system's tracking authorization dialog
       await AppTrackingTransparency.requestTrackingAuthorization();
     }
+
+    I._trackingStatus =
+        await AppTrackingTransparency.trackingAuthorizationStatus;
   }
 
   ArcaneLogger removePersistentMetadata(String key) {
