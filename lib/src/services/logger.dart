@@ -17,7 +17,7 @@ class ArcaneLogger {
   List<LoggingInterface> get interfaces => I._interfaces;
 
   final Map<String, String> _additionalMetadata = {};
-  static Map<String, String> get additionalMetadata => I._additionalMetadata;
+  Map<String, String> get additionalMetadata => I._additionalMetadata;
 
   TrackingStatus _trackingStatus = TrackingStatus.notDetermined;
   TrackingStatus get trackingStatus => I._trackingStatus;
@@ -275,27 +275,28 @@ class ArcaneLogger {
       I._interfaces.isNotEmpty,
       "No logging interfaces have been registered.",
     );
+
     for (final entry in input.entries) {
       final String key = entry.key;
       final String? value = entry.value;
 
-      final bool keyPresent = additionalMetadata.containsKey(key);
+      final bool keyPresent = _additionalMetadata.containsKey(key);
 
       if (keyPresent && value.isNullOrEmpty) {
-        additionalMetadata.removeWhere((k, v) => k == key);
+        _additionalMetadata.removeWhere((k, v) => k == key);
         return I;
       }
 
       if (value == null) return I;
 
-      additionalMetadata.removeWhere((k, v) => k == key);
-      additionalMetadata.putIfAbsent(key, () => value);
+      _additionalMetadata.removeWhere((k, v) => k == key);
+      _additionalMetadata.putIfAbsent(key, () => value);
     }
 
     return I;
   }
 
-  void clearPersistentMetadata() => additionalMetadata.clear();
+  void clearPersistentMetadata() => _additionalMetadata.clear();
 }
 
 abstract class LoggingInterface {
