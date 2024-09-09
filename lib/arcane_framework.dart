@@ -1,6 +1,9 @@
 library arcane_framework;
 
+export "package:app_tracking_transparency/app_tracking_transparency.dart"
+    show TrackingStatus;
 export "package:arcane_framework/arcane.dart" show Arcane;
+export "package:arcane_framework/src/arcane_app.dart" show ArcaneApp;
 export "package:arcane_framework/src/extensions/string.dart" show Nullability;
 export "package:arcane_framework/src/service_provider.dart"
     show ArcaneServiceProvider, ServiceProvider, ArcaneService;

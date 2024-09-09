@@ -18,6 +18,9 @@ class ArcaneLogger {
   final Map<String, String> _additionalMetadata = {};
   static Map<String, String> get additionalMetadata => I._additionalMetadata;
 
+  TrackingStatus _trackingStatus = TrackingStatus.notDetermined;
+  TrackingStatus get trackingStatus => I._trackingStatus;
+
   bool _initialized = false;
   bool get initialized => I._initialized;
 
@@ -53,6 +56,11 @@ class ArcaneLogger {
       );
       return true;
     };
+
+    if (!(Platform.isIOS || Platform.isMacOS)) {
+      I._trackingStatus = TrackingStatus.authorized;
+      return;
+    }
 
     I._initialized = true;
   }
@@ -211,7 +219,9 @@ class ArcaneLogger {
 
     if (!I._initialized) init();
     for (final LoggingInterface i in I._interfaces) {
-      await i.init();
+      if (!i.initialized) {
+        await i.init();
+      }
     }
 
     return I;
@@ -226,16 +236,16 @@ class ArcaneLogger {
   Future<void> initalizeAppTracking({
     Future<void>? trackingDialog,
   }) async {
-    final TrackingStatus status =
+    I._trackingStatus =
         await AppTrackingTransparency.trackingAuthorizationStatus;
 
-    if (status == TrackingStatus.authorized || Platform.isAndroid) {
+    if (I._trackingStatus == TrackingStatus.authorized || Platform.isAndroid) {
       await initializeInterfaces();
       return;
     }
 
     // If the system can show an authorization request dialog
-    if (status == TrackingStatus.notDetermined) {
+    if (I._trackingStatus == TrackingStatus.notDetermined) {
       // Show a custom explainer dialog before the system dialog
       await trackingDialog;
       // Wait for dialog popping animation
@@ -294,7 +304,7 @@ abstract class LoggingInterface {
   static LoggingInterface get I => _instance;
 
   final bool _initialized = false;
-  static bool get initialized => I._initialized;
+  bool get initialized => I._initialized;
 
   /// Initializes the logging interface
   Future<LoggingInterface?> init();
@@ -314,26 +324,3 @@ abstract class LoggingInterface {
 /// [Arcane.features.enabledFeatures]. All [LoggingInterface] classes must be
 /// registered using [Arcane.logger.registerInterface()] before use.
 abstract class ArcaneDebugConsole implements LoggingInterface {}
-
-class ArcaneNullLogger implements LoggingInterface {
-  static final ArcaneNullLogger _instance = ArcaneNullLogger._internal();
-  static ArcaneNullLogger get I => _instance;
-
-  ArcaneNullLogger._internal();
-
-  @override
-  void log(
-    String message, {
-    Map<String, dynamic>? metadata,
-    Level? level,
-    StackTrace? stackTrace,
-  }) {
-    return;
-  }
-
-  @override
-  bool get _initialized => true;
-
-  @override
-  Future<LoggingInterface?> init() => Future.value(I);
-}
