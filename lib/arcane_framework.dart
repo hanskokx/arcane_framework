@@ -10,4 +10,5 @@ export "package:arcane_framework/src/services/id.dart";
 export "package:arcane_framework/src/services/logger.dart";
 export "package:arcane_framework/src/services/theme.dart";
 export "package:arcane_framework/src/storage.dart";
+export "package:arcane_framework/src/widgets/environment.dart";
 export "package:result_monad/result_monad.dart";
