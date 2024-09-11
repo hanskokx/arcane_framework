@@ -1,5 +1,5 @@
-import "package:arcane_framework/src/service_provider.dart";
-import "package:arcane_framework/src/services/authentication.dart";
+import "package:arcane_framework/src/authentication/authentication_service.dart";
+import "package:arcane_framework/src/providers/service_provider.dart";
 import "package:arcane_framework/src/services/feature_flags.dart";
 import "package:arcane_framework/src/services/id.dart";
 import "package:arcane_framework/src/services/logger.dart";

@@ -1,4 +1,4 @@
-part of "../services/authentication.dart";
+part of "authentication_service.dart";
 
 /// An abstract class that defines the authentication interface.
 ///

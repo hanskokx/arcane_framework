@@ -4,8 +4,8 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/widgets.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 
-part "../authentication/authentication_enums.dart";
-part "../authentication/authentication_interface.dart";
+part "authentication_enums.dart";
+part "authentication_interface.dart";
 
 /// Provides a standard interface to handle authentication-related tasks.
 ///

@@ -1,4 +1,4 @@
-part of "../services/authentication.dart";
+part of "authentication_service.dart";
 
 /// An enum representing the different steps in the sign-up process.
 ///
