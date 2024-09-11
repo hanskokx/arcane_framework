@@ -4,6 +4,9 @@ version: 1.0.0
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
 
+topics:
+  - arcane-framework
+
 environment:
   sdk: ^3.5.2
   flutter: ">=1.17.0"
