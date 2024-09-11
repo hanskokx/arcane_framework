@@ -9,6 +9,6 @@ export "package:arcane_framework/src/id/id_service.dart";
 export "package:arcane_framework/src/logging/logging_service.dart";
 export "package:arcane_framework/src/providers/environment_provider.dart";
 export "package:arcane_framework/src/providers/service_provider.dart";
+export "package:arcane_framework/src/reactive_theme/reactive_theme_service.dart";
 export "package:arcane_framework/src/secure_storage/secure_storage_service.dart";
-export "package:arcane_framework/src/services/theme.dart";
 export "package:result_monad/result_monad.dart";

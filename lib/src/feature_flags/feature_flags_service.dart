@@ -1,7 +1,7 @@
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/foundation.dart";
 
-part "feature_flags_enums.dart";
+part "feature_flags_extensions.dart";
 
 /// A singleton class that manages feature flags in the Arcane architecture.
 ///
