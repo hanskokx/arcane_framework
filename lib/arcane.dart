@@ -1,10 +1,10 @@
 import "package:arcane_framework/src/authentication/authentication_service.dart";
 import "package:arcane_framework/src/feature_flags/feature_flags_service.dart";
 import "package:arcane_framework/src/providers/service_provider.dart";
+import "package:arcane_framework/src/secure_storage/secure_storage_service.dart";
 import "package:arcane_framework/src/services/id.dart";
 import "package:arcane_framework/src/services/logger.dart";
 import "package:arcane_framework/src/services/theme.dart";
-import "package:arcane_framework/src/storage.dart";
 
 class Arcane {
   Arcane._internal();

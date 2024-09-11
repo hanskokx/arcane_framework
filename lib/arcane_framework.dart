@@ -7,8 +7,8 @@ export "package:arcane_framework/src/authentication/authentication_service.dart"
 export "package:arcane_framework/src/feature_flags/feature_flags_service.dart";
 export "package:arcane_framework/src/providers/environment_provider.dart";
 export "package:arcane_framework/src/providers/service_provider.dart";
+export "package:arcane_framework/src/secure_storage/secure_storage_service.dart";
 export "package:arcane_framework/src/services/id.dart";
 export "package:arcane_framework/src/services/logger.dart";
 export "package:arcane_framework/src/services/theme.dart";
-export "package:arcane_framework/src/storage.dart";
 export "package:result_monad/result_monad.dart";
