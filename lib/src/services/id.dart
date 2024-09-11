@@ -10,29 +10,45 @@ class ArcaneIdService extends ArcaneService {
 
   ArcaneIdService._internal();
 
+  bool _initialized = false;
+  bool get initialized => I._initialized;
+
   String? _installId;
-  String? get installId => I._installId;
+  Future<String?> get installId async {
+    if (!initialized) await _init();
+    return I._installId;
+  }
 
   String? _sessionId;
-  String? get sessionId => I._sessionId;
+  Future<String?> get sessionId async {
+    if (!initialized) await _init();
+    return I._sessionId;
+  }
+
+  String get newId => uuid.v7();
 
   static const Uuid uuid = Uuid();
 
-  Future<void> init() async {
-    if (_mocked) return;
-    assert(Arcane.storage.initialized, "Storage must be initialized first.");
+  Future<ArcaneIdService> _init() async {
+    if (_mocked) return I;
+    if (!Arcane.storage.initialized) Arcane.storage.init();
 
-    I._installId =
-        await Arcane.storage.getValue(ArcaneSecureStorage.installIdKey);
+    I._installId = await Arcane.storage.getValue(
+      ArcaneSecureStorage.installIdKey,
+    );
 
     if (I._installId == null) {
       // Generate a new ID and store it
-      I._installId = uuid.v4();
-      await Arcane.storage
-          .setValue(ArcaneSecureStorage.installIdKey, I._installId);
+      I._installId = uuid.v7();
+      await Arcane.storage.setValue(
+        ArcaneSecureStorage.installIdKey,
+        I._installId,
+      );
     }
 
-    I._sessionId = uuid.v4();
+    I._sessionId = uuid.v7();
+    I._initialized = true;
+    return I;
   }
 
   @visibleForTesting
