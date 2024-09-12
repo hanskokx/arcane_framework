@@ -181,55 +181,9 @@ class DebugConsole implements LoggingInterface {
     Level? level,
     StackTrace? stackTrace,
   }) {
-    if (Feature.logging.disabled) return;
-    if (Feature.debugConsoleLogging.disabled) return;
-
-    final Map<String, dynamic> localMetadata = metadata ?? {};
-
-    final String? module = localMetadata["module"] as String?;
-    final String? method = localMetadata["method"] as String?;
-
-    const JsonEncoder encoder = JsonEncoder.withIndent("  ");
-    final String? prettyprint =
-        (localMetadata.isNotEmpty) ? encoder.convert(localMetadata) : null;
-
-    final Logger logger = Logger(
-      level: level,
-      printer: PrettyPrinter(
-        methodCount: 2,
-        errorMethodCount: kDebugMode &&
-                !(level == Level.error ||
-                    level == Level.warning ||
-                    level == Level.trace ||
-                    level == Level.fatal)
-            ? 4
-            : 8,
-        stackTraceBeginIndex: 1,
-        lineLength: 120,
-        colors: !Platform.isIOS,
-        printEmojis: kDebugMode,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-    );
-
-    // Print the message to the debug console
-    String prefix = "";
-    if (module != null) prefix += "[$module]";
-    if (method != null) prefix += "[$method]";
-    if (prefix.isNotEmpty) prefix += " ";
-    message = "$prefix$message";
-
-    if (prettyprint.isNotNullOrEmpty) message += "\n\n$prettyprint";
-
-    localMetadata.removeWhere((key, value) => key == "module");
-    localMetadata.removeWhere((key, value) => key == "method");
-    localMetadata.removeWhere((key, value) => key == "filenameAndLineNumber");
-
-    logger.log(
-      level ?? Level.debug,
-      message,
-      error: localMetadata["error"] ?? "",
-      stackTrace: stackTrace,
+    debugPrint(
+      "$message\n"
+      "$metadata\n"
     );
   }
 
