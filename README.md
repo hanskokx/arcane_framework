@@ -183,7 +183,7 @@ class DebugConsole implements LoggingInterface {
   }) {
     debugPrint(
       "$message\n"
-      "$metadata\n"
+      "$metadata\n",
     );
   }
 
