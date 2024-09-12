@@ -19,7 +19,6 @@ dependencies:
   flutter_bloc: ^8.1.6
   flutter_secure_storage: ^9.2.2
   get_it: ^7.7.0
-  logger: ^2.4.0
   result_monad: ^2.3.2
 
 dev_dependencies:

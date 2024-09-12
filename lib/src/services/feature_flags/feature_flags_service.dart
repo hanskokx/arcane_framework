@@ -29,8 +29,8 @@ class ArcaneFeatureFlags extends ArcaneService {
   ///
   /// Each feature is represented as an `Enum`. The list holds the features that are
   /// currently enabled.
-  final List<Enum> _enabledFeatures = [];
   List<Enum> get enabledFeatures => _enabledFeatures;
+  final List<Enum> _enabledFeatures = [];
 
   /// Indicates whether the feature flags have been initialized.
   bool _initialized = false;
