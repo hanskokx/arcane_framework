@@ -37,17 +37,6 @@ class Arcane {
   /// customizing them.
   static ArcaneReactiveTheme get theme => ArcaneReactiveTheme.I;
 
-  /// Provides access to the singleton instance of the secure storage service.
-  ///
-  /// `ArcaneSecureStorage` is responsible for securely storing key-value pairs,
-  /// such as tokens or user data.
-  static ArcaneSecureStorage get storage => ArcaneSecureStorage.I;
-
-  /// Provides access to the singleton instance of the ID service.
-  ///
-  /// `ArcaneIdService` manages unique identifiers for installations and sessions.
-  static ArcaneIdService get id => ArcaneIdService.I;
-
   /// Returns a list of all services available in the Arcane framework.
   ///
   /// This list includes the feature flags, authentication, theme, and ID services.
@@ -55,7 +44,6 @@ class Arcane {
         features,
         auth,
         theme,
-        id,
       ];
 
   /// Logs a message using the integrated logger.

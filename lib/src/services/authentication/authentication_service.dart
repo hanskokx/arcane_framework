@@ -52,8 +52,6 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// provides one.
   Future<String?> get refreshToken => authInterface.refreshToken;
 
-  static ArcaneSecureStorage get _storage => Arcane.storage;
-
   /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
   Future<void> registerInterface(ArcaneAuthInterface authInterface) async {
     _authInterface = authInterface;
@@ -113,7 +111,6 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     await loggedOut.fold(
       onSuccess: (_) async {
-        await _storage.deleteAll();
         setUnauthenticated();
         onLoggedOut();
       },
@@ -147,7 +144,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result.isSuccess) {
-      await _storage.setValue(ArcaneSecureStorage.emailKey, email);
       setAuthenticated();
       if (onLoggedIn != null) await onLoggedIn();
     }

@@ -7,8 +7,6 @@ The Arcane Framework is a powerful Dart package designed to provide a robust arc
 - **Logging**: Easily log messages with metadata, stack traces, and different log levels via `ArcaneLogger`.
 - **Authentication**: Built-in support for handling user authentication workflows.
 - **Theming**: Switch between light and dark themes with `ArcaneReactiveTheme`.
-- **Secure Storage**: Store sensitive data like tokens and user information securely using `ArcaneSecureStorage`.
-- **Session and Install ID Management**: Manage unique identifiers for user sessions and app installs.
 
 ## Getting Started
 
@@ -252,32 +250,8 @@ await Arcane.logger.registerInterfaces([
   DebugConsole.I,
 ]);
 
-// Initialize app tracking (recommended for iOS)
-await Arcane.logger.initalizeAppTracking(
-  trackingDialog: () async {
-    if (Arcane.logger.trackingStatus != TrackingStatus.notDetermined) return;
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: "Incoming tracking consent dialog",
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await Arcane.logger.initializeInterfaces();
-              },
-              child: Text("Continue"),
-            ),
-          ],
-        );
-      },
-    );
-  },
-);
-
 // Initialize registered logging interfaces
-// NOTE: This step may be deferred until a user has consented to app tracking. It is perofrmed automatically when called via `initializeAppTracking`.
+// NOTE: This step may be deferred until a user has consented to app tracking.
 await Arcane.logger.initializeInterfaces();
 ```
 
@@ -303,7 +277,7 @@ Arcane.log(
 
 Multiple logging interfaces can be registered simultaneously.
 
-**Important**: Logging interfaces should generally be initialized after being registered with the logger service. This ensures that all logging interfaces are properly initialized before any messages are logged. This should typically be done manually in order to properly present the user with a message stating that they're about to be prompted for tracking permissions (on iOS). See the Arcane logger documentation for further details.
+**Important**: Logging interfaces should generally be initialized after being registered with the logger service. This ensures that all logging interfaces are properly initialized before any messages are logged. This should typically be done manually in order to properly present the user with a message stating that they're about to be prompted for tracking permissions (on iOS).
 
 ### Authentication
 
@@ -565,36 +539,6 @@ Arcane.theme.setDarkTheme(customDarkTheme);
 
 // Set a custom light theme
 Arcane.theme.setLightTheme(customLightTheme);
-```
-
-### Secure Storage
-
-You can store sensitive data like tokens securely with `ArcaneSecureStorage`:
-
-```dart
-// Store a value in secure storage
-await Arcane.storage.setValue(ArcaneSecureStorage.emailKey, "user@example.com");
-
-// Retrieve a value from secure storage
-final email = await Arcane.storage.getValue(ArcaneSecureStorage.emailKey);
-
-// Delete all stored data
-await Arcane.storage.deleteAll();
-```
-
-### Install and Session IDs
-
-Use `ArcaneIdService` to manage unique IDs for app installations and user sessions:
-
-```dart
-// Get the install ID
-final installId = await Arcane.id.installId;
-
-// Get the session ID
-final sessionId = await Arcane.id.sessionId;
-
-// Generate a new ID
-final newId = Arcane.id.newId;
 ```
 
 ## Contributing

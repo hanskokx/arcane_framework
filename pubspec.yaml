@@ -1,5 +1,5 @@
 name: arcane_framework
-description: "Arcane Framework is a comprehensive Dart package designed to streamline the management of essential services like logging, authentication, theming, feature flags, and secure storage in Flutter applications. With a robust architecture and easy-to-use APIs, it empowers developers to build scalable, dynamic apps with minimal overhead."
+description: "The Arcane Framework provides a modular, feature-rich solution for bootstrapping new applications."
 version: 1.0.0
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
@@ -12,7 +12,6 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  app_tracking_transparency: ^2.0.6
   arcane_helper_utils: ^1.0.1
   collection: ^1.18.0
   flutter:
@@ -22,7 +21,6 @@ dependencies:
   get_it: ^7.7.0
   logger: ^2.4.0
   result_monad: ^2.3.2
-  uuid: ^4.5.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
