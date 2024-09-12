@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:io" show Platform;
 
 import "package:arcane_framework/arcane_framework.dart";
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
@@ -14,9 +13,7 @@ part "logging_interface.dart";
 ///
 /// The `ArcaneLogger` provides a centralized way to log messages across
 /// different parts of an application. It supports multiple logging interfaces,
-/// metadata, and platform-specific error handling. It integrates with
-/// [AppTrackingTransparency] for tracking authorization status on fruit-shaped
-/// operating systems.
+/// metadata, and platform-specific error handling.
 class ArcaneLogger {
   ArcaneLogger._internal();
 
@@ -34,11 +31,6 @@ class ArcaneLogger {
 
   /// Additional metadata that is included in all logs.
   Map<String, String> get additionalMetadata => I._additionalMetadata;
-
-  TrackingStatus _trackingStatus = TrackingStatus.notDetermined;
-
-  /// The tracking authorization status for the current platform.
-  TrackingStatus get trackingStatus => I._trackingStatus;
 
   bool _initialized = false;
 
@@ -66,35 +58,22 @@ class ArcaneLogger {
     // Handles unhandled Flutter errors by logging them.
     FlutterError.onError = (errorDetails) {
       log(
-        "UNHANDLED FLUTTER ERROR",
+        errorDetails.exceptionAsString(),
         level: Level.error,
         module: errorDetails.library,
         stackTrace: errorDetails.stack,
-        metadata: {
-          "details": errorDetails.exceptionAsString(),
-        },
       );
     };
 
     // Handles unhandled platform-specific errors by logging them.
     PlatformDispatcher.instance.onError = (error, stack) {
       log(
-        "UNHANDLED PLATFORM ERROR",
+        "$error",
         level: Level.error,
         stackTrace: stack,
-        metadata: {
-          "details": error.toString(),
-        },
       );
-      return true;
+      return false;
     };
-
-    I._trackingStatus =
-        await AppTrackingTransparency.trackingAuthorizationStatus;
-
-    if (!(Platform.isIOS || Platform.isMacOS)) {
-      I._trackingStatus = TrackingStatus.authorized;
-    }
 
     I._initialized = true;
   }
@@ -213,9 +192,8 @@ class ArcaneLogger {
     }
   }
 
-  /// Registers a [LoggingInterface] with the [ArcaneLogger]. If the current
-  /// operating system is not a fruit-shaped OS, it will automatically be
-  /// initalized. Otherwise, app tracking permissions must first be checked for
+  /// Registers a [LoggingInterface] with the [ArcaneLogger]. Due to iOS app
+  /// tracking permissions, permission to track must first be checked for
   /// and (optionally) granted before the interface is automatically initialized.
   ///
   /// Once your [LoggingInterface] has been registered and initialized, logs
@@ -246,42 +224,6 @@ class ArcaneLogger {
     }
 
     return I;
-  }
-
-  /// This will ask the user to approve app tracking permissions on
-  /// fruit-shaped operating systems. An optional `trackingDialog` method can be
-  /// passed in, which could be used to display a message to users that they're
-  /// about to be asked for tracking permissions. The `trackingDialog` method
-  /// will only be run if the tracking status is `notDetermined`.
-  ///
-  /// If app tracking has been allowed, all registered [LoggingInterface]s will
-  /// be initialized.
-  Future<void> initalizeAppTracking({
-    Future<void>? trackingDialog,
-  }) async {
-    if (I._mocked) return;
-    if (!I._initialized) await _init();
-    if (I._trackingStatus == TrackingStatus.authorized) {
-      await initializeInterfaces();
-      return;
-    }
-
-    // If the system can show an authorization request dialog
-    if (I._trackingStatus == TrackingStatus.notDetermined) {
-      // Show a custom explainer dialog before the system dialog
-      if (trackingDialog != null) await trackingDialog;
-      // Wait for dialog popping animation
-      await Future.delayed(const Duration(milliseconds: 200));
-      // Request system's tracking authorization dialog
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-
-    I._trackingStatus =
-        await AppTrackingTransparency.trackingAuthorizationStatus;
-
-    if (I._trackingStatus == TrackingStatus.authorized) {
-      await initializeInterfaces();
-    }
   }
 
   /// Removes a specific key from the persistent metadata.
