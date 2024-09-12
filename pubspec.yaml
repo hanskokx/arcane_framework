@@ -1,6 +1,6 @@
 name: arcane_framework
 description: "The Arcane Framework provides a modular, feature-rich solution for bootstrapping new applications."
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
 
