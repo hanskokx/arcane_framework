@@ -1,11 +1,9 @@
 import "dart:async";
 
-import "package:arcane_framework/arcane_framework.dart";
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
 import "package:flutter/foundation.dart";
 
-export "package:logger/logger.dart" show Level;
-
+part "logging_enums.dart";
 part "logging_interface.dart";
 
 /// A singleton class that manages logging to one or more logging interfaces
