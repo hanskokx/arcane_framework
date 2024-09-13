@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:arcane_framework/arcane_framework.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/widgets.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 
@@ -37,11 +38,11 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// been registered.
   ArcaneAuthInterface get authInterface => _authInterface;
 
-  /// A shortcut to `status == AuthenticationStatus.authenticated`.
-  bool get isAuthenticated => status == AuthenticationStatus.authenticated;
+  /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
+  bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
 
-  /// A shortcut to the `isSignedIn` getter of the registered `ArcaneAuthInterface`.
-  Future<bool> get isSignedIn => authInterface.isSignedIn;
+  /// Expose the ValueListenable so other widgets can listen to changes.
+  ValueListenable<bool> get isSignedIn => ValueNotifier<bool>(isAuthenticated);
 
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
@@ -103,16 +104,16 @@ class ArcaneAuthenticationService extends ArcaneService {
 
   /// Logs the current user out. Upon successful logout, `status` will be set to
   /// `AuthenticationStatus.unauthenticated`.
-  Future<void> logOut({required VoidCallback onLoggedOut}) async {
+  Future<void> logOut({VoidCallback? onLoggedOut}) async {
     if (_mocked) return;
-    if (status == AuthenticationStatus.unauthenticated) return;
+    if (!isAuthenticated) return;
 
     final Result<void, String> loggedOut = await authInterface.logout();
 
     await loggedOut.fold(
       onSuccess: (_) async {
         setUnauthenticated();
-        onLoggedOut();
+        if (onLoggedOut != null) onLoggedOut();
       },
       onError: (e) {
         throw Exception(e);
