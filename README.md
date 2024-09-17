@@ -452,7 +452,7 @@ await Arcane.auth.setDebug();
 
 The Arcane Framework provides a simple interface for managing themes in your application, with dynamic switching between dark and light themes based on the user's system settings, or manually switching between themes.
 
-To get started, first register your `ThemeData` objects with the Arcane theme module, then reference the theme in your `MaterialApp` or `CupertinoApp`:
+To get started, first register your `ThemeData` objects with the Arcane theme module:
 
 ```dart
 void main() {
@@ -463,21 +463,66 @@ void main() {
 
   runApp(
     ArcaneApp(
-      child: MaterialApp(
-        theme: Arcane.theme.light,
-        darkTheme: Arcane.theme.dark,
-        themeMode: context.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      ),
+      child: MainApp(),
     ),
   );
 }
 ```
 
-Once configured, you'll have access to theme-related methods and properties:
+From here, you can either follow the system theme:
+
+```dart
+// Follow the system's theme mode
+class MainApp extends StatefulWidget {
+  const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  @override
+  Widget build(BuildContext context) {
+    return ArcaneApp(
+      child: MaterialApp(
+        theme: Arcane.theme.light,
+        darkTheme: Arcane.theme.dark,
+        themeMode: Arcane.theme.systemTheme.value,
+      ),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    Arcane.theme.followSystemTheme(context);
+    super.didChangeDependencies();
+  }
+}
+```
+
+or manually control the theme mode:
+
+```dart
+// Manually control the theme mode
+class MainApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ArcaneApp(
+      child: MaterialApp(
+        theme: Arcane.theme.light,
+        darkTheme: Arcane.theme.dark,
+        themeMode: Arcane.theme.currentMode,
+      ),
+    );
+  }
+}
+```
+
+Then, you can switch modes whenever you want:
 
 ```dart
 // Switch between light and dark themes
-Arcane.theme.switchTheme(context);
+Arcane.theme.switchTheme();
 
 // Access current theme data
 final ThemeData currentTheme = Arcane.theme.currentMode == ThemeMode.dark
