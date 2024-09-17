@@ -186,10 +186,12 @@ class ArcaneAuthenticationService extends ArcaneService {
       password: password,
     );
 
-    if (result.isSuccess) {
-      setAuthenticated();
-      if (onLoggedIn != null) await onLoggedIn();
+    if (result.isFailure) {
+      throw Exception(result.error);
     }
+
+    setAuthenticated();
+    if (onLoggedIn != null) await onLoggedIn();
 
     return result;
   }
