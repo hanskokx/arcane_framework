@@ -1,4 +1,5 @@
 import "package:arcane_framework/arcane_framework.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 part "reactive_theme_extensions.dart";
@@ -37,6 +38,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// Returns the current light theme `ThemeData`.
   ThemeData get light => _lightTheme;
 
+  ValueListenable<ThemeMode> get systemTheme =>
+      ValueNotifier<ThemeMode>(_isDark ? ThemeMode.dark : ThemeMode.light);
+
   /// Switches the current theme between light and dark modes.
   ///
   /// If the theme is currently light, it switches to dark, and vice versa. It also
@@ -49,6 +53,27 @@ class ArcaneReactiveTheme extends ArcaneService {
   ArcaneReactiveTheme switchTheme(BuildContext context) {
     _isDark = !_isDark;
     notifyListeners();
+
+    return I;
+  }
+
+  /// Switches the current theme between light and dark modes automatically
+  /// based upon the system's current mode.
+  ///
+  /// Example:
+  /// ```dart
+  /// ArcaneReactiveTheme.I.followSystemTheme(context);
+  /// final ThemeMode mode = Arcane.theme.systemTheme.value;
+  /// ```
+  ArcaneReactiveTheme followSystemTheme(BuildContext context) {
+    final ThemeMode systemMode =
+        context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+
+    if (currentMode != systemMode) {
+      _isDark = !_isDark;
+      notifyListeners();
+    }
+
     return I;
   }
 
