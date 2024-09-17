@@ -72,13 +72,55 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     try {
       environment = context.read<ArcaneEnvironment>();
-      await environment.enableDebugMode(onDebugModeSet);
+      final Environment previousEnvironment = environment.state;
+
+      if (previousEnvironment == Environment.debug) return;
+
+      environment.enableDebugMode();
+
+      final Environment currentEnvironment = environment.state;
+
+      if (previousEnvironment == currentEnvironment) {
+        throw Exception("Unable to switch to debug mode.");
+      }
+
+      _setStatus(AuthenticationStatus.debug);
+      if (onDebugModeSet != null) await onDebugModeSet();
     } catch (_) {
       throw Exception("No ArcaneEnvironment found in BuildContext");
     }
+  }
 
-    _setStatus(AuthenticationStatus.debug);
-    if (onDebugModeSet != null) await onDebugModeSet();
+  /// Sets `status` to `AuthenticationStatus.normal`. If `onDebugModeUnset` has
+  /// been specified, the method will be triggered after the new status has been
+  /// set.
+  Future<void> setNormal(
+    BuildContext context, {
+    Future<void> Function()? onDebugModeUnset,
+  }) async {
+    if (_mocked) return;
+
+    ArcaneEnvironment? environment;
+
+    try {
+      environment = context.read<ArcaneEnvironment>();
+      final Environment previousEnvironment = environment.state;
+
+      if (previousEnvironment == Environment.normal) return;
+
+      environment.disableDebugMode();
+
+      final Environment currentEnvironment = environment.state;
+
+      if (previousEnvironment == currentEnvironment) {
+        throw Exception("Unable to switch to normal mode.");
+      }
+
+      _setStatus(AuthenticationStatus.debug);
+      if (onDebugModeUnset != null) await onDebugModeUnset();
+    } catch (_) {
+      throw Exception("No ArcaneEnvironment found in BuildContext");
+    }
   }
 
   /// Sets `status` to `AuthenticationStatus.authenticated`.

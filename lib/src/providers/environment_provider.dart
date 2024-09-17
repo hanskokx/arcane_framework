@@ -11,21 +11,17 @@ class ArcaneEnvironment extends Cubit<Environment> {
   ArcaneEnvironment() : super(Environment.normal);
 
   /// Enables debug mode by setting the environment to `Environment.debug`.
-  ///
-  /// If provided, [onDebugModeSet] is a callback that will be awaited before switching
-  /// to debug mode. This is useful for performing any setup required when enabling
-  /// demo mode.
-  ///
-  /// Example:
-  /// ```dart
-  /// await environmentCubit.enableDebugMode(() async {
-  ///   // Perform some setup when enabling demo mode.
-  /// });
-  /// ```
-  Future<void> enableDebugMode(Future<void> Function()? onDebugModeSet) async {
-    if (onDebugModeSet != null) await onDebugModeSet();
+  void enableDebugMode() {
+    if (state == Environment.debug) return;
 
     emit(Environment.debug);
+  }
+
+  /// Disables debug mode by setting the environment to `Environment.normal`.
+  void disableDebugMode() {
+    if (state == Environment.normal) return;
+
+    emit(Environment.normal);
   }
 }
 
