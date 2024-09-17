@@ -48,9 +48,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.switchTheme(context);
+  /// ArcaneReactiveTheme.I.switchTheme();
   /// ```
-  ArcaneReactiveTheme switchTheme(BuildContext context) {
+  ArcaneReactiveTheme switchTheme() {
     _isDark = !_isDark;
     notifyListeners();
 
@@ -70,8 +70,7 @@ class ArcaneReactiveTheme extends ArcaneService {
         context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
     if (currentMode != systemMode) {
-      _isDark = !_isDark;
-      notifyListeners();
+      switchTheme();
     }
 
     return I;
