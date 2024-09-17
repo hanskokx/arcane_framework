@@ -146,7 +146,7 @@ class ArcaneAuthenticationService extends ArcaneService {
 
   /// Logs the current user out. Upon successful logout, `status` will be set to
   /// `AuthenticationStatus.unauthenticated`.
-  Future<void> logOut({VoidCallback? onLoggedOut}) async {
+  Future<void> logOut({Future<void> Function()? onLoggedOut}) async {
     if (_mocked) return;
     if (!isAuthenticated) return;
 
@@ -155,7 +155,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     await loggedOut.fold(
       onSuccess: (_) async {
         setUnauthenticated();
-        if (onLoggedOut != null) onLoggedOut();
+        if (onLoggedOut != null) await onLoggedOut();
       },
       onError: (e) {
         throw Exception(e);
