@@ -1,3 +1,6 @@
+## 1.0.4
+
+* Resolved an issue with authentication using the ArcaneAuthenticationService when logging in with an email and password
 
 ## 1.0.3+1
 
