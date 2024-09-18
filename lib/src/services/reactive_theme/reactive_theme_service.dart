@@ -38,6 +38,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// Returns the current light theme `ThemeData`.
   ThemeData get light => _lightTheme;
 
+  /// A listenable that notifies listeners when the syste theme mode changes.
   ValueListenable<ThemeMode> get systemTheme =>
       ValueNotifier<ThemeMode>(_isDark ? ThemeMode.dark : ThemeMode.light);
 
