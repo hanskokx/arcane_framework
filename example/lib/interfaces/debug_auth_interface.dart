@@ -33,17 +33,8 @@ class DebugAuthInterface implements ArcaneAuthInterface {
   Future<Result<void, String>> loginWithEmailAndPassword({
     required String email,
     required String password,
-  }) async {
-    final bool alreadyLoggedIn = await isSignedIn;
-
-    if (alreadyLoggedIn) return Result.ok(null);
-
-    Arcane.log("Logging in as $email");
-
-    _isSignedIn = true;
-
-    return Result.ok(null);
-  }
+  }) async =>
+      throw UnimplementedError();
 
   @override
   Future<Result<void, String>> login<T>({
@@ -54,7 +45,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
 
     if (alreadyLoggedIn) return Result.ok(null);
 
-    Arcane.log("Logging: $input");
+    Arcane.log("Logging in with input: $input");
 
     _isSignedIn = true;
 

@@ -116,9 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 child: const Text("Sign in"),
                 onPressed: () async {
-                  await Arcane.auth.loginWithEmailAndPassword(
-                    email: "email",
-                    password: "password",
+                  await Arcane.auth.login<Map<String, String>>(
+                    input: {
+                      "email": "email",
+                      "password": "password",
+                    },
                     onLoggedIn: () async {
                       setState(() {});
                     },

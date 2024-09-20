@@ -1,3 +1,7 @@
+## 1.0.5+1
+
+- Marked the `loginWithEmailAndPassword` method in ArcaneAuthenticationService as deprecated and updated example project
+
 ## 1.0.5
 
 - Added the ability to use a generic type for the login method in ArcaneAuthenticationService

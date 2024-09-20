@@ -180,6 +180,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// method will run after the authentication status has been updated.
   /// When logging in with email and password, the user's email address will be
   /// cached in `ArcaneSecureStorage`.
+  @Deprecated("Use `login` instead. Deprecated as of version 1.0.5")
   Future<Result<void, String>> loginWithEmailAndPassword({
     required String email,
     required String password,

@@ -46,6 +46,7 @@ abstract class ArcaneAuthInterface {
   ///   password: "password123",
   /// );
   /// ```
+  @Deprecated("Use `login` instead. Deprecated as of version 1.0.5")
   Future<Result<void, String>> loginWithEmailAndPassword({
     required String email,
     required String password,
