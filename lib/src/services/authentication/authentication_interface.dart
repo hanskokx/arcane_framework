@@ -51,6 +51,27 @@ abstract class ArcaneAuthInterface {
     required String password,
   });
 
+  /// Logs the user in using an optional, generic `T` type of input.
+  /// This login method is a generic method that can be used to login with any
+  /// type of input. It is useful for login methods that do not require an email
+  /// and password. Any type of input can be passed in, and it will be handled
+  /// by the implementation of the method wihin the specific authentication
+  /// service.
+  ///
+  /// Example:
+  /// ```dart
+  /// await authInterface.login<Map<String, String>>(
+  ///   input: {
+  ///     "username": "hello@world.com",
+  ///     "password": "password",
+  ///   },
+  /// );
+  /// ```
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  });
+
   /// Re-sends a verification code to the user's email address.
   ///
   /// This method is typically used when the user hasn't received or has lost their initial

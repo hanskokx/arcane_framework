@@ -35,22 +35,12 @@ class ArcaneLogger {
   /// Whether the logger has been initialized.
   bool get initialized => I._initialized;
 
-  /// Marks the logger as mocked for testing purposes.
-  ///
-  /// If the logger is mocked, platform-specific features (such as tracking
-  /// status) will not be initialized.
-  @visibleForTesting
-  void setMocked() => _mocked = true;
-  bool _mocked = false;
-
   /// Initializes the logger.
   ///
   /// Sets up error handling for both Flutter and platform-specific errors.
   /// Also, retrieves the tracking authorization status if running on iOS or
   /// macOS.
   Future<void> _init() async {
-    if (_mocked) return;
-
     additionalMetadata.clear();
 
     // Handles unhandled Flutter errors by logging them.
@@ -146,8 +136,6 @@ class ArcaneLogger {
     StackTrace? stackTrace,
     Map<String, String>? metadata,
   }) {
-    if (I._mocked) return;
-
     if (!I._initialized) {
       throw Exception("ArcaneLogger has not yet been initialized.");
     }

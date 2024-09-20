@@ -46,6 +46,22 @@ class DebugAuthInterface implements ArcaneAuthInterface {
   }
 
   @override
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  }) async {
+    final bool alreadyLoggedIn = await isSignedIn;
+
+    if (alreadyLoggedIn) return Result.ok(null);
+
+    Arcane.log("Logging: $input");
+
+    _isSignedIn = true;
+
+    return Result.ok(null);
+  }
+
+  @override
   Future<Result<String, String>> resendVerificationCode(String email) async {
     Arcane.log("Re-sending verification code to $email");
     return Result.ok("Code sent");

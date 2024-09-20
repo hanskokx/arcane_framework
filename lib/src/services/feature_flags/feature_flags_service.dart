@@ -1,5 +1,4 @@
 import "package:arcane_framework/arcane_framework.dart";
-import "package:flutter/foundation.dart";
 
 part "feature_flags_extensions.dart";
 
@@ -40,15 +39,6 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// This getter is `static` and allows checking the initialization status without needing
   /// to access the instance.
   static bool get initialized => I._initialized;
-
-  bool _mocked = false;
-
-  /// Marks the feature flags as mocked for testing purposes.
-  ///
-  /// When the feature flags are mocked, they bypass certain initializations, making
-  /// them easier to work with in unit tests.
-  @visibleForTesting
-  void setMocked() => _mocked = true;
 
   /// Checks if a specific [feature] is enabled.
   ///
@@ -125,8 +115,6 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// It is called automatically when enabling or disabling features if they haven't
   /// already been initialized.
   void _init() {
-    if (_mocked) return;
-
     _enabledFeatures.clear();
 
     I._initialized = true;

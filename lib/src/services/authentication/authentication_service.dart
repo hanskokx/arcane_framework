@@ -15,7 +15,6 @@ part "authentication_interface.dart";
 class ArcaneAuthenticationService extends ArcaneService {
   ArcaneAuthenticationService._internal();
 
-  static bool _mocked = false;
   static final ArcaneAuthenticationService _instance =
       ArcaneAuthenticationService._internal();
 
@@ -32,11 +31,17 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// - `debug`: Debug mode has been enabled, enabling development features.
   AuthenticationStatus get status => _status;
 
-  static late ArcaneAuthInterface _authInterface;
+  static ArcaneAuthInterface? _authInterface;
 
   /// Provides direct access to the registered `ArcaneAuthInterface`, if one has
   /// been registered.
-  ArcaneAuthInterface get authInterface => _authInterface;
+  ArcaneAuthInterface get authInterface {
+    assert(
+      _authInterface != null,
+      "No ArcaneAuthInterface has been registered",
+    );
+    return _authInterface!;
+  }
 
   /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
   bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
@@ -53,8 +58,20 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// provides one.
   Future<String?> get refreshToken => authInterface.refreshToken;
 
+  /// Removes any registered `ArcaneAuthInterface` and resets all values to
+  /// default.
+  Future<void> reset() async {
+    _authInterface = null;
+    _status = AuthenticationStatus.unauthenticated;
+    notifyListeners();
+  }
+
   /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
   Future<void> registerInterface(ArcaneAuthInterface authInterface) async {
+    if (_authInterface != null) {
+      throw Exception("ArcaneAuthInterface has already been registered");
+    }
+
     _authInterface = authInterface;
     await authInterface.init();
   }
@@ -66,8 +83,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
   }) async {
-    if (_mocked) return;
-
     ArcaneEnvironment? environment;
 
     try {
@@ -98,8 +113,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
-    if (_mocked) return;
-
     ArcaneEnvironment? environment;
 
     try {
@@ -125,21 +138,15 @@ class ArcaneAuthenticationService extends ArcaneService {
 
   /// Sets `status` to `AuthenticationStatus.authenticated`.
   void setAuthenticated() {
-    if (_mocked) return;
-
     _setStatus(AuthenticationStatus.authenticated);
   }
 
   /// Sets `status` to `AuthenticationStatus.unauthenticated`.
   void setUnauthenticated() {
-    if (_mocked) return;
-
     _setStatus(AuthenticationStatus.unauthenticated);
   }
 
   void _setStatus(AuthenticationStatus newStatus) {
-    if (_mocked) return;
-
     _status = newStatus;
     notifyListeners();
   }
@@ -147,8 +154,12 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Logs the current user out. Upon successful logout, `status` will be set to
   /// `AuthenticationStatus.unauthenticated`.
   Future<void> logOut({Future<void> Function()? onLoggedOut}) async {
-    if (_mocked) return;
     if (!isAuthenticated) return;
+
+    assert(
+      _authInterface != null,
+      "No ArcaneAuthInterface has been registered",
+    );
 
     final Result<void, String> loggedOut = await authInterface.logout();
 
@@ -174,8 +185,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     required String password,
     Future<void> Function()? onLoggedIn,
   }) async {
-    if (_mocked) return Result.ok(null);
-
     if (status != AuthenticationStatus.unauthenticated) {
       return Result.error("Cannot sign in. Status is already ${status.name}.");
     }
@@ -194,6 +203,27 @@ class ArcaneAuthenticationService extends ArcaneService {
     return result;
   }
 
+  /// Logs the user in using an optional, generic `T` type of input.
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  }) async {
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    final Result<void, String> result = await authInterface.login(
+      input: input,
+    );
+
+    if (result.isSuccess) {
+      setAuthenticated();
+      if (onLoggedIn != null) await onLoggedIn();
+    }
+
+    return result;
+  }
+
   /// Attempts to register a new account using the provided `email` and
   /// `password`. Upon success, returns a `SignUpStep` indicating the next step
   /// in the signup process as a `SignUpStep`.
@@ -201,7 +231,10 @@ class ArcaneAuthenticationService extends ArcaneService {
     required String email,
     required String password,
   }) async {
-    if (_mocked) return Result.ok(SignUpStep.done);
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
     final Result<SignUpStep, String> result = await authInterface.signup(
       email: email,
       password: password,
@@ -216,7 +249,10 @@ class ArcaneAuthenticationService extends ArcaneService {
     required String email,
     required String confirmationCode,
   }) async {
-    if (_mocked) return Result.ok(false);
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
     final Result<bool, String> result = await authInterface.confirmSignup(
       username: email,
       confirmationCode: confirmationCode,
@@ -228,7 +264,10 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Re-sends a verification code to be used when confirming the user's
   /// registration.
   Future<Result<String, String>> resendVerificationCode(String email) async {
-    if (_mocked) return Result.ok("");
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
     return authInterface.resendVerificationCode(email);
   }
 
@@ -243,7 +282,10 @@ class ArcaneAuthenticationService extends ArcaneService {
     String? newPassword,
     String? confirmationCode,
   }) async {
-    if (_mocked) return Result.ok(false);
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
     final Result<bool, String> result = await authInterface.resetPassword(
       email: email,
       newPassword: newPassword,
@@ -251,13 +293,5 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     return result;
-  }
-
-  /// Marks the service as mocked for testing purposes.
-  ///
-  /// If the service is mocked, no method will be executed.
-  @visibleForTesting
-  static void setMocked() {
-    _mocked = true;
   }
 }
