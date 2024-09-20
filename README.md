@@ -443,9 +443,9 @@ final passwordResetFinished = await Arcane.auth.resetPassword(
 );
 
 // Sign in with email and password
-final result = await Arcane.auth.loginWithEmailAndPassword(
-  email: "user@example.com",
-  password: "password123",
+final result = await Arcane.auth.login(
+  input: ("email": "user@example.com", "password": "password123")
+  onLoggedIn: () => Arcane.log("User logged in"),
 );
 
 // Sign out
