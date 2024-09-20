@@ -240,6 +240,8 @@ The Arcane Framework provides a useful interface for performing common authentic
 To get started, create an authentication interface provider and register it in the Arcane authentication module:
 
 ```dart
+typedef LoginInput = ({String email, String password});
+
 // Create an authentication interface
 class AuthProviderInterface implements ArcaneAuthInterface {
   AuthProviderInterface._internal();
@@ -287,13 +289,18 @@ class AuthProviderInterface implements ArcaneAuthInterface {
   }
 
   @override
-  Future<Result<void, String>> loginWithEmailAndPassword({
-    required String email,
-    required String password,
+  Future<Result<void, String>> login<LoginInput>({
+    LoginInput? input,
+    Future<void> Function()? onLoggedIn,
   }) async {
     final bool alreadyLoggedIn = await isSignedIn;
 
     if (alreadyLoggedIn) return Result.ok(null);
+
+    final credentials = input as ({String email, String password});
+
+    final String email = credentials.email;
+    final String password = credentials.password;
 
     try {
       final SignInResult result = await _session.signIn(
