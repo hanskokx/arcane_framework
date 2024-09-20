@@ -1,6 +1,6 @@
 name: arcane_framework
 description: "Agnostic Reusable Component Architecture for New Ecosystems: a modern framework for bootstrapping new applications"
-version: 1.0.5+1
+version: 1.0.5+2
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
 

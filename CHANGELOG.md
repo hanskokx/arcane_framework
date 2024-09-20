@@ -1,3 +1,7 @@
+## 1.0.5.2
+
+- Updated README and example project documentation
+
 ## 1.0.5+1
 
 - Marked the `loginWithEmailAndPassword` method in ArcaneAuthenticationService as deprecated and updated example project
