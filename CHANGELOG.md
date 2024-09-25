@@ -1,4 +1,8 @@
-## 1.0.5.2
+## 1.0.6
+
+- Removed get_it as a dependency
+
+## 1.0.5+2
 
 - Updated README and example project documentation
 

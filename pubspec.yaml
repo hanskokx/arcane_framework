@@ -1,6 +1,6 @@
 name: arcane_framework
 description: "Agnostic Reusable Component Architecture for New Ecosystems: a modern framework for bootstrapping new applications"
-version: 1.0.5+2
+version: 1.0.6
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
 
@@ -18,7 +18,6 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^8.1.6
   flutter_secure_storage: ^9.2.2
-  get_it: ^7.7.0
   result_monad: ^2.3.2
 
 dev_dependencies:
