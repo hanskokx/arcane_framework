@@ -32,5 +32,6 @@ abstract class LoggingInterface {
     Map<String, dynamic>? metadata,
     Level? level,
     StackTrace? stackTrace,
+    Object? extra,
   });
 }

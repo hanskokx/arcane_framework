@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Added the `extra` parameter to the `LoggingInterface`
+
 ## 1.0.6+1
 
 - Migrated linting rules to new [arcane_analysis](https://pub.dev/packages/arcane_analysis) package.

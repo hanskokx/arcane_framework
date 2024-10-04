@@ -75,32 +75,38 @@ class ArcaneLogger {
   ///
   /// **Parameters:**
   ///
-  /// - `message` (String):
+  /// - `message` ([String]):
   ///   The main log message to be recorded. This is the primary content that
   ///   describes the event or state being logged.
   ///
-  /// - `module` (String?, _optional_):
+  /// - `module` ([String?], _optional_):
   ///   The name of the module where the log originates. If not provided, it will
   ///   be inferred from the current stack trace. This helps in categorizing logs
   ///   by different parts of the application.
   ///
-  /// - `method` (String?, _optional_):
+  /// - `method` ([String?], _optional_):
   ///   The name of the method where the log originates. If not provided, it will
   ///   be inferred from the current stack trace. This adds context to the log by
   ///   identifying the specific method generating the log.
   ///
-  /// - `level` (Level, _optional_):
+  /// - `level` ([Level], _optional_):
   ///   The severity level of the log. Defaults to `Level.debug`. This determines
   ///   the importance of the log and influences how it is handled and displayed.
   ///
-  /// - `stackTrace` (StackTrace?, _optional_):
+  /// - `stackTrace` ([StackTrace?], _optional_):
   ///   The stack trace associated with the log event. Useful for error and
   ///   warning logs to trace the execution path leading to the log event.
   ///
-  /// - `metadata` (Map<String, String>?, _optional_):
+  /// - `metadata` ([Map<String, String>?], _optional_):
   ///   Additional key-value pairs providing extra context for the log. Commonly
   ///   used for custom information that can aid in diagnosing issues or
   ///   understanding the log in context. If not provided, an empty map is used.
+  ///
+  /// - `extra` ([Object?], _optional_):
+  ///   Allows for passing additional, arbitrary objects of any type into the
+  ///   logging interface. This is a general-purpose object that could be used
+  ///   for anything from passing an [Exception] for additional processing, to
+  ///   any other purpose one could dream up.
   ///
   /// **Details:**
   ///
@@ -135,6 +141,7 @@ class ArcaneLogger {
     Level level = Level.debug,
     StackTrace? stackTrace,
     Map<String, String>? metadata,
+    Object? extra,
   }) {
     if (!I._initialized) {
       throw Exception("ArcaneLogger has not yet been initialized.");
@@ -174,6 +181,7 @@ class ArcaneLogger {
         level: level,
         metadata: metadata,
         stackTrace: stackTrace,
+        extra: extra,
       );
     }
   }
