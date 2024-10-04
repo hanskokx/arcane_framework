@@ -16,6 +16,7 @@ class DebugPrint implements LoggingInterface {
     Map<String, dynamic>? metadata,
     Level? level = Level.debug,
     StackTrace? stackTrace,
+    Object? extra,
   }) {
     if (Feature.logging.disabled) return;
 
