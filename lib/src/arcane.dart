@@ -64,6 +64,7 @@ class Arcane {
   ///    `Level.debug`.
   /// - [stackTrace]: Optional stack trace information.
   /// - [metadata]: Optional additional metadata in key-value pairs.
+  /// - [extra]: Optional data passed to the logger.
   static void log(
     String message, {
     String? module,
@@ -71,6 +72,7 @@ class Arcane {
     Level level = Level.debug,
     StackTrace? stackTrace,
     Map<String, String>? metadata,
+    Object? extra,
   }) {
     ArcaneLogger.I.log(
       message,
@@ -79,6 +81,7 @@ class Arcane {
       level: level,
       stackTrace: stackTrace,
       metadata: metadata,
+      extra: extra,
     );
   }
 }

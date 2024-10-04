@@ -1,3 +1,7 @@
+## 1.0.8
+
+- Added the `extra` parameter to the `Arcane.log` shortcut method
+
 ## 1.0.7
 
 - Added the `extra` parameter to the `LoggingInterface`
