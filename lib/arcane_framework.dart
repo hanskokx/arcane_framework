@@ -35,7 +35,7 @@
 /// This library is designed to simplify the development of complex, scalable
 /// Flutter applications by offering a set of tools to manage core
 /// functionalities efficiently.
-library arcane_framework;
+library;
 
 export "package:arcane_framework/src/arcane.dart";
 export "package:arcane_framework/src/arcane_app.dart";

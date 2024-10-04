@@ -1,3 +1,7 @@
+## 1.0.6+1
+
+- Migrated linting rules to new [arcane_analysis](https://pub.dev/packages/arcane_analysis) package.
+
 ## 1.0.6
 
 - Removed get_it as a dependency
