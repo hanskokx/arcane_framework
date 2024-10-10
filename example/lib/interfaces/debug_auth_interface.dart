@@ -1,6 +1,6 @@
 import "package:arcane_framework/arcane_framework.dart";
 
-typedef LoginInput = ({String email, String password});
+typedef Credentials = ({String email, String password});
 
 class DebugAuthInterface implements ArcaneAuthInterface {
   DebugAuthInterface._internal();
@@ -32,15 +32,8 @@ class DebugAuthInterface implements ArcaneAuthInterface {
   }
 
   @override
-  Future<Result<void, String>> loginWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async =>
-      throw UnimplementedError();
-
-  @override
-  Future<Result<void, String>> login<LoginInput>({
-    LoginInput? input,
+  Future<Result<void, String>> login<Credentials>({
+    Credentials? input,
     Future<void> Function()? onLoggedIn,
   }) async {
     final bool alreadyLoggedIn = await isSignedIn;
@@ -66,11 +59,18 @@ class DebugAuthInterface implements ArcaneAuthInterface {
   }
 
   @override
-  Future<Result<SignUpStep, String>> signup({
-    required String password,
-    required String email,
+  Future<Result<SignUpStep, String>> register<Credentials>({
+    Credentials? input,
   }) async {
-    Arcane.log("Creating account for $email with password $password");
+    if (input != null) {
+      final credentials = input as ({String email, String password});
+
+      final String email = credentials.email;
+      final String password = credentials.password;
+
+      Arcane.log("Creating account for $email with password $password");
+    }
+
     return Result.ok(SignUpStep.confirmSignUp);
   }
 

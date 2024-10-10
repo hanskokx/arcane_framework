@@ -52,11 +52,13 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
-  Future<String?> get accessToken => authInterface.accessToken;
+  Future<String?> get accessToken =>
+      authInterface.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
-  Future<String?> get refreshToken => authInterface.refreshToken;
+  Future<String?> get refreshToken =>
+      authInterface.refreshToken ?? Future.value("");
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
@@ -174,36 +176,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
   }
 
-  /// Attempts to log in the user using their `email` and `password`.
-  /// Upon successful login, `status` will be set to
-  /// `AuthenticationStatus.authenticated]` If `onLoggedIn` is specified, the
-  /// method will run after the authentication status has been updated.
-  /// When logging in with email and password, the user's email address will be
-  /// cached in `ArcaneSecureStorage`.
-  @Deprecated("Use `login` instead. Deprecated as of version 1.0.5")
-  Future<Result<void, String>> loginWithEmailAndPassword({
-    required String email,
-    required String password,
-    Future<void> Function()? onLoggedIn,
-  }) async {
-    if (status != AuthenticationStatus.unauthenticated) {
-      return Result.error("Cannot sign in. Status is already ${status.name}.");
-    }
-
-    final Result<void, String> result =
-        await authInterface.loginWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-
-    if (result.isSuccess) {
-      setAuthenticated();
-      if (onLoggedIn != null) await onLoggedIn();
-    }
-
-    return result;
-  }
-
   /// Logs the user in using an optional, generic `T` type of input.
   Future<Result<void, String>> login<T>({
     T? input,
@@ -225,21 +197,25 @@ class ArcaneAuthenticationService extends ArcaneService {
     return result;
   }
 
-  /// Attempts to register a new account using the provided `email` and
-  /// `password`. Upon success, returns a `SignUpStep` indicating the next step
+  /// Attempts to register a new account using user-defined input.
+  /// Upon success, returns a `SignUpStep` indicating the next step
   /// in the signup process as a `SignUpStep`.
-  Future<Result<SignUpStep, String>> signup({
-    required String email,
-    required String password,
+  Future<Result<SignUpStep, String>> register<T>({
+    T? input,
   }) async {
     if (_authInterface == null) {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<SignUpStep, String> result = await authInterface.signup(
-      email: email,
-      password: password,
+    final Result<SignUpStep, String>? result = await authInterface.register(
+      input: input,
     );
+
+    if (result == null) {
+      return Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
 
     return result;
   }
@@ -254,10 +230,16 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String> result = await authInterface.confirmSignup(
+    final Result<bool, String>? result = await authInterface.confirmSignup(
       username: email,
       confirmationCode: confirmationCode,
     );
+
+    if (result == null) {
+      return Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
 
     return result;
   }
@@ -269,7 +251,16 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    return authInterface.resendVerificationCode(email);
+    final Future<Result<String, String>>? result =
+        authInterface.resendVerificationCode(email);
+
+    if (result == null) {
+      return Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
+
+    return result;
   }
 
   /// Attempts to reset the user's password using their `email`. This method
@@ -287,11 +278,17 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String> result = await authInterface.resetPassword(
+    final Result<bool, String>? result = await authInterface.resetPassword(
       email: email,
       newPassword: newPassword,
       code: confirmationCode,
     );
+
+    if (result == null) {
+      return Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
 
     return result;
   }

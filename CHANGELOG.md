@@ -1,3 +1,14 @@
+## 1.1.0
+
+- [BREAKING] Updated the authentication service and interface to be more versatile
+
+### Migration
+
+| Class               | Migration path                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| ArcaneAuthInterface | `loginWtihEmailAndPassword({String email, String password})` -> `login<T>({T? input})` |
+| ArcaneAuthInterface | `signup({String email, String password})` -> `register<T>({T? input})`                 |
+
 ## 1.0.8
 
 - Added the `extra` parameter to the `Arcane.log` shortcut method
