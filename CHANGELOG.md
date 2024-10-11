@@ -1,3 +1,15 @@
+## 1.1.1
+
+- [BREAKING] Updated ArcaneAuthInterface to make the `resendVerificationCode`, `confirmSignup`, and `resetPassword` methods more versatile
+
+### Migration
+
+| Class               | Migration path                                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| ArcaneAuthInterface | `resendVerificationCode(String email)` -> `resendVerificationCode<T>({T? input})`                                                         |
+| ArcaneAuthInterface | `confirmSignup({String email, String password})` -> `confirmSignup({String? email, String? password})`                                    |
+| ArcaneAuthInterface | `resetPassword({String email, String? newPassword, String? code})` -> `resetPassword({String? email, String? newPassword, String? code})` |
+
 ## 1.1.0
 
 - [BREAKING] Updated the authentication service and interface to be more versatile

@@ -60,9 +60,7 @@ abstract class ArcaneAuthInterface {
   /// This method is typically used when the user hasn't received or has lost their initial
   /// verification code. Returns a `Result` that contains the verification code on success
   /// or an error message.
-  Future<Result<String, String>>? resendVerificationCode(
-    String email,
-  );
+  Future<Result<String, String>>? resendVerificationCode<T>({T? input});
 
   /// Registers a new account using user-supplied input.
   ///
@@ -83,8 +81,8 @@ abstract class ArcaneAuthInterface {
   /// This method completes the sign-up process by verifying the user's confirmation code.
   /// Returns a `Result` that contains `true` on success or an error message.
   Future<Result<bool, String>>? confirmSignup({
-    required String username,
-    required String confirmationCode,
+    String? username,
+    String? confirmationCode,
   });
 
   /// Resets a user's password using an email address and a code.
@@ -98,7 +96,7 @@ abstract class ArcaneAuthInterface {
   /// code or pin. The second call should include the `email`, the user's new password
   /// (`newPassword`), and the `code` they received in their email.
   Future<Result<bool, String>>? resetPassword({
-    required String email,
+    String? email,
     String? newPassword,
     String? code,
   });

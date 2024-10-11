@@ -53,8 +53,10 @@ class DebugAuthInterface implements ArcaneAuthInterface {
   }
 
   @override
-  Future<Result<String, String>> resendVerificationCode(String email) async {
-    Arcane.log("Re-sending verification code to $email");
+  Future<Result<String, String>> resendVerificationCode<T>({
+    T? input,
+  }) async {
+    Arcane.log("Re-sending verification code to $input");
     return Result.ok("Code sent");
   }
 
@@ -76,8 +78,8 @@ class DebugAuthInterface implements ArcaneAuthInterface {
 
   @override
   Future<Result<bool, String>> confirmSignup({
-    required String username,
-    required String confirmationCode,
+    String? username,
+    String? confirmationCode,
   }) async {
     Arcane.log(
       "Confirming registration for $username with code $confirmationCode",
@@ -87,7 +89,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
 
   @override
   Future<Result<bool, String>> resetPassword({
-    required String email,
+    String? email,
     String? newPassword,
     String? code,
   }) async {

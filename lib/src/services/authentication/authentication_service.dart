@@ -252,7 +252,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     }
 
     final Future<Result<String, String>>? result =
-        authInterface.resendVerificationCode(email);
+        authInterface.resendVerificationCode(input: email);
 
     if (result == null) {
       return Result.error(
