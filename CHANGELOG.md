@@ -1,3 +1,7 @@
+## 1.1.1+1
+
+- Updated example in README
+
 ## 1.1.1
 
 - [BREAKING] Updated ArcaneAuthInterface to make the `resendVerificationCode`, `confirmSignup`, and `resetPassword` methods more versatile

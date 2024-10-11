@@ -242,57 +242,42 @@ The Arcane Framework provides a useful interface for performing common authentic
 To get started, create an authentication interface provider and register it in the Arcane authentication module:
 
 ```dart
-typedef LoginInput = ({String email, String password});
+import "package:arcane_framework/arcane_framework.dart";
 
-// Create an authentication interface
-class AuthProviderInterface implements ArcaneAuthInterface {
-  AuthProviderInterface._internal();
+typedef Credentials = ({String email, String password});
 
-  static bool _mocked = false;
+class DebugAuthInterface implements ArcaneAuthInterface {
+  DebugAuthInterface._internal();
 
-  static final AuthProviderInterface _instance = AuthProviderInterface._internal();
-  static AuthProviderInterface get I => _instance;
-
-  Future<AuthSession?> get _session async {
-    return await ThirdPartyAuthProvider.fetchAuthSession();
-  }
+  static final ArcaneAuthInterface _instance = DebugAuthInterface._internal();
+  static ArcaneAuthInterface get I => _instance;
 
   @override
-  Future<bool> get isSignedIn =>
-      _session.then((value) => value?.isSignedIn == true);
+  Future<bool> get isSignedIn => Future.value(_isSignedIn);
+  bool _isSignedIn = false;
 
   @override
   Future<String?> get accessToken => isSignedIn.then(
-        (loggedIn) => loggedIn
-            ? _session.then(
-                (value) => value?.accessToken,
-              )
-            : null,
+        (loggedIn) => loggedIn ? "access_token" : null,
       );
 
   @override
   Future<String?> get refreshToken => isSignedIn.then(
-        (loggedIn) => loggedIn
-            ? _session.then(
-                (value) => value?.refreshToken,
-              )
-            : null,
+        (loggedIn) => loggedIn ? "refresh_token" : null,
       );
 
   @override
   Future<Result<void, String>> logout() async {
-    final result = await _session.signOut();
+    Arcane.log("Logging out");
 
-    if (result is FailedSignOut) {
-      return Result.error(result.exception.message);
-    }
+    _isSignedIn = false;
 
     return Result.ok(null);
   }
 
   @override
-  Future<Result<void, String>> login<LoginInput>({
-    LoginInput? input,
+  Future<Result<void, String>> login<Credentials>({
+    Credentials? input,
     Future<void> Function()? onLoggedIn,
   }) async {
     final bool alreadyLoggedIn = await isSignedIn;
@@ -304,109 +289,65 @@ class AuthProviderInterface implements ArcaneAuthInterface {
     final String email = credentials.email;
     final String password = credentials.password;
 
-    try {
-      final SignInResult result = await _session.signIn(
-        username: email,
-        password: password,
-      );
-      return Result.ok(null);
-    } on AuthException catch (e) {
-      return Result.error("Error signing in: ${e.message}");
-    } catch (e) {
-      return Result.error("Error signing in: $e");
-    }
+    Arcane.log("Logging in as $email using password $password");
+
+    _isSignedIn = true;
+
+    return Result.ok(null);
   }
 
   @override
-  Future<Result<String, String>> resendVerificationCode(String email) async {
-    try {
-      final result = await _session.resendSignUpCode(username: email);
-      return Result.ok(result.message);
-    } catch (e) {
-      return Result.error("Error resending verification code: ${e.message}");
-    }
-  }
-
-  @override
-  Future<Result<SignUpStep, String>> signup({
-    required String password,
-    required String email,
+  Future<Result<String, String>> resendVerificationCode<T>({
+    T? input,
   }) async {
-    try {
-      final SignUpResult result = await _session.signUp(
-        username: email,
-        password: password,
-      );
+    Arcane.log("Re-sending verification code to $input");
+    return Result.ok("Code sent");
+  }
 
-      if (result.nextStep.signUpStep == AuthSignUpStep.confirmSignUp) {
-        return Result.ok(SignUpStep.confirmSignUp);
-      }
+  @override
+  Future<Result<SignUpStep, String>> register<Credentials>({
+    Credentials? input,
+  }) async {
+    if (input != null) {
+      final credentials = input as ({String email, String password});
 
-      return Result.ok(SignUpStep.done);
-    } catch (e) {
-      return Result.error("Error signing up user: ${e.message}");
+      final String email = credentials.email;
+      final String password = credentials.password;
+
+      Arcane.log("Creating account for $email with password $password");
     }
+
+    return Result.ok(SignUpStep.confirmSignUp);
   }
 
   @override
   Future<Result<bool, String>> confirmSignup({
-    required String username,
-    required String confirmationCode,
+    String? username,
+    String? confirmationCode,
   }) async {
-    try {
-      final SignUpResult result = await _session.confirmSignUp(
-        username: username,
-        confirmationCode: confirmationCode,
-      );
-
-      return Result.ok(result.isSignUpComplete);
-    } on AuthException catch (e) {
-      return Result.error("Error confirming user: ${e.message}");
-    }
+    Arcane.log(
+      "Confirming registration for $username with code $confirmationCode",
+    );
+    return Result.ok(true);
   }
 
   @override
   Future<Result<bool, String>> resetPassword({
-    required String email,
+    String? email,
     String? newPassword,
     String? code,
   }) async {
-    try {
-      late ResetPasswordResult result;
-      if (newPassword != null && code != null) {
-        result = await _session.confirmResetPassword(
-          username: email,
-          newPassword: newPassword,
-          confirmationCode: code,
-        );
-      }
-
-      if (newPassword == null && code == null) {
-        result = await _session.resetPassword(
-          username: email,
-        );
-      }
-
-      return Result.ok(result.isPasswordReset);
-    } catch (e) {
-      return Result.error("Error resetting the password: ${e.message}");
-    }
+    Arcane.log("Resetting password for $email");
+    return Result.ok(true);
   }
 
   @override
   Future<void> init() async {
-    if (_mocked) return;
-
-    if (ThirdPartyAuthProvider.isConfigured) return;
-
-    await ThirdPartyAuthProvider.initialize();
-  }
-
-  @visibleForTesting
-  static void setMocked() {
-    _mocked = true;
+    Arcane.log("Debug auth interface initialized.");
+    return;
   }
 }
+
 
 
 // Register an interface to handle user authentication.
