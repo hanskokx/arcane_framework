@@ -358,10 +358,9 @@ Once your interface has been created and registered, you can use it to perform a
 
 ```dart
 // Register an account
-final nextStep = await Arcane.auth.signup(
-  email: "user@example.com",
-  password: "password123",
-);
+  final nextStep = await Arcane.auth.register<Credentials>(
+    input: ("email": "user@example.com", "password": "password123"),
+  );
 
 // Confirm a newly registered account
 final accountConfirmed = await Arcane.auth.confirmSignup(

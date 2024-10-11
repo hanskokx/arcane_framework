@@ -1,3 +1,7 @@
+## 1.1.1+2
+
+- Updated example in README
+
 ## 1.1.1+1
 
 - Updated example in README
