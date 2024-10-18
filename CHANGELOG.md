@@ -1,3 +1,33 @@
+## 1.1.2
+
+- Removed Flutter exception handling from `ArcaneLoggingService`, as this functionality should be defined by a users' interface.
+
+### Migration
+
+Add the following to your `ArcaneLoggingInterface`'s `init` method to replicate the previous behavior:
+
+```dart
+// Handles unhandled Flutter errors by logging them.
+FlutterError.onError = (errorDetails) {
+  Arcane.log(
+    errorDetails.exceptionAsString(),
+    level: Level.error,
+    module: errorDetails.library,
+    stackTrace: errorDetails.stack,
+  );
+};
+
+// Handles unhandled platform-specific errors by logging them.
+PlatformDispatcher.instance.onError = (error, stack) {
+  Arcane.log(
+    "$error",
+    level: Level.error,
+    stackTrace: stack,
+  );
+  return false;
+};
+```
+
 ## 1.1.1+2
 
 - Updated example in README

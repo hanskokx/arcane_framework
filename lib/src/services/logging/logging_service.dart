@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
-import "package:flutter/foundation.dart";
 
 part "logging_enums.dart";
 part "logging_interface.dart";
@@ -42,26 +41,6 @@ class ArcaneLogger {
   /// macOS.
   Future<void> _init() async {
     additionalMetadata.clear();
-
-    // Handles unhandled Flutter errors by logging them.
-    FlutterError.onError = (errorDetails) {
-      log(
-        errorDetails.exceptionAsString(),
-        level: Level.error,
-        module: errorDetails.library,
-        stackTrace: errorDetails.stack,
-      );
-    };
-
-    // Handles unhandled platform-specific errors by logging them.
-    PlatformDispatcher.instance.onError = (error, stack) {
-      log(
-        "$error",
-        level: Level.error,
-        stackTrace: stack,
-      );
-      return false;
-    };
 
     I._initialized = true;
   }
