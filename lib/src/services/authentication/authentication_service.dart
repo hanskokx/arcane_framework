@@ -155,8 +155,10 @@ class ArcaneAuthenticationService extends ArcaneService {
 
   /// Logs the current user out. Upon successful logout, `status` will be set to
   /// `AuthenticationStatus.unauthenticated`.
-  Future<void> logOut({Future<void> Function()? onLoggedOut}) async {
-    if (!isAuthenticated) return;
+  Future<Result<void, String>> logOut({
+    Future<void> Function()? onLoggedOut,
+  }) async {
+    if (!isAuthenticated) Result.error("User is not authenticated.");
 
     assert(
       _authInterface != null,
@@ -165,15 +167,12 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     final Result<void, String> loggedOut = await authInterface.logout();
 
-    await loggedOut.fold(
-      onSuccess: (_) async {
-        setUnauthenticated();
-        if (onLoggedOut != null) await onLoggedOut();
-      },
-      onError: (e) {
-        throw Exception(e);
-      },
-    );
+    if (loggedOut.isSuccess) {
+      setUnauthenticated();
+      if (onLoggedOut != null) await onLoggedOut();
+    }
+
+    return loggedOut;
   }
 
   /// Logs the user in using an optional, generic `T` type of input.
