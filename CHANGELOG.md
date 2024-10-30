@@ -1,3 +1,7 @@
+## 1.1.4
+
+- Update package dependencies. No code changes.
+
 ## 1.1.3
 
 - Arcane Auth no longer throws exceptions when log out fails, instead returning a `Result<void, String>`. This behavior matches the login method.
