@@ -1,3 +1,7 @@
+## 1.1.5
+
+- Update package dependencies. No code changes.
+
 ## 1.1.4
 
 - Update package dependencies. No code changes.
