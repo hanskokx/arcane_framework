@@ -68,7 +68,7 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature enabled",
+        "Feature enabled: ${feature.name}",
         level: Level.debug,
         metadata: {
           feature.name: "✅",
@@ -97,7 +97,7 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature disabled",
+        "Feature disabled: ${feature.name}",
         level: Level.debug,
         metadata: {
           feature.name: "❌",

@@ -1,3 +1,7 @@
+## 1.1.6
+
+- Updated logging feature to indicate the feature which was enabled or disabled within the log message, instead of only in the metadata
+
 ## 1.1.5
 
 - Update package dependencies. No code changes.
