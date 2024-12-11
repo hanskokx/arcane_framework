@@ -35,13 +35,7 @@ class ArcaneAuthenticationService extends ArcaneService {
 
   /// Provides direct access to the registered `ArcaneAuthInterface`, if one has
   /// been registered.
-  ArcaneAuthInterface get authInterface {
-    assert(
-      _authInterface != null,
-      "No ArcaneAuthInterface has been registered",
-    );
-    return _authInterface!;
-  }
+  ArcaneAuthInterface? get authInterface => _authInterface;
 
   /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
   bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
@@ -53,12 +47,12 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
   Future<String?> get accessToken =>
-      authInterface.accessToken ?? Future.value("");
+      authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
   Future<String?> get refreshToken =>
-      authInterface.refreshToken ?? Future.value("");
+      authInterface?.refreshToken ?? Future.value("");
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
@@ -158,14 +152,13 @@ class ArcaneAuthenticationService extends ArcaneService {
   Future<Result<void, String>> logOut({
     Future<void> Function()? onLoggedOut,
   }) async {
+    if (_authInterface == null) {
+      return Result.error("No ArcaneAuthInterface has been registered");
+    }
+
     if (!isAuthenticated) Result.error("User is not authenticated.");
 
-    assert(
-      _authInterface != null,
-      "No ArcaneAuthInterface has been registered",
-    );
-
-    final Result<void, String> loggedOut = await authInterface.logout();
+    final Result<void, String> loggedOut = await authInterface!.logout();
 
     if (loggedOut.isSuccess) {
       setUnauthenticated();
@@ -184,7 +177,7 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<void, String> result = await authInterface.login(
+    final Result<void, String> result = await authInterface!.login(
       input: input,
     );
 
@@ -206,7 +199,7 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<SignUpStep, String>? result = await authInterface.register(
+    final Result<SignUpStep, String>? result = await authInterface!.register(
       input: input,
     );
 
@@ -229,7 +222,7 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String>? result = await authInterface.confirmSignup(
+    final Result<bool, String>? result = await authInterface!.confirmSignup(
       username: email,
       confirmationCode: confirmationCode,
     );
@@ -251,7 +244,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     }
 
     final Future<Result<String, String>>? result =
-        authInterface.resendVerificationCode(input: email);
+        authInterface!.resendVerificationCode(input: email);
 
     if (result == null) {
       return Result.error(
@@ -277,7 +270,7 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String>? result = await authInterface.resetPassword(
+    final Result<bool, String>? result = await authInterface!.resetPassword(
       email: email,
       newPassword: newPassword,
       code: confirmationCode,
