@@ -199,7 +199,15 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<SignUpStep, String>? result = await authInterface!.register(
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
+    final Result<SignUpStep, String>? result = await auth.register(
       input: input,
     );
 
@@ -222,7 +230,15 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String>? result = await authInterface!.confirmSignup(
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
+    final Result<bool, String>? result = await auth.confirmSignup(
       username: email,
       confirmationCode: confirmationCode,
     );
@@ -243,8 +259,16 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
     final Future<Result<String, String>>? result =
-        authInterface!.resendVerificationCode(input: email);
+        auth.resendVerificationCode(input: email);
 
     if (result == null) {
       return Result.error(
@@ -270,7 +294,15 @@ class ArcaneAuthenticationService extends ArcaneService {
       return Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    final Result<bool, String>? result = await authInterface!.resetPassword(
+    if (authInterface is! ArcaneAuthPasswordManagement) {
+      return Result.error(
+        "The provided ArcaneAuthInterface does not support password management.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthPasswordManagement;
+
+    final Result<bool, String>? result = await auth.resetPassword(
       email: email,
       newPassword: newPassword,
       code: confirmationCode,

@@ -1,3 +1,5 @@
+# Arcane Framework: Agnostic Reusable Component Architecture for New Ecosystems
+
 The Arcane Framework is a powerful Dart package designed to provide a robust architecture for managing key application services such as logging, authentication, secure storage, feature flags, theming, and more. This framework is ideal for building scalable applications that require dynamic configuration and service management.
 
 [![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)](https://pub.dev/packages/arcane_analysis)
@@ -246,7 +248,9 @@ import "package:arcane_framework/arcane_framework.dart";
 
 typedef Credentials = ({String email, String password});
 
-class DebugAuthInterface implements ArcaneAuthInterface {
+class DebugAuthInterface
+  with ArcaneAuthAccountRegistration, ArcaneAuthPasswordManagement
+  implements ArcaneAuthInterface {
   DebugAuthInterface._internal();
 
   static final ArcaneAuthInterface _instance = DebugAuthInterface._internal();
@@ -296,6 +300,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
     return Result.ok(null);
   }
 
+  // Provided by the ArcaneAuthAccountRegistration mixin
   @override
   Future<Result<String, String>> resendVerificationCode<T>({
     T? input,
@@ -304,6 +309,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
     return Result.ok("Code sent");
   }
 
+  // Provided by the ArcaneAuthAccountRegistration mixin
   @override
   Future<Result<SignUpStep, String>> register<Credentials>({
     Credentials? input,
@@ -320,6 +326,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
     return Result.ok(SignUpStep.confirmSignUp);
   }
 
+  // Provided by the ArcaneAuthAccountRegistration mixin
   @override
   Future<Result<bool, String>> confirmSignup({
     String? username,
@@ -331,6 +338,7 @@ class DebugAuthInterface implements ArcaneAuthInterface {
     return Result.ok(true);
   }
 
+  // Provided by the ArcaneAuthPasswordManagement mixin
   @override
   Future<Result<bool, String>> resetPassword({
     String? email,
@@ -357,27 +365,27 @@ await Arcane.auth.registerInterface(AuthProviderInterface.I);
 Once your interface has been created and registered, you can use it to perform a number of common authentication tasks:
 
 ```dart
-// Register an account
+// Register an account using the ArcaneAuthAccountRegistration mixin
   final nextStep = await Arcane.auth.register<Credentials>(
     input: ("email": "user@example.com", "password": "password123"),
   );
 
-// Confirm a newly registered account
+// Confirm a newly registered account using the ArcaneAuthAccountRegistration mixin
 final accountConfirmed = await Arcane.auth.confirmSignup(
   email: "user@example.com",
   confirmationCode: "123456",
 );
 
-// Re-send a verification code
+// Re-send a verification code using the ArcaneAuthAccountRegistration mixin
 final response = await Arcane.auth.resendVerificationCode("user@example.com");
 
-// Initiate a password reset flow
+// Initiate a password reset flow using the ArcaneAuthPasswordManagement mixin
 final passwordResetStarted = await Arcane.auth.resetPassword(
   email: "user@example.com",
   newPassword: "password456",
 );
 
-// Confirm password reset
+// Confirm password reset using the ArcaneAuthPasswordManagement mixin
 final passwordResetFinished = await Arcane.auth.resetPassword(
   email: "user@example.com",
   newPassword: "password456",
@@ -392,9 +400,6 @@ final result = await Arcane.auth.login(
 
 // Sign out
 await Arcane.auth.logout();
-
-// Set the system to debug mode
-await Arcane.auth.setDebug();
 ```
 
 ### Dynamic Theming

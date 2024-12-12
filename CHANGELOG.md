@@ -1,3 +1,47 @@
+## 1.2.0
+
+- Removed flutter_secure_storage dependency as it was unused
+
+### Breaking Changes
+
+The following methods have been moved outside of the ArcaneAuthInterface base
+class:
+
+- resendVerificationCode
+- register
+- confirmSignup
+- resetPassword
+
+These methods have been moved to mixin classes. To continue using them, please
+update your ArcaneAuthInterface implementations.
+
+- To use `resendVerificationCode`, `register` and `confirmSignup`, use the new
+`ArcaneAuthAccountRegistration` mixin.
+- To use `resetPassword`, use the new `ArcaneAuthPasswordManagement` mixin.
+
+### Migration
+
+In order to migrate your existing interfaces, update them from:
+
+```dart
+class MyAuthInterface implements ArcaneAuthInterface {}
+```
+
+to:
+
+```dart
+class MyAuthInterface
+    with ArcaneAuthAccountRegistration, ArcaneAuthPasswordManagement
+    implements ArcaneAuthInterface {}
+```
+
+If the methods that these mixins provide are not being used, the mixins can
+safely be omitted. If only one of these mixins is required, the other can be
+safely omitted.
+
+This change should result in fewer lines of code for interface implementations
+that do not require these additional features.
+
 ## 1.1.7
 
 - Fixed an issue with the `ArcaneAuthenticationService` where an exception would

@@ -12,7 +12,7 @@ abstract class LoggingInterface {
   /// ensures that the logging interface, once configured, remains so.
   static LoggingInterface get I => _instance;
 
-  final bool _initialized = false;
+  bool _initialized = false;
 
   /// Whether the logging interface has been initialized.
   bool get initialized => I._initialized;
@@ -22,7 +22,10 @@ abstract class LoggingInterface {
   /// If any configuration needs to be performed on the logging interface prior
   /// to use, this is where it should be done.
   /// This method should, at a minimum, set `I._initialized = true`.
-  Future<LoggingInterface?> init();
+  Future<LoggingInterface?> init() async {
+    I._initialized = true;
+    return I;
+  }
 
   /// This method is called by the `ArcaneLogger` when a log message is
   /// received. See `ArcaneLogger.log` for further details on how logging

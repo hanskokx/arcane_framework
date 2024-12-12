@@ -2,7 +2,9 @@ import "package:arcane_framework/arcane_framework.dart";
 
 typedef Credentials = ({String email, String password});
 
-class DebugAuthInterface implements ArcaneAuthInterface {
+class DebugAuthInterface
+    with ArcaneAuthAccountRegistration, ArcaneAuthPasswordManagement
+    implements ArcaneAuthInterface {
   DebugAuthInterface._internal();
 
   static final ArcaneAuthInterface _instance = DebugAuthInterface._internal();
