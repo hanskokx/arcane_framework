@@ -1,3 +1,8 @@
+## 1.2.1
+
+- Lowered minimum required SDK version to prevent forcing users into the latest
+  Flutter release
+
 ## 1.2.0
 
 - Removed flutter_secure_storage dependency as it was unused
