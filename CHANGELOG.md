@@ -1,3 +1,8 @@
+## 1.2.2
+
+- Lowered minimum required collection dependency version to prevent forcing
+  users into the latest Flutter release
+
 ## 1.2.1
 
 - Lowered minimum required SDK version to prevent forcing users into the latest
