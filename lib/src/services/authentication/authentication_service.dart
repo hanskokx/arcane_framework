@@ -1,7 +1,6 @@
 import "dart:async";
 
 import "package:arcane_framework/arcane_framework.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/widgets.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 
@@ -15,13 +14,16 @@ part "authentication_interface.dart";
 class ArcaneAuthenticationService extends ArcaneService {
   ArcaneAuthenticationService._internal();
 
-  static final ArcaneAuthenticationService _instance =
-      ArcaneAuthenticationService._internal();
+  static final ArcaneAuthenticationService _instance = ArcaneAuthenticationService._internal();
 
   /// Provides access to the singleton instance of this service.
   static ArcaneAuthenticationService get I => _instance;
 
-  AuthenticationStatus _status = AuthenticationStatus.unauthenticated;
+  final ValueNotifier<AuthenticationStatus> _notifier =
+      ValueNotifier<AuthenticationStatus>(AuthenticationStatus.unauthenticated);
+
+  /// A `ValueNotifier` that emits the current `AuthenticationStatus`.
+  ValueNotifier<AuthenticationStatus> get notifier => _notifier;
 
   /// Returns the current `AuthenticationStatus`.
   ///
@@ -29,7 +31,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// - `authenticated`: The user has successfully authenticated and is logged in.
   /// - `unauthenticated`: The user has not yet logged in.
   /// - `debug`: Debug mode has been enabled, enabling development features.
-  AuthenticationStatus get status => _status;
+  AuthenticationStatus get status => _notifier.value;
 
   static ArcaneAuthInterface? _authInterface;
 
@@ -40,25 +42,26 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
   bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
 
-  /// Expose the ValueListenable so other widgets can listen to changes.
-  ValueListenable<bool> get isSignedIn => ValueNotifier<bool>(isAuthenticated);
+  final ValueNotifier<bool> _isSignedIn = ValueNotifier<bool>(false);
+
+  /// A `ValueNotifier` that emits `true` if the user is currently signed in.
+  ValueNotifier<bool> get isSignedIn => _isSignedIn;
 
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
-  Future<String?> get accessToken =>
-      authInterface?.accessToken ?? Future.value("");
+  Future<String?> get accessToken => authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
-  Future<String?> get refreshToken =>
-      authInterface?.refreshToken ?? Future.value("");
+  Future<String?> get refreshToken => authInterface?.refreshToken ?? Future.value("");
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
   Future<void> reset() async {
     _authInterface = null;
-    _status = AuthenticationStatus.unauthenticated;
+    _notifier.value = AuthenticationStatus.unauthenticated;
+    _isSignedIn.value = isAuthenticated;
     notifyListeners();
   }
 
@@ -143,7 +146,10 @@ class ArcaneAuthenticationService extends ArcaneService {
   }
 
   void _setStatus(AuthenticationStatus newStatus) {
-    _status = newStatus;
+    if (_notifier.value != newStatus) {
+      _notifier.value = newStatus;
+      _isSignedIn.value = isAuthenticated;
+    }
     notifyListeners();
   }
 
@@ -267,8 +273,7 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     final auth = authInterface as ArcaneAuthAccountRegistration;
 
-    final Future<Result<String, String>>? result =
-        auth.resendVerificationCode(input: email);
+    final Future<Result<String, String>>? result = auth.resendVerificationCode(input: email);
 
     if (result == null) {
       return Result.error(

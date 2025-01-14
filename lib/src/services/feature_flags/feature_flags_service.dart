@@ -1,4 +1,5 @@
 import "package:arcane_framework/arcane_framework.dart";
+import "package:flutter/foundation.dart";
 
 part "feature_flags_extensions.dart";
 
@@ -30,6 +31,11 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// currently enabled.
   List<Enum> get enabledFeatures => _enabledFeatures;
   final List<Enum> _enabledFeatures = [];
+
+  final ValueNotifier<List<Enum>> _notifier = ValueNotifier<List<Enum>>([]);
+
+  /// A `ValueNotifier` that notifies listeners when the list of enabled features changes.
+  ValueNotifier<List<Enum>> get notifier => _notifier;
 
   /// Indicates whether the feature flags have been initialized.
   bool _initialized = false;
@@ -65,6 +71,7 @@ class ArcaneFeatureFlags extends ArcaneService {
     if (_enabledFeatures.contains(feature)) return I;
 
     _enabledFeatures.add(feature);
+    _notifier.value.add(feature);
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -94,6 +101,7 @@ class ArcaneFeatureFlags extends ArcaneService {
     if (!_enabledFeatures.contains(feature)) return I;
 
     _enabledFeatures.remove(feature);
+    _notifier.value.remove(feature);
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -116,6 +124,7 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// already been initialized.
   void _init() {
     _enabledFeatures.clear();
+    _notifier.value.clear();
 
     I._initialized = true;
     notifyListeners();

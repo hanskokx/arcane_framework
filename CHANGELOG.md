@@ -1,3 +1,27 @@
+## 1.2.3
+
+- Added `ValueNotifier`s to both the `ArcaneAuthenticationService` and
+  `ArcaneFeatureFlags`. This enables the possibility of listening for changes to
+  either service.
+
+### Example
+
+```dart
+// Listen to changes in the authentication status
+Arcane.auth.isSignedIn.addListener(() {
+  if (Arcane.auth.isSignedIn.value) {
+    Arcane.log("User is signed in");
+  } else {
+    Arcane.log("User is signed out");
+  }
+});
+
+// Listen to changes in the enabled/disabled features
+Arcane.features.notifier.addListener(() {
+  Arcane.log("Enabled features have been updated: ${Arcane.features.notifier.value}");
+});
+```
+
 ## 1.2.2
 
 - Lowered minimum required collection dependency version to prevent forcing

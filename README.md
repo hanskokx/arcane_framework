@@ -54,27 +54,27 @@ A service's purpose is to facilitate cross-feature communication of small pieces
 
 ```dart
 class FavoriteColorService extends ArcaneService {
-  static bool _mocked = false;
   static final FavoriteColorService _instance = FavoriteColorService._internal();
 
   static FavoriteColorService get I => _instance;
 
   FavoriteColorService._internal();
 
-  Color? _myFavoriteColor;
-  Color? get myFavoriteColor => _myFavoriteColor;
+  Color? get myFavoriteColor => _notifier.value;
+
+  final ValueNotifier<Color?> _notifier = ValueNotifier<Color?>(null);
+
+  ValueNotifier<Color?> get notifier => _notifier;
 
   void setMyFavoriteColor(Color? newValue) {
-    if (_mocked) return;
-
-    _myFavoriteColor = newValue;
+    if (_notifier.value != newValue) {
+      _notifier.value = newValue;
+    }
 
     notifyListeners();
   }
-
-  @visibleForTesting
-  static void setMocked() => _mocked = true;
 }
+
 ```
 
 To register a service with Arcane, simply add the instance of the `ArcaneService` to your list of services when initializing the `ArcaneApp`.
@@ -88,7 +88,14 @@ ArcaneApp(
 ),
 ```
 
-Service properties can be accessed either directly (e.g., `FavoriteColorService.I.myFavoriteColor`) or via `BuildContext` (e.g., `context.serviceOfType<FavoriteColorService>()?.myFavoriteColor`). If the `notifyListeners()` method is included within your service, any widgets that are referencing the service property through `BuildContext` will automatically be notified of the change.
+Service properties can be accessed either directly (e.g., `FavoriteColorService.I.myFavoriteColor`) or via `BuildContext` (e.g., `context.serviceOfType<FavoriteColorService>()?.myFavoriteColor`). If the `notifyListeners()` method is included within your service, any widgets that are referencing the service property through `BuildContext` will automatically be notified of the change. Additionally, a listener can be added to watch the value for changes.
+
+```dart
+FavoriteColorService.I.notifier.addListener(() {
+  final Color? color = FavoriteColorService.I.myFavoriteColor;
+  // Do something with the value
+});
+```
 
 ### Feature Flags
 
@@ -154,6 +161,14 @@ To get a list of the currently enabled features, simply ask the Arcane feature f
 final List<Enum> enabledFeatures = Arcane.features.enabledFeatures;
 ```
 
+It is also possible to add a listener to watch for changes in the enabled features.
+
+```dart
+Arcane.features.notifier.addListener(() {
+  print("Features changed: ${Arcane.features.enabledFeatures}");
+});
+```
+
 Note that it is possible to register multiple different `Enum` types in the feature flag service, should one have a need to do so.
 
 ### Logging
@@ -166,17 +181,13 @@ To get started, first create one or more logging interfaces, extending the `Logg
 class DebugConsole implements LoggingInterface {
   static final DebugConsole _instance = DebugConsole._internal();
   static DebugConsole get I => _instance;
+  DebugConsole._internal();
 
   final bool _initialized = true;
 
   @override
   bool get initialized => I._initialized;
 
-  DebugConsole._internal();
-
-  @visibleForTesting
-  void setMocked() => _mocked = true;
-  bool _mocked = false;
 
   @override
   void log(
@@ -192,11 +203,7 @@ class DebugConsole implements LoggingInterface {
   }
 
   @override
-  Future<LoggingInterface?> init() async {
-    if (_mocked) return null;
-
-    return I;
-  }
+  Future<LoggingInterface?> init() async => I;
 }
 ```
 
