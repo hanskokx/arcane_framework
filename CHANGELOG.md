@@ -1,3 +1,7 @@
+## 1.2.4
+
+- Update package dependencies
+
 ## 1.2.3
 
 - Added `ValueNotifier`s to both the `ArcaneAuthenticationService` and
