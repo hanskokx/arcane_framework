@@ -1,3 +1,7 @@
+## 1.2.5
+
+- Improved automatic metadata detection in `ArcaneLogger`
+
 ## 1.2.4
 
 - Update package dependencies
