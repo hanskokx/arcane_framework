@@ -132,8 +132,12 @@ class ArcaneLogger {
     metadata.putIfAbsent("timestamp", () => now);
 
     try {
-      final List<String> parts =
-          StackTrace.current.toString().split("\n")[2].split(RegExp("#2"))[1].trimLeft().split(".");
+      final List<String> parts = StackTrace.current
+          .toString()
+          .split("\n")[2]
+          .split(RegExp("#2"))[1]
+          .trimLeft()
+          .split(".");
 
       module ??= parts.first.replaceFirst("new ", "");
       method ??= parts[1].split(" ").first.replaceAll("<anonymous", "");
@@ -147,10 +151,12 @@ class ArcaneLogger {
           .last
           .split(":");
 
-      final String fileAndLine = "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
+      final String fileAndLine =
+          "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
 
       metadata.putIfAbsent("module", () => module!);
-      if (method.isNotNullOrEmpty) metadata.putIfAbsent("method", () => method!);
+      if (method.isNotNullOrEmpty)
+        metadata.putIfAbsent("method", () => method!);
       metadata.putIfAbsent("filenameAndLineNumber", () => fileAndLine);
     } catch (_) {}
 

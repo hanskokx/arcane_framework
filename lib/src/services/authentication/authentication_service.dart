@@ -14,7 +14,8 @@ part "authentication_interface.dart";
 class ArcaneAuthenticationService extends ArcaneService {
   ArcaneAuthenticationService._internal();
 
-  static final ArcaneAuthenticationService _instance = ArcaneAuthenticationService._internal();
+  static final ArcaneAuthenticationService _instance =
+      ArcaneAuthenticationService._internal();
 
   /// Provides access to the singleton instance of this service.
   static ArcaneAuthenticationService get I => _instance;
@@ -50,11 +51,13 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
-  Future<String?> get accessToken => authInterface?.accessToken ?? Future.value("");
+  Future<String?> get accessToken =>
+      authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
-  Future<String?> get refreshToken => authInterface?.refreshToken ?? Future.value("");
+  Future<String?> get refreshToken =>
+      authInterface?.refreshToken ?? Future.value("");
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
@@ -273,7 +276,8 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     final auth = authInterface as ArcaneAuthAccountRegistration;
 
-    final Future<Result<String, String>>? result = auth.resendVerificationCode(input: email);
+    final Future<Result<String, String>>? result =
+        auth.resendVerificationCode(input: email);
 
     if (result == null) {
       return Result.error(
