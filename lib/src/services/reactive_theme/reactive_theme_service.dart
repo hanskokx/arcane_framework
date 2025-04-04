@@ -18,29 +18,30 @@ class ArcaneReactiveTheme extends ArcaneService {
 
   ArcaneReactiveTheme._internal();
 
-  /// Whether the current theme is dark.
-  bool _isDark = false;
+  final ValueNotifier<ThemeMode> _systemThemeNotifier =
+      ValueNotifier(ThemeMode.light);
 
   /// Returns the current theme mode based on `_isDark`.
   ///
   /// If `_isDark` is true, it returns `ThemeMode.dark`, otherwise it returns `ThemeMode.light`.
-  ThemeMode get currentMode => _isDark ? ThemeMode.dark : ThemeMode.light;
+  ThemeMode get currentMode => I._systemThemeNotifier.value;
 
   /// The `ThemeData` for the dark theme.
-  ThemeData _darkTheme = ThemeData.dark();
+  final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
 
   /// The `ThemeData` for the light theme.
-  ThemeData _lightTheme = ThemeData.light();
+  final ValueNotifier<ThemeData> _lightTheme = ValueNotifier(ThemeData.light());
 
   /// Returns the current dark theme `ThemeData`.
-  ThemeData get dark => _darkTheme;
+  ThemeData get dark => _darkTheme.value;
+  ValueNotifier<ThemeData> get darkTheme => I._darkTheme;
 
   /// Returns the current light theme `ThemeData`.
-  ThemeData get light => _lightTheme;
+  ThemeData get light => _lightTheme.value;
+  ValueNotifier<ThemeData> get lightTheme => I._lightTheme;
 
   /// A listenable that notifies listeners when the syste theme mode changes.
-  ValueListenable<ThemeMode> get systemTheme =>
-      ValueNotifier<ThemeMode>(_isDark ? ThemeMode.dark : ThemeMode.light);
+  ValueListenable<ThemeMode> get systemTheme => I._systemThemeNotifier;
 
   /// Switches the current theme between light and dark modes.
   ///
@@ -52,7 +53,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ArcaneReactiveTheme.I.switchTheme();
   /// ```
   ArcaneReactiveTheme switchTheme() {
-    _isDark = !_isDark;
+    _systemThemeNotifier.value = _systemThemeNotifier.value == ThemeMode.light
+        ? ThemeMode.dark
+        : ThemeMode.light;
     notifyListeners();
 
     return I;
@@ -87,7 +90,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ArcaneReactiveTheme.I.setDarkTheme(customDarkTheme);
   /// ```
   ArcaneReactiveTheme setDarkTheme(ThemeData theme) {
-    _darkTheme = theme;
+    _darkTheme.value = theme;
     notifyListeners();
     return I;
   }
@@ -102,8 +105,16 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ArcaneReactiveTheme.I.setLightTheme(customLightTheme);
   /// ```
   ArcaneReactiveTheme setLightTheme(ThemeData theme) {
-    _lightTheme = theme;
+    _lightTheme.value = theme;
     notifyListeners();
     return I;
+  }
+
+  @visibleForTesting
+  void reset() {
+    _darkTheme.value = ThemeData.dark();
+    _lightTheme.value = ThemeData.light();
+    _systemThemeNotifier.value = ThemeMode.light;
+    notifyListeners();
   }
 }
