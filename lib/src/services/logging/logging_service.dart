@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
+import "package:flutter/foundation.dart";
 
 part "logging_enums.dart";
 part "logging_interface.dart";
@@ -174,9 +175,27 @@ class ArcaneLogger {
     }
   }
 
-  /// Registers a [LoggingInterface] with the [ArcaneLogger]. Due to iOS app
-  /// tracking permissions, permission to track must first be checked for
-  /// and (optionally) granted before the interface is automatically initialized.
+  /// Registers a [LoggingInterface] with the [ArcaneLogger].
+  /// Due to iOS app tracking permissions, permission to track must first be
+  /// checked for and (optionally) granted before the interface is automatically
+  /// initialized.
+  ///
+  /// Once your [LoggingInterface] has been registered and initialized, logs
+  /// will automatically be sent to the interface.
+  Future<ArcaneLogger> registerInterface(
+    LoggingInterface loggingInterface,
+  ) async {
+    if (!initialized) await _init();
+
+    I._interfaces.add(loggingInterface);
+
+    return I;
+  }
+
+  /// Registers a `List` of [LoggingInterface] with the [ArcaneLogger].
+  /// Due to iOS app tracking permissions, permission to track must first be
+  /// checked for and (optionally) granted before the interface is automatically
+  /// initialized.
   ///
   /// Once your [LoggingInterface] has been registered and initialized, logs
   /// will automatically be sent to the interface.
@@ -192,15 +211,37 @@ class ArcaneLogger {
     return I;
   }
 
+  /// Unregisters a `List` of [LoggingInterface] from the [ArcaneLogger], if
+  /// they were previously registered.
+  Future<ArcaneLogger> unregisterInterfaces(
+    List<LoggingInterface> interfaces,
+  ) async {
+    if (!initialized) await _init();
+
+    for (final LoggingInterface i in interfaces) {
+      I._interfaces.remove(i);
+    }
+
+    return I;
+  }
+
+  /// Unregisters all previously registered [LoggingInterface] from the
+  /// [ArcaneLogger], if any were previously registered.
+  Future<ArcaneLogger> unregisterAllInterfaces() async {
+    if (!initialized) await _init();
+    I._interfaces.clear();
+    return I;
+  }
+
   /// Initializes all registered [LoggingInterface]s by calling their
   /// [LoggingInterface.init] methods.
   Future<ArcaneLogger> initializeInterfaces() async {
-    assert(
-      I._interfaces.isNotEmpty,
-      "No logging interfaces have been registered.",
-    );
+    if (!initialized) await _init();
 
-    if (!I._initialized) await _init();
+    if (I._interfaces.isEmptyOrNull) {
+      throw Exception("No logging interfaces have been registered.");
+    }
+
     for (final LoggingInterface i in I._interfaces) {
       if (!i.initialized) await i.init();
     }
@@ -245,4 +286,11 @@ class ArcaneLogger {
 
   /// Clears all persistent metadata.
   void clearPersistentMetadata() => _additionalMetadata.clear();
+
+  @visibleForTesting
+  void reset() {
+    I._interfaces.clear();
+    I._initialized = false;
+    I._additionalMetadata.clear();
+  }
 }

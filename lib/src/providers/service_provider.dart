@@ -53,14 +53,12 @@ class ArcaneServiceProvider extends InheritedNotifier {
   /// final provider = ArcaneServiceProvider.of(context);
   /// ```
   static ArcaneServiceProvider of(BuildContext context) {
-    final ArcaneServiceProvider? result =
-        context.dependOnInheritedWidgetOfExactType<ArcaneServiceProvider>();
-
-    if (result == null) {
+    try {
+      return context
+          .dependOnInheritedWidgetOfExactType<ArcaneServiceProvider>()!;
+    } catch (e) {
       throw Exception("ArcaneServiceProvider not found in context");
     }
-
-    return result;
   }
 }
 

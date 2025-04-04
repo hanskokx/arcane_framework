@@ -2,7 +2,6 @@ import "dart:async";
 
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/widgets.dart";
-import "package:flutter_bloc/flutter_bloc.dart";
 
 part "authentication_enums.dart";
 part "authentication_interface.dart";
@@ -59,12 +58,15 @@ class ArcaneAuthenticationService extends ArcaneService {
   Future<String?> get refreshToken =>
       authInterface?.refreshToken ?? Future.value("");
 
+  AuthenticationStatus? _previousModeWhenSettingDebug;
+
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
   Future<void> reset() async {
     _authInterface = null;
     _notifier.value = AuthenticationStatus.unauthenticated;
     _isSignedIn.value = isAuthenticated;
+    _previousModeWhenSettingDebug = null;
     notifyListeners();
   }
 
@@ -85,17 +87,18 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
   }) async {
-    ArcaneEnvironment? environment;
-
     try {
-      environment = context.read<ArcaneEnvironment>();
-      final Environment previousEnvironment = environment.state;
+      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+
+      final Environment previousEnvironment = arcaneEnvironment.environment;
 
       if (previousEnvironment == Environment.debug) return;
 
-      environment.enableDebugMode();
+      _previousModeWhenSettingDebug = status;
 
-      final Environment currentEnvironment = environment.state;
+      arcaneEnvironment.enableDebugMode();
+
+      final Environment currentEnvironment = arcaneEnvironment.environment;
 
       if (previousEnvironment == currentEnvironment) {
         throw Exception("Unable to switch to debug mode.");
@@ -103,8 +106,8 @@ class ArcaneAuthenticationService extends ArcaneService {
 
       _setStatus(AuthenticationStatus.debug);
       if (onDebugModeSet != null) await onDebugModeSet();
-    } catch (_) {
-      throw Exception("No ArcaneEnvironment found in BuildContext");
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -115,23 +118,24 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
-    ArcaneEnvironment? environment;
-
     try {
-      environment = context.read<ArcaneEnvironment>();
-      final Environment previousEnvironment = environment.state;
+      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+
+      final Environment previousEnvironment = arcaneEnvironment.environment;
 
       if (previousEnvironment == Environment.normal) return;
 
-      environment.disableDebugMode();
+      arcaneEnvironment.disableDebugMode();
 
-      final Environment currentEnvironment = environment.state;
+      final Environment currentEnvironment = arcaneEnvironment.environment;
 
       if (previousEnvironment == currentEnvironment) {
         throw Exception("Unable to switch to normal mode.");
       }
 
-      _setStatus(AuthenticationStatus.debug);
+      _setStatus(
+        _previousModeWhenSettingDebug ?? AuthenticationStatus.unauthenticated,
+      );
       if (onDebugModeUnset != null) await onDebugModeUnset();
     } catch (_) {
       throw Exception("No ArcaneEnvironment found in BuildContext");
@@ -173,6 +177,8 @@ class ArcaneAuthenticationService extends ArcaneService {
       setUnauthenticated();
       if (onLoggedOut != null) await onLoggedOut();
     }
+
+    _previousModeWhenSettingDebug = null;
 
     return loggedOut;
   }

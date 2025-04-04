@@ -6,14 +6,7 @@ import "package:arcane_framework/arcane_framework.dart";
 /// `Arcane` provides access to important services like logging, feature flags,
 /// authentication, theming, secure storage, and ID management. It also offers a
 /// convenient method for logging messages using the integrated logger.
-class Arcane {
-  Arcane._internal();
-
-  /// Creates a singleton instance of `Arcane`.
-  ///
-  /// This factory constructor always returns the same instance of `Arcane`.
-  factory Arcane() => Arcane._internal();
-
+abstract class Arcane {
   /// Provides access to the singleton instance of the logger service.
   ///
   /// The `ArcaneLogger` is used for logging messages throughout the app.
