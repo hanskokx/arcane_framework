@@ -177,4 +177,16 @@ class ArcaneFeatureFlagService extends ArcaneService {
       ..clear()
       ..addAll(notifier.value);
   }
+
+  /// Resets the feature flags to their initial state.
+  ///
+  /// This method clears all enabled features, resets notification values,
+  /// marks the flags as uninitialized, and notifies listeners of the changes.
+  void reset() {
+    _enabledFeatures.clear();
+    _notifier.value.clear();
+
+    I._initialized = false;
+    notifyListeners();
+  }
 }
