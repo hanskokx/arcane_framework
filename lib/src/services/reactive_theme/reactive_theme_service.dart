@@ -52,10 +52,15 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```dart
   /// ArcaneReactiveTheme.I.switchTheme();
   /// ```
-  ArcaneReactiveTheme switchTheme() {
-    _systemThemeNotifier.value = _systemThemeNotifier.value == ThemeMode.light
-        ? ThemeMode.dark
-        : ThemeMode.light;
+  ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
+    if (themeMode != null) {
+      _systemThemeNotifier.value = themeMode;
+    } else {
+      _systemThemeNotifier.value = _systemThemeNotifier.value == ThemeMode.light
+          ? ThemeMode.dark
+          : ThemeMode.light;
+    }
+
     notifyListeners();
 
     return I;
