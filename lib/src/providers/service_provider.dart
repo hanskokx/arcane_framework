@@ -105,4 +105,7 @@ extension ServiceProvider on BuildContext {
 /// to notify listeners of changes. Services are typically registered in
 /// `ArcaneServiceProvider` and can be accessed using the `serviceOfType`
 /// method on `BuildContext`.
-abstract class ArcaneService with ChangeNotifier {}
+abstract class ArcaneService with ChangeNotifier {
+  static T? of<T extends ArcaneService>(BuildContext context) =>
+      context.serviceOfType<T>();
+}
