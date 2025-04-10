@@ -66,7 +66,7 @@ These methods have been moved to mixin classes. To continue using them, please
 update your ArcaneAuthInterface implementations.
 
 - To use `resendVerificationCode`, `register` and `confirmSignup`, use the new
-`ArcaneAuthAccountRegistration` mixin.
+  `ArcaneAuthAccountRegistration` mixin.
 - To use `resetPassword`, use the new `ArcaneAuthPasswordManagement` mixin.
 
 ### Migration
