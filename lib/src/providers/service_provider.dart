@@ -38,9 +38,7 @@ class ArcaneServiceProvider extends InheritedNotifier {
   /// This always returns `true`, meaning dependents will always be notified
   /// when this widget is rebuilt.
   @override
-  bool updateShouldNotify(ArcaneServiceProvider oldWidget) {
-    return true;
-  }
+  bool updateShouldNotify(_) => true;
 
   /// Retrieves the nearest `ArcaneServiceProvider` in the widget tree.
   ///
@@ -105,7 +103,7 @@ extension ServiceProvider on BuildContext {
 /// to notify listeners of changes. Services are typically registered in
 /// `ArcaneServiceProvider` and can be accessed using the `serviceOfType`
 /// method on `BuildContext`.
-abstract class ArcaneService with ChangeNotifier {
+abstract class ArcaneService<T> with ChangeNotifier {
   static T? of<T extends ArcaneService>(BuildContext context) =>
-      context.serviceOfType<T>();
+      context.serviceOfType();
 }
