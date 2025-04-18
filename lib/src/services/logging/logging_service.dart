@@ -203,7 +203,7 @@ class ArcaneLogger {
         ...?parts?.split("(package:").lastOrNull?.split(":"),
       ];
 
-      if (fileAndLineParts.length <= 2) {
+      if (fileAndLineParts.length < 2) {
         filenameAndLineNumber = fileAndLineParts.firstOrNull;
       } else {
         filenameAndLineNumber = "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
