@@ -46,7 +46,10 @@ class ArcaneApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ArcaneEnvironmentProvider(
       child: ArcaneServiceProvider(
-        serviceInstances: services,
+        serviceInstances: [
+          ArcaneReactiveTheme.I,
+          ...services,
+        ],
         child: child,
       ),
     );
