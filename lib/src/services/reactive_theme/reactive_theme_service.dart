@@ -1,5 +1,4 @@
 import "package:arcane_framework/arcane_framework.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
 part "reactive_theme_extensions.dart";
@@ -21,10 +20,13 @@ class ArcaneReactiveTheme extends ArcaneService {
   final ValueNotifier<ThemeMode> _systemThemeNotifier =
       ValueNotifier(ThemeMode.light);
 
-  /// Returns the current theme mode based on `_isDark`.
-  ///
-  /// If `_isDark` is true, it returns `ThemeMode.dark`, otherwise it returns `ThemeMode.light`.
-  ThemeMode get currentMode => I._systemThemeNotifier.value;
+  final ValueNotifier<ThemeMode> _currentThemeNotifier =
+      ValueNotifier(ThemeMode.light);
+
+  ThemeMode get currentTheme => I._currentThemeNotifier.value;
+
+  /// A listenable that notifies listeners when the system theme mode changes.
+  ThemeMode get systemTheme => I._systemThemeNotifier.value;
 
   /// The `ThemeData` for the dark theme.
   final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
@@ -40,9 +42,6 @@ class ArcaneReactiveTheme extends ArcaneService {
   ThemeData get light => _lightTheme.value;
   ValueNotifier<ThemeData> get lightTheme => I._lightTheme;
 
-  /// A listenable that notifies listeners when the syste theme mode changes.
-  ValueListenable<ThemeMode> get systemTheme => I._systemThemeNotifier;
-
   /// Switches the current theme between light and dark modes.
   ///
   /// If the theme is currently light, it switches to dark, and vice versa. It also
@@ -53,12 +52,17 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ArcaneReactiveTheme.I.switchTheme();
   /// ```
   ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
+    if (I._systemThemeNotifier.hasListeners) {
+      _systemThemeNotifier.removeListener(_systemThemeListener);
+    }
+
     if (themeMode != null) {
-      _systemThemeNotifier.value = themeMode;
+      _currentThemeNotifier.value = themeMode;
     } else {
-      _systemThemeNotifier.value = _systemThemeNotifier.value == ThemeMode.light
-          ? ThemeMode.dark
-          : ThemeMode.light;
+      _currentThemeNotifier.value =
+          _currentThemeNotifier.value == ThemeMode.light
+              ? ThemeMode.dark
+              : ThemeMode.light;
     }
 
     notifyListeners();
@@ -78,8 +82,13 @@ class ArcaneReactiveTheme extends ArcaneService {
     final ThemeMode systemMode =
         context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
-    if (currentMode != systemMode) {
-      switchTheme();
+    if (!I._systemThemeNotifier.hasListeners) {
+      I._systemThemeNotifier.addListener(_systemThemeListener);
+    }
+
+    if (systemMode != currentTheme) {
+      _systemThemeNotifier.value = systemMode;
+      notifyListeners();
     }
 
     return I;
@@ -120,6 +129,14 @@ class ArcaneReactiveTheme extends ArcaneService {
     _darkTheme.value = ThemeData.dark();
     _lightTheme.value = ThemeData.light();
     _systemThemeNotifier.value = ThemeMode.light;
+    _currentThemeNotifier.value = ThemeMode.light;
     notifyListeners();
+  }
+
+  void _systemThemeListener() {
+    if (currentTheme != _systemThemeNotifier.value) {
+      _currentThemeNotifier.value = _systemThemeNotifier.value;
+      notifyListeners();
+    }
   }
 }

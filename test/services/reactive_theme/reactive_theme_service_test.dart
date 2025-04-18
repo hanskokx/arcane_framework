@@ -16,15 +16,15 @@ void main() {
 
     group("theme mode", () {
       test("initial mode is light", () {
-        expect(theme.currentMode, equals(ThemeMode.light));
+        expect(theme.currentTheme, equals(ThemeMode.light));
       });
 
       test("switchTheme toggles between light and dark", () {
-        expect(theme.currentMode, equals(ThemeMode.light));
+        expect(theme.currentTheme, equals(ThemeMode.light));
         theme.switchTheme();
-        expect(theme.currentMode, equals(ThemeMode.dark));
+        expect(theme.currentTheme, equals(ThemeMode.dark));
         theme.switchTheme();
-        expect(theme.currentMode, equals(ThemeMode.light));
+        expect(theme.currentTheme, equals(ThemeMode.light));
       });
 
       test("switching theme notifies listeners", () {
@@ -66,7 +66,7 @@ void main() {
         });
 
         theme.addListener(() {
-          currentTheme = theme.currentMode;
+          currentTheme = theme.currentTheme;
         });
 
         expect(currentTheme, ThemeMode.system);
@@ -103,7 +103,7 @@ void main() {
         final BuildContext lightContext = tester.element(find.byType(SizedBox));
         theme.followSystemTheme(lightContext);
 
-        expect(theme.currentMode, equals(ThemeMode.light));
+        expect(theme.currentTheme, equals(ThemeMode.light));
 
         await tester.pumpWidget(
           const MediaQuery(
@@ -113,9 +113,8 @@ void main() {
         );
 
         final BuildContext darkContext = tester.element(find.byType(SizedBox));
-
         theme.followSystemTheme(darkContext);
-        expect(theme.currentMode, equals(ThemeMode.dark));
+        expect(theme.currentTheme, equals(ThemeMode.dark));
       });
 
       testWidgets("followSystemTheme only switches when needed",

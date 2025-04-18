@@ -61,7 +61,7 @@ class _MainAppState extends State<MainApp> {
         debugShowCheckedModeBanner: false,
         theme: Arcane.theme.light,
         darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.currentMode,
+        themeMode: Arcane.theme.currentTheme,
         home: Scaffold(
           appBar: AppBar(
             title: const Text("Arcane Framework Example"),
