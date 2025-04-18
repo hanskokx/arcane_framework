@@ -1,7 +1,7 @@
 import "dart:async";
 
+import "package:arcane_framework/src/services/logging/logging_interface_extensions.dart";
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
-import "package:flutter/foundation.dart";
 
 part "logging_enums.dart";
 part "logging_interface.dart";
@@ -12,7 +12,7 @@ part "logging_interface.dart";
 /// The `ArcaneLogger` provides a centralized way to log messages across
 /// different parts of an application. It supports multiple logging interfaces,
 /// metadata, and platform-specific error handling.
-class ArcaneLogger {
+class ArcaneLogger with FileAndLineNumber {
   ArcaneLogger._internal();
 
   static final ArcaneLogger _instance = ArcaneLogger._internal();
@@ -115,13 +115,61 @@ class ArcaneLogger {
   /// ```
   ///
   void log(
+    /// The message to be logged
     String message, {
+    /// The Dart class from which the `log` call was invoked. This is useful
+    /// in determining which part of the code called the log event. If the
+    /// [module] is not specified and [skipAutodetection] is set to [false],
+    /// [ArcaneLogger] will attempt to derive this value automatically. However,
+    /// this may fail in some cases and could potentially adversely impact
+    /// performance.
     String? module,
+
+    /// The method from which the `log` call was invoked. This is useful
+    /// in determining which part of the code called the log event. If the
+    /// [method] is not specified and [skipAutodetection] is set to [false],
+    /// [ArcaneLogger] will attempt to derive this value automatically. However,
+    /// this may fail in some cases and could potentially adversely impact
+    /// performance.
     String? method,
+
+    /// This value defines the severity of the log message. The default value is
+    /// [Level.debug].
     Level level = Level.debug,
+
+    /// A [StackTrace] can be passed into the `log` call for further processing
+    /// by the registered [LoggingInterface]s.
     StackTrace? stackTrace,
+
+    /// The provided [metadata] will be merged with any previously registered
+    /// persistent metadata. If the [module] and/or [method] are provided, these
+    /// values will be merged with the [metadata] as well, otherwise if one or
+    /// none of these values are provided and [skipAutodetection] is set to
+    /// [false] (default), the module, method, and/or [filenameAndLineNumber]
+    /// will be automatically determined and added to the [metadata] if the
+    /// values are not already present.
     Map<String, String>? metadata,
+
+    /// The [extra] parameter can be used to pass _any_ object into the
+    /// registered [LoggingInterface]s.
     Object? extra,
+
+    /// If set to [true], this parameter will skip automatically trying to
+    /// determine the current log message's [module], [method], and
+    /// [filenameAndLineNumber].
+    ///
+    /// If set to [true] and the [filenameAndLineNumber] are desired, they
+    /// should be calculated by the [LoggingInterface] and added as as
+    /// [metadata].
+    ///
+    /// If this value is [false] (default), the [module] and [method] will only
+    /// be added to the [metadata] if they are not otherwise provided. However,
+    /// the [filenameAndLineNumber] will automatically be added _unless_ it is
+    /// already in the [metadata] provided.
+    ///
+    /// When set to [true], the automatic generation of these values _may_
+    /// impact performance.
+    bool skipAutodetection = false,
   }) {
     if (!I._initialized) {
       throw Exception("ArcaneLogger has not yet been initialized.");
@@ -129,37 +177,41 @@ class ArcaneLogger {
 
     metadata ??= <String, String>{};
 
-    final String now = DateTime.now().toIso8601String();
-    metadata.putIfAbsent("timestamp", () => now);
+    metadata.putIfAbsent("timestamp", () => DateTime.now().toIso8601String());
 
-    try {
-      final List<String> parts = StackTrace.current
-          .toString()
-          .split("\n")[2]
-          .split(RegExp("#2"))[1]
-          .trimLeft()
-          .split(".");
-
-      module ??= parts.first.replaceFirst("new ", "");
-      method ??= parts[1].split(" ").first.replaceAll("<anonymous", "");
-
-      final List<String> fileAndLineParts = StackTrace.current
-          .toString()
-          .split("\n")[2]
-          .split(RegExp("#2"))[1]
-          .trim()
-          .split("(package:")
-          .last
-          .split(":");
-
-      final String fileAndLine =
-          "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
-
+    if (module.isNotEmptyOrNull) {
       metadata.putIfAbsent("module", () => module!);
-      if (method.isNotNullOrEmpty)
-        metadata.putIfAbsent("method", () => method!);
-      metadata.putIfAbsent("filenameAndLineNumber", () => fileAndLine);
-    } catch (_) {}
+    } else if (!metadata.containsKey("module") &&
+        metadata["module"].isNullOrEmpty) {
+      try {
+        if (FileAndLineNumber.module.isNotNullOrEmpty) {
+          metadata.putIfAbsent("module", () => FileAndLineNumber.module!);
+        }
+      } catch (_) {}
+    }
+
+    if (method.isNotEmptyOrNull) {
+      metadata.putIfAbsent("method", () => method!);
+    } else if (!metadata.containsKey("method") &&
+        metadata["method"].isNullOrEmpty) {
+      try {
+        if (FileAndLineNumber.method.isNotNullOrEmpty) {
+          metadata.putIfAbsent("method", () => FileAndLineNumber.method!);
+        }
+      } catch (_) {}
+    }
+
+    if (!metadata.containsKey("filenameAndLineNumber") &&
+        metadata["filenameAndLineNumber"].isNullOrEmpty) {
+      try {
+        if (FileAndLineNumber.fileAndLine.isNotNullOrEmpty) {
+          metadata.putIfAbsent(
+            "filenameAndLineNumber",
+            () => FileAndLineNumber.fileAndLine!,
+          );
+        }
+      } catch (_) {}
+    }
 
     metadata.addAll(additionalMetadata);
 
@@ -207,6 +259,18 @@ class ArcaneLogger {
     for (final LoggingInterface i in interfaces) {
       I._interfaces.add(i);
     }
+
+    return I;
+  }
+
+  /// Unregisters a [LoggingInterface] from the [ArcaneLogger], if it was
+  /// previously registered.
+  Future<ArcaneLogger> unregisterInterface(
+    LoggingInterface interface,
+  ) async {
+    if (!initialized) await _init();
+
+    I._interfaces.remove(interface);
 
     return I;
   }
@@ -287,7 +351,9 @@ class ArcaneLogger {
   /// Clears all persistent metadata.
   void clearPersistentMetadata() => _additionalMetadata.clear();
 
-  @visibleForTesting
+  /// Resets the Arcane logging service by clearing all persistent metadata,
+  /// clearing all registered [LoggingInterface]s and marking the logging
+  /// service as no longer being initialized.
   void reset() {
     I._interfaces.clear();
     I._initialized = false;
