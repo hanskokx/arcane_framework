@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:developer" as dev;
 
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
 
@@ -232,10 +231,6 @@ class ArcaneLogger {
 
     module ??= metadata.containsKey("module") ? metadata["module"] : null;
     method ??= metadata.containsKey("method") ? metadata["method"] : null;
-
-    dev.log(
-      "Module: $module, Method: $method",
-    );
 
     // Send logs to registered interface(s)
     for (final LoggingInterface i in I._interfaces) {
