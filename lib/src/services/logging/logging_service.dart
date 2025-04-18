@@ -1,6 +1,6 @@
 import "dart:async";
+import "dart:developer" as dev;
 
-import "package:arcane_framework/src/services/logging/logging_interface_extensions.dart";
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
 
 part "logging_enums.dart";
@@ -12,7 +12,7 @@ part "logging_interface.dart";
 /// The `ArcaneLogger` provides a centralized way to log messages across
 /// different parts of an application. It supports multiple logging interfaces,
 /// metadata, and platform-specific error handling.
-class ArcaneLogger with FileAndLineNumber {
+class ArcaneLogger {
   ArcaneLogger._internal();
 
   static final ArcaneLogger _instance = ArcaneLogger._internal();
@@ -176,44 +176,66 @@ class ArcaneLogger with FileAndLineNumber {
     }
 
     metadata ??= <String, String>{};
-
     metadata.putIfAbsent("timestamp", () => DateTime.now().toIso8601String());
 
+    String? parts;
+    String? filenameAndLineNumber;
+    if (!skipAutodetection) {
+      try {
+        parts = StackTrace.current
+            .toString()
+            .split("\n")[2]
+            .split(RegExp("#2"))[1]
+            .trim();
+      } catch (_) {}
+
+      module ??= parts?.split(".").firstOrNull?.replaceFirst("new ", "");
+
+      method ??= ((parts?.split(".").length ?? 0) <= 1)
+          ? null
+          : parts
+              ?.split(".")[1]
+              .split(" ")
+              .firstOrNull
+              ?.replaceAll("<anonymous", "");
+
+      final List<String> fileAndLineParts = [
+        ...?parts?.split("(package:").lastOrNull?.split(":"),
+      ];
+
+      if (fileAndLineParts.length <= 2) {
+        filenameAndLineNumber = fileAndLineParts.firstOrNull;
+      } else {
+        filenameAndLineNumber = "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
+      }
+    }
+
+    // Module management
     if (module.isNotEmptyOrNull) {
       metadata.putIfAbsent("module", () => module!);
-    } else if (!metadata.containsKey("module") &&
-        metadata["module"].isNullOrEmpty) {
-      try {
-        if (FileAndLineNumber.module.isNotNullOrEmpty) {
-          metadata.putIfAbsent("module", () => FileAndLineNumber.module!);
-        }
-      } catch (_) {}
     }
 
+    // Method managmeent
     if (method.isNotEmptyOrNull) {
       metadata.putIfAbsent("method", () => method!);
-    } else if (!metadata.containsKey("method") &&
-        metadata["method"].isNullOrEmpty) {
-      try {
-        if (FileAndLineNumber.method.isNotNullOrEmpty) {
-          metadata.putIfAbsent("method", () => FileAndLineNumber.method!);
-        }
-      } catch (_) {}
     }
 
-    if (!metadata.containsKey("filenameAndLineNumber") &&
-        metadata["filenameAndLineNumber"].isNullOrEmpty) {
-      try {
-        if (FileAndLineNumber.fileAndLine.isNotNullOrEmpty) {
-          metadata.putIfAbsent(
-            "filenameAndLineNumber",
-            () => FileAndLineNumber.fileAndLine!,
-          );
-        }
-      } catch (_) {}
+    // Filename and line number management
+    if (filenameAndLineNumber.isNotNullOrEmpty) {
+      metadata.putIfAbsent(
+        "filenameAndLineNumber",
+        () => filenameAndLineNumber!,
+      );
     }
 
     metadata.addAll(additionalMetadata);
+
+    module ??= metadata.containsKey("module") ? metadata["module"] : null;
+    method ??= metadata.containsKey("method") ? metadata["method"] : null;
+
+    dev.log(
+      "Module: $module, Method: $method",
+    );
 
     // Send logs to registered interface(s)
     for (final LoggingInterface i in I._interfaces) {
