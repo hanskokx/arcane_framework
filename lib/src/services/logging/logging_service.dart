@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:arcane_framework/src/services/logging/logging_interface_extensions.dart";
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
 
 part "log_event.dart";
@@ -14,7 +13,7 @@ part "logging_interface.dart";
 /// The `ArcaneLogger` provides a centralized way to log messages across
 /// different parts of an application. It supports multiple logging interfaces,
 /// metadata, and platform-specific error handling.
-class ArcaneLogger with FileAndLineNumber {
+class ArcaneLogger {
   ArcaneLogger._internal();
 
   static final ArcaneLogger _instance = ArcaneLogger._internal();
