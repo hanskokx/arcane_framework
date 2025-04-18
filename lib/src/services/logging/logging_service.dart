@@ -177,9 +177,9 @@ class ArcaneLogger {
     metadata ??= <String, String>{};
     metadata.putIfAbsent("timestamp", () => DateTime.now().toIso8601String());
 
-    String? parts;
     String? filenameAndLineNumber;
     if (!skipAutodetection) {
+      late final String? parts;
       try {
         parts = StackTrace.current
             .toString()
