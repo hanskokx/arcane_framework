@@ -40,43 +40,45 @@ Future<void> main() async {
     },
   );
 
-  runApp(const MainApp());
-}
-
-class MainApp extends StatefulWidget {
-  const MainApp({super.key});
-
-  @override
-  State<MainApp> createState() => _MainAppState();
-}
-
-class _MainAppState extends State<MainApp> {
-  @override
-  Widget build(BuildContext context) {
-    return ArcaneApp(
+  runApp(
+    ArcaneApp(
       services: [
         IdService.I,
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: Arcane.theme.light,
-        darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.currentTheme,
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text("Arcane Framework Example"),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.contrast),
-                onPressed: () {
-                  Arcane.theme.switchTheme();
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-          body: const HomeScreen(),
+      child: const MainApp(),
+    ),
+  );
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: Arcane.theme.light,
+      darkTheme: Arcane.theme.dark,
+      themeMode: Arcane.theme.currentTheme,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Arcane Framework Example"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_system_daydream),
+              onPressed: () {
+                Arcane.theme.followSystemTheme(context);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.contrast),
+              onPressed: () {
+                Arcane.theme.switchTheme();
+              },
+            ),
+          ],
         ),
+        body: const HomeScreen(),
       ),
     );
   }
@@ -116,11 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 child: const Text("Sign in"),
                 onPressed: () async {
-                  await Arcane.auth.login<Map<String, String>>(
-                    input: {
-                      "email": "email",
-                      "password": "password",
-                    },
+                  await Arcane.auth.login<Credentials>(
+                    input: (
+                      email: "email",
+                      password: "password",
+                    ),
                     onLoggedIn: () async {
                       setState(() {});
                     },
