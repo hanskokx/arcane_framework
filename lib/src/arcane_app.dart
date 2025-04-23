@@ -186,4 +186,37 @@ class _ArcaneAppState extends State<ArcaneApp> {
       ),
     );
   }
+
+  // Update our context reference whenever the widget is built
+  void _updateContextReference(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Only store this context if the widget is still mounted
+      if (mounted) {
+        // Store this context in a way that ArcaneReactiveTheme can access it
+        ArcaneReactiveTheme.I.checkSystemTheme(context);
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Register as an observer to detect system theme changes
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // Clean up the observer when the widget is disposed
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // This is called when the system brightness changes
+    // Check and update the theme if we're following system theme
+    ArcaneReactiveTheme.I.checkSystemTheme(context);
+    super.didChangePlatformBrightness();
+  }
 }
