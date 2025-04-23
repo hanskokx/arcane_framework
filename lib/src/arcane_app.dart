@@ -56,16 +56,15 @@ class _ArcaneAppState extends State<ArcaneApp> with WidgetsBindingObserver {
         serviceInstances: widget.services,
         child: Builder(
           key: _appKey,
-          builder: (context) {
-            _updateContextReference(context);
-
+          builder: (BuildContext currentContext) {
             return StreamBuilder<ThemeMode>(
               stream: ArcaneReactiveTheme.I.currentThemeStream,
+              initialData: ArcaneReactiveTheme.I.currentTheme,
               builder: (context, AsyncSnapshot<ThemeMode> snapshot) {
-                if (!snapshot.hasData) return widget.child;
+                final ThemeMode themeMode = snapshot.data ?? ThemeMode.light;
 
-                return KeyedSubtree(
-                  key: Key(snapshot.data!.name),
+                return ArcaneTheme(
+                  themeMode: themeMode,
                   child: widget.child,
                 );
               },
@@ -74,17 +73,6 @@ class _ArcaneAppState extends State<ArcaneApp> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-
-  // Update our context reference whenever the widget is built
-  void _updateContextReference(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Only store this context if the widget is still mounted
-      if (mounted) {
-        // Store this context in a way that ArcaneReactiveTheme can access it
-        ArcaneReactiveTheme.I.checkSystemTheme(context);
-      }
-    });
   }
 
   @override
@@ -103,9 +91,17 @@ class _ArcaneAppState extends State<ArcaneApp> with WidgetsBindingObserver {
 
   @override
   void didChangePlatformBrightness() {
-    // This is called when the system brightness changes
-    // Check and update the theme if we're following system theme
-    ArcaneReactiveTheme.I.checkSystemTheme(context);
+    // When system brightness changes, find the current builder context
+    // and use it to check the system theme
+    if (mounted && _appKey.currentContext != null) {
+      // Use the current context from the key to check system theme
+      final BuildContext currentContext = _appKey.currentContext!;
+      if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ArcaneReactiveTheme.I.checkSystemTheme(currentContext);
+        });
+      }
+    }
     super.didChangePlatformBrightness();
   }
 }

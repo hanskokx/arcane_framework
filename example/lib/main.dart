@@ -59,7 +59,8 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Arcane.theme.light,
       darkTheme: Arcane.theme.dark,
-      themeMode: Arcane.theme.currentTheme,
+      themeMode:
+          ArcaneTheme.of(context)?.themeMode ?? Arcane.theme.currentTheme,
       home: Scaffold(
         appBar: AppBar(
           title: const Text("Arcane Framework Example"),
