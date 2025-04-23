@@ -179,7 +179,7 @@ class ArcaneLogger {
 
     String? filenameAndLineNumber;
     if (!skipAutodetection) {
-      late final String? parts;
+      String? parts;
       try {
         parts = StackTrace.current
             .toString()
