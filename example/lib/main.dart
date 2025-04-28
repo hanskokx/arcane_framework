@@ -59,25 +59,10 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Arcane.theme.light,
       darkTheme: Arcane.theme.dark,
-      themeMode:
-          ArcaneTheme.of(context)?.themeMode ?? Arcane.theme.currentTheme,
+      themeMode: Arcane.theme.currentModeOf(context),
       home: Scaffold(
         appBar: AppBar(
           title: const Text("Arcane Framework Example"),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_system_daydream),
-              onPressed: () {
-                Arcane.theme.followSystemTheme(context);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.contrast),
-              onPressed: () {
-                Arcane.theme.switchTheme();
-              },
-            ),
-          ],
         ),
         body: const HomeScreen(),
       ),
@@ -101,6 +86,49 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Column(
+                      children: [
+                        Checkbox(
+                          value: Arcane.theme.isFollowingSystemTheme,
+                          onChanged: (value) {
+                            if (value == true) {
+                              Arcane.theme.followSystemTheme(context);
+                            } else {
+                              Arcane.theme.switchTheme(
+                                themeMode: Arcane.theme.systemTheme,
+                              );
+                            }
+                          },
+                        ),
+                        const Text("Use system theme"),
+                      ],
+                    ),
+                    Switch(
+                      value: Arcane.theme.currentTheme == ThemeMode.dark,
+                      thumbIcon: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(Icons.dark_mode);
+                        }
+                        return const Icon(Icons.light_mode);
+                      }),
+                      onChanged: (_) {
+                        Arcane.theme.switchTheme();
+                      },
+                    ),
+                    Text(
+                      "The current theme mode is ${context.themeMode.name} and\n"
+                      "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
+                      "following the system theme.",
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Text(
               "Authentication status: ${Arcane.auth.status.name}",
             ),
