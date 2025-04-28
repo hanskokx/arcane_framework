@@ -29,6 +29,16 @@ class ArcaneLogger {
   /// Additional metadata that is included in all logs.
   Map<String, String> get additionalMetadata => I._additionalMetadata;
 
+  final StreamController<String> _logStreamController =
+      StreamController<String>.broadcast(
+    onCancel: () {
+      I._logStreamController.close();
+    },
+  );
+
+  /// Stream of log messages being received and sent to the registered interfaces.
+  Stream<String> get logStream => I._logStreamController.stream;
+
   bool _initialized = false;
 
   /// Whether the logger has been initialized.
@@ -240,6 +250,14 @@ class ArcaneLogger {
         metadata: metadata,
         stackTrace: stackTrace,
         extra: extra,
+      );
+
+      _logStreamController.add(
+        "$message ${{
+          "level": level,
+          "metadata": metadata,
+          "extra": extra,
+        }}",
       );
     }
   }
