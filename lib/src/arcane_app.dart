@@ -207,10 +207,9 @@ class _ArcaneAppState extends State<ArcaneApp> {
     // and use it to check the system theme
     if (mounted && _appKey.currentContext != null) {
       // Use the current context from the key to check system theme
-      final BuildContext currentContext = _appKey.currentContext!;
       if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ArcaneReactiveTheme.I.checkSystemTheme(currentContext);
+          ArcaneReactiveTheme.I.followSystemTheme(context);
         });
       }
     }

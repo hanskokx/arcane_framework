@@ -330,6 +330,49 @@ class ArcaneThemeExample extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Column(
+                      children: [
+                        Checkbox(
+                          value: Arcane.theme.isFollowingSystemTheme,
+                          onChanged: (value) {
+                            if (value == true) {
+                              Arcane.theme.followSystemTheme(context);
+                            } else {
+                              Arcane.theme.switchTheme(
+                                themeMode: Arcane.theme.systemTheme,
+                              );
+                            }
+                          },
+                        ),
+                        const Text("Use system theme"),
+                      ],
+                    ),
+                    Switch(
+                      value: Arcane.theme.currentTheme == ThemeMode.dark,
+                      thumbIcon: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(Icons.dark_mode);
+                        }
+                        return const Icon(Icons.light_mode);
+                      }),
+                      onChanged: (_) {
+                        Arcane.theme.switchTheme();
+                      },
+                    ),
+                    Text(
+                      "The current theme mode is ${context.themeMode.name} and\n"
+                      "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
+                      "following the system theme.",
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Text(
               "Theme",
               style: Theme.of(context).textTheme.headlineSmall,
