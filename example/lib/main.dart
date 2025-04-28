@@ -713,4 +713,20 @@ class ArcaneServicesExample extends StatelessWidget {
       },
     );
   }
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = Arcane.logger.logStream.listen((message) {
+      setState(() {
+        latestLogs.insert(0, message);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
