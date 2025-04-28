@@ -335,7 +335,20 @@ class ArcaneThemeExample extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    Column(
+                    Switch(
+                      value: Arcane.theme.currentTheme == ThemeMode.dark,
+                      thumbIcon: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(Icons.dark_mode);
+                        }
+                        return const Icon(Icons.light_mode);
+                      }),
+                      onChanged: (_) {
+                        Arcane.theme.switchTheme();
+                      },
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Checkbox(
                           value: Arcane.theme.isFollowingSystemTheme,
@@ -349,7 +362,7 @@ class ArcaneThemeExample extends StatelessWidget {
                             }
                           },
                         ),
-                        const Text("Use system theme"),
+                        const Text("Follow system"),
                       ],
                     ),
                     Switch(
