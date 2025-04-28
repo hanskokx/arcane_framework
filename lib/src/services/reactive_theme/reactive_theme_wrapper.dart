@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:arcane_framework/src/services/reactive_theme/reactive_theme_service.dart";
 import "package:flutter/material.dart";
 
@@ -16,12 +18,12 @@ class ArcaneTheme extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ArcaneTheme oldWidget) {
-    return oldWidget.themeMode != themeMode;
+    return themeMode != oldWidget.themeMode;
   }
 
   static ArcaneReactiveTheme get service => ArcaneReactiveTheme.I;
   static bool get isFollowingSystemTheme => service.isFollowingSystemTheme;
-  static Stream<ThemeMode> get currentThemeStream => service.currentThemeStream;
+  static Stream<ThemeMode> get themeChanges => service.themeChanges;
   static ThemeMode get currentTheme => service.currentTheme;
   static ThemeMode get systemTheme => service.systemTheme;
   static ThemeData get dark => service.dark;
@@ -33,7 +35,6 @@ class ArcaneTheme extends InheritedWidget {
       service.switchTheme;
   static ArcaneReactiveTheme Function(BuildContext context)
       get followSystemTheme => service.followSystemTheme;
-  static void get checkSystemTheme => service.checkSystemTheme;
   static ArcaneReactiveTheme Function(ThemeData theme) get setDarkTheme =>
       service.setDarkTheme;
   static ArcaneReactiveTheme Function(ThemeData theme) get setLightTheme =>
