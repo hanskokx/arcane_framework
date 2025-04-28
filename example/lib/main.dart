@@ -81,17 +81,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isSignedIn = Arcane.auth.isSignedIn.value;
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
+    return GridView.extent(
+      maxCrossAxisExtent: 300,
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Theme",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Column(
                   children: [
-                    Column(
+                    Switch(
+                      value: Arcane.theme.currentTheme == ThemeMode.dark,
+                      thumbIcon: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(Icons.dark_mode);
+                        }
+                        return const Icon(Icons.light_mode);
+                      }),
+                      onChanged: (_) {
+                        Arcane.theme.switchTheme();
+                      },
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Checkbox(
                           value: Arcane.theme.isFollowingSystemTheme,
@@ -105,62 +125,61 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                         ),
-                        const Text("Use system theme"),
+                        const Text("Follow system"),
                       ],
-                    ),
-                    Switch(
-                      value: Arcane.theme.currentTheme == ThemeMode.dark,
-                      thumbIcon: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return const Icon(Icons.dark_mode);
-                        }
-                        return const Icon(Icons.light_mode);
-                      }),
-                      onChanged: (_) {
-                        Arcane.theme.switchTheme();
-                      },
-                    ),
-                    Text(
-                      "The current theme mode is ${context.themeMode.name} and\n"
-                      "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
-                      "following the system theme.",
                     ),
                   ],
                 ),
-              ),
+                Text(
+                  "The current theme mode is ${context.themeMode.name} and\n"
+                  "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
+                  "following the system theme.",
+                ),
+              ],
             ),
-            Text(
-              "Authentication status: ${Arcane.auth.status.name}",
-            ),
-            if (isSignedIn)
-              ElevatedButton(
-                child: const Text("Sign out"),
-                onPressed: () async {
-                  await Arcane.auth.logOut(
-                    onLoggedOut: () async {
-                      setState(() {});
-                    },
-                  );
-                },
-              ),
-            if (!isSignedIn)
-              ElevatedButton(
-                child: const Text("Sign in"),
-                onPressed: () async {
-                  await Arcane.auth.login<Credentials>(
-                    input: (
-                      email: "email",
-                      password: "password",
-                    ),
-                    onLoggedIn: () async {
-                      setState(() {});
-                    },
-                  );
-                },
-              ),
-          ],
+          ),
         ),
-      ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Authentication",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                ElevatedButton(
+                  child: Text(isSignedIn ? "Sign out" : "Sign in"),
+                  onPressed: () async {
+                    if (isSignedIn) {
+                      await Arcane.auth.logOut(
+                        onLoggedOut: () async {
+                          setState(() {});
+                        },
+                      );
+                    } else {
+                      await Arcane.auth.login<Credentials>(
+                        input: (
+                          email: "email",
+                          password: "password",
+                        ),
+                        onLoggedIn: () async {
+                          setState(() {});
+                        },
+                      );
+                    }
+                  },
+                ),
+                Center(
+                  child: Text("Status: ${Arcane.auth.status.name}"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
