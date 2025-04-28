@@ -1,4 +1,5 @@
 import "package:arcane_framework/arcane_framework.dart";
+import "package:arcane_framework/src/services/reactive_theme/reactive_theme_switcher.dart";
 import "package:flutter/material.dart";
 
 /// A root widget for an Arcane-powered application.
@@ -54,22 +55,9 @@ class _ArcaneAppState extends State<ArcaneApp> with WidgetsBindingObserver {
     return ArcaneEnvironmentProvider(
       child: ArcaneServiceProvider(
         serviceInstances: widget.services,
-        child: Builder(
+        child: ArcaneThemeSwitcher(
           key: _appKey,
-          builder: (BuildContext currentContext) {
-            return StreamBuilder<ThemeMode>(
-              stream: ArcaneReactiveTheme.I.currentThemeStream,
-              initialData: ArcaneReactiveTheme.I.currentTheme,
-              builder: (context, AsyncSnapshot<ThemeMode> snapshot) {
-                final ThemeMode themeMode = snapshot.data ?? ThemeMode.light;
-
-                return ArcaneTheme(
-                  themeMode: themeMode,
-                  child: widget.child,
-                );
-              },
-            );
-          },
+          child: widget.child,
         ),
       ),
     );
@@ -95,10 +83,9 @@ class _ArcaneAppState extends State<ArcaneApp> with WidgetsBindingObserver {
     // and use it to check the system theme
     if (mounted && _appKey.currentContext != null) {
       // Use the current context from the key to check system theme
-      final BuildContext currentContext = _appKey.currentContext!;
       if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ArcaneReactiveTheme.I.checkSystemTheme(currentContext);
+          ArcaneReactiveTheme.I.followSystemTheme(context);
         });
       }
     }

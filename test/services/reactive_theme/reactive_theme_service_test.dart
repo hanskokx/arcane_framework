@@ -96,43 +96,32 @@ void main() {
         await tester.pumpWidget(
           const MediaQuery(
             data: MediaQueryData(platformBrightness: Brightness.light),
-            child: SizedBox(),
+            child: ArcaneApp(
+              child: SizedBox(),
+            ),
           ),
         );
 
         final BuildContext lightContext = tester.element(find.byType(SizedBox));
-        theme.followSystemTheme(lightContext);
+        Arcane.theme.followSystemTheme(lightContext);
+        await tester.pumpAndSettle();
 
         expect(theme.currentTheme, equals(ThemeMode.light));
 
         await tester.pumpWidget(
           const MediaQuery(
             data: MediaQueryData(platformBrightness: Brightness.dark),
-            child: SizedBox(),
+            child: ArcaneApp(
+              child: SizedBox(),
+            ),
           ),
         );
 
         final BuildContext darkContext = tester.element(find.byType(SizedBox));
-        theme.followSystemTheme(darkContext);
+        Arcane.theme.followSystemTheme(darkContext);
+        await tester.pumpAndSettle();
+
         expect(theme.currentTheme, equals(ThemeMode.dark));
-      });
-
-      testWidgets("followSystemTheme only switches when needed",
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MediaQuery(
-            data: MediaQueryData(platformBrightness: Brightness.light),
-            child: SizedBox(),
-          ),
-        );
-        final BuildContext lightContext = tester.element(find.byType(SizedBox));
-
-        int switchCount = 0;
-        theme.addListener(() => switchCount++);
-
-        // Already light, shouldn't switch
-        theme.followSystemTheme(lightContext);
-        expect(switchCount, equals(0));
       });
     });
   });

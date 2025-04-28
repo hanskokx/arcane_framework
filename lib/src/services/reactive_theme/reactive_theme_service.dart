@@ -27,12 +27,16 @@ class ArcaneReactiveTheme extends ArcaneService {
 
   /// Whether the theme service is currently following the system theme.
   ///
-  /// When true, the theme will automatically switch between light and dark
+  /// When `true`, the theme will automatically switch between light and dark
   /// based on the system's brightness setting.
   bool get isFollowingSystemTheme => _followingSystemTheme;
 
-  final ValueNotifier<ThemeMode> _systemThemeNotifier =
-      ValueNotifier(ThemeMode.system);
+  final StreamController<ThemeMode> _systemStreamController =
+      StreamController<ThemeMode>.broadcast(
+    onCancel: () {
+      I._systemStreamController.close();
+    },
+  );
 
   final StreamController<ThemeMode> _themeStreamController =
       StreamController<ThemeMode>.broadcast(
@@ -41,16 +45,19 @@ class ArcaneReactiveTheme extends ArcaneService {
     },
   );
 
-  /// Stream of theme mode changes that can be listened to for reactive UI updates.
-  Stream<ThemeMode> get currentThemeStream => I._themeStreamController.stream;
+  /// Stream of `ThemeMode` changes that can be listened to for reactive UI updates.
+  Stream<ThemeMode> get themeChanges => I._themeStreamController.stream;
+
+  /// Returns the `ThemeData` corresponding to the current system theme
+  ThemeMode get systemTheme => _currentSystemTheme;
+
+  /// Tracks the current system theme mode
+  ThemeMode _currentSystemTheme = ThemeMode.system;
 
   ThemeMode _currentTheme = ThemeMode.light;
 
   /// The currently active theme mode (light or dark).
   ThemeMode get currentTheme => _currentTheme;
-
-  /// A listenable that notifies listeners when the system theme mode changes.
-  ThemeMode get systemTheme => I._systemThemeNotifier.value;
 
   /// The `ThemeData` for the dark theme.
   final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
@@ -70,14 +77,22 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ValueNotifier for the light theme that can be observed for changes.
   ValueNotifier<ThemeData> get lightTheme => I._lightTheme;
 
+  /// Returns the current `ThemeMode` being used by `ArcaneReactiveTheme`.
+  /// Will automatically update when the theme changes.
+  ThemeMode currentModeOf(BuildContext context) => context.themeMode;
+
   /// Switches the current theme between light and dark modes.
   ///
-  /// If the theme is currently light, it switches to dark, and vice versa. It also
-  /// notifies listeners to update the UI accordingly.
+  /// If the theme is currently light, it switches to dark, and vice versa. It
+  /// also notifies listeners to update the UI accordingly.
   ///
   /// Example:
   /// ```dart
   /// ArcaneReactiveTheme.I.switchTheme();
+  /// // or
+  /// ArcaneReactiveTheme.I.switchTheme(themeMode: ThemeMode.dark);
+  /// // or
+  /// Arcane.theme.switchTheme(themeMode: ThemeMode.light);
   /// ```
   ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
     _followingSystemTheme = false;
@@ -103,40 +118,25 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// Example:
   /// ```dart
   /// ArcaneReactiveTheme.I.followSystemTheme(context);
+  /// // or
+  /// Arcane.theme.followSystemTheme(context);
   /// ```
   ArcaneReactiveTheme followSystemTheme(BuildContext context) {
     _followingSystemTheme = true;
 
-    // Always check the system theme when this method is called
-    checkSystemTheme(context);
+    _currentSystemTheme = context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    _systemStreamController.add(_currentSystemTheme);
+    _updateTheme(_currentSystemTheme);
+
+    notifyListeners();
 
     return I;
   }
 
-  /// Check and apply the system theme if we're following it
-  ///
-  /// This is called automatically when the system brightness changes if
-  /// [followSystemTheme] has been enabled.
-  void checkSystemTheme(BuildContext context) {
-    if (!_followingSystemTheme) return;
-
-    final Brightness systemBrightness =
-        MediaQuery.platformBrightnessOf(context);
-
-    final ThemeMode systemMode =
-        systemBrightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
-
-    // Only update and notify if the theme actually changed
-    if (systemMode != _currentTheme) {
-      _updateTheme(systemMode);
-      notifyListeners();
-    }
-  }
-
   /// Sets a custom `ThemeData` for the dark theme.
   ///
-  /// This allows you to customize the dark theme and notify listeners to apply the
-  /// changes immediately.
+  /// This allows you to customize the dark theme and notify listeners to apply
+  /// the changes immediately.
   ///
   /// Example:
   /// ```dart
@@ -150,8 +150,8 @@ class ArcaneReactiveTheme extends ArcaneService {
 
   /// Sets a custom `ThemeData` for the light theme.
   ///
-  /// This allows you to customize the light theme and notify listeners to apply the
-  /// changes immediately.
+  /// This allows you to customize the light theme and notify listeners to apply
+  /// the changes immediately.
   ///
   /// Example:
   /// ```dart
