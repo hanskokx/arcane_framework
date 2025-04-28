@@ -16,31 +16,27 @@ class ArcaneThemeSwitcher extends StatefulWidget {
 }
 
 class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher> {
-  late final StreamSubscription<ThemeMode> _themeModeSubscription;
-  ThemeMode _currentThemeMode = ArcaneReactiveTheme.I.currentTheme;
+  late final StreamSubscription<ThemeMode> _subscription;
 
   @override
   void initState() {
     super.initState();
-    _themeModeSubscription =
-        ArcaneReactiveTheme.I.themeChanges.listen((ThemeMode newMode) {
-      if (mounted)
-        setState(() {
-          _currentThemeMode = newMode;
-        });
+    _subscription = ArcaneReactiveTheme.I.themeChanges.listen((_) {
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _themeModeSubscription.cancel();
+    _subscription.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ArcaneTheme(
-      themeMode: _currentThemeMode,
+      themeMode: ArcaneReactiveTheme.I.currentTheme,
+      followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
       child: widget.child,
     );
   }
