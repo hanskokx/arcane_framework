@@ -3,8 +3,6 @@ on:
   workflow_dispatch:
   pull_request:
 
-env:
-  FLUTTER_VERSION: "stable"
 jobs:
   test:
     name: Analyze and test
@@ -12,17 +10,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - id: puro_version
+      - name: Get Flutter version from .puro.json
+        id: puro_version
         run: |
-          content=`cat .puro.json`
-          # the following lines are only required for multi line json
-          content="${content//'%'/'%25'}"
-          content="${content//$'\n'/'%0A'}"
-          content="${content//$'\r'/'%0D'}"
-          # end of optional handling for multi line json
-          echo "::set-output name=packageJson::$content"
-      - run: |
-          export FLUTTER_VERSION="${{fromJson(steps.puro_version.outputs.packageJson).env}}"
+          if [[ -f ".puro.json" ]]; then
+            flutter_version=$(jq -r '.env' .puro.json)
+            echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
+          else
+            echo "Warning: .puro.json not found, using default Flutter stable channel."
+            echo "FLUTTER_VERSION=stable" >> $GITHUB_ENV
+          fi
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
