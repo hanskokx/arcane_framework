@@ -15,16 +15,16 @@ jobs:
         run: |
           if [[ -f ".puro.json" ]]; then
             flutter_version=$(jq -r '.env' .puro.json)
-            echo "FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
+            echo "PURO_FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
           else
             echo "Warning: .puro.json not found, using default Flutter stable channel."
-            echo "FLUTTER_VERSION=stable" >> $GITHUB_ENV
+            echo "PURO_FLUTTER_VERSION=stable" >> $GITHUB_ENV
           fi
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: "stable"
+          flutter-version: ${{ env.PURO_FLUTTER_VERSION == 'stable' && '' || env.PURO_FLUTTER_VERSION }}
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze
