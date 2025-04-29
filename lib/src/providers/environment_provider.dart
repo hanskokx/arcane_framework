@@ -9,15 +9,16 @@ class ArcaneEnvironment extends InheritedWidget {
   /// The current application environment.
   final Environment environment;
 
-  final ValueChanged<Environment> switchEnvironment;
+  final ValueChanged<Environment> _switchEnvironment;
 
   /// Creates an `ArcaneEnvironment` widget.
   const ArcaneEnvironment({
     required this.environment,
     required Widget child,
-    required this.switchEnvironment,
+    required void Function(Environment) switchEnvironment,
     Key? key,
-  }) : super(key: key, child: child);
+  })  : _switchEnvironment = switchEnvironment,
+        super(key: key, child: child);
 
   /// Retrieves the `ArcaneEnvironment` instance from the nearest ancestor.
   ///
@@ -42,8 +43,8 @@ class ArcaneEnvironment extends InheritedWidget {
     return environment != oldWidget.environment;
   }
 
-  void enableDebugMode() => switchEnvironment(Environment.debug);
-  void disableDebugMode() => switchEnvironment(Environment.normal);
+  void enableDebugMode() => _switchEnvironment(Environment.debug);
+  void disableDebugMode() => _switchEnvironment(Environment.normal);
 }
 
 /// A `StatefulWidget` that manages and provides the `ArcaneEnvironment`.
