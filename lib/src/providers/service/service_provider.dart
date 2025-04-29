@@ -77,6 +77,27 @@ class ArcaneServiceProvider
     return provider.registeredServices.whereType<T>().firstOrNull;
   }
 
+  /// Retrieves a service of type `T` from the nearest provider.
+  ///
+  /// Throws an exception if no service of type `T` is found or if no provider exists.
+  ///
+  /// Example:
+  /// ```dart
+  /// final myService = ArcaneServiceProvider.of<MyService>(context);
+  /// ```
+  static T requiredServiceOfType<T extends ArcaneService>(
+    BuildContext context,
+  ) {
+    final provider = maybeOf(context);
+    assert(provider != null, "No ArcaneServiceProvider found");
+
+    final T? service = provider!.registeredServices.whereType<T>().firstOrNull;
+
+    assert(service != null, "No service of type $T found");
+
+    return service!;
+  }
+
   /// Updates the service instances in this provider.
   ///
   /// This will trigger a rebuild of all widgets that depend on this provider.
