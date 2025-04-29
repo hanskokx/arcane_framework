@@ -45,7 +45,7 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
 
   @override
   Widget build(BuildContext context) {
-    return ArcaneTheme(
+    return _ArcaneTheme(
       themeMode: ArcaneReactiveTheme.I.currentThemeMode,
       followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
       theme: ArcaneReactiveTheme.I.currentTheme,
@@ -66,5 +66,37 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
       }
     }
     super.didChangePlatformBrightness();
+  }
+}
+
+class _ArcaneTheme extends InheritedWidget {
+  final ThemeMode themeMode;
+  final bool followSystem;
+  final ThemeData? theme;
+
+  const _ArcaneTheme({
+    required super.child,
+    this.themeMode = ThemeMode.light,
+    this.followSystem = false,
+    this.theme,
+  });
+
+  static _ArcaneTheme? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_ArcaneTheme>();
+  }
+
+  @override
+  bool updateShouldNotify(_ArcaneTheme oldWidget) {
+    return themeMode != oldWidget.themeMode ||
+        followSystem != oldWidget.followSystem ||
+        theme != oldWidget.theme;
+  }
+}
+
+extension ArcaneThemeContext on BuildContext {
+  /// Get the current theme mode from the nearest ArcaneThemeInherited widget
+  ThemeMode get themeMode {
+    return _ArcaneTheme.of(this)?.themeMode ??
+        ArcaneReactiveTheme.I.currentThemeMode;
   }
 }

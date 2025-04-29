@@ -44,7 +44,6 @@ export "package:arcane_framework/src/providers/service_provider.dart";
 export "package:arcane_framework/src/services/authentication/authentication_service.dart";
 export "package:arcane_framework/src/services/feature_flags/feature_flags_service.dart";
 export "package:arcane_framework/src/services/logging/logging_service.dart";
-export "package:arcane_framework/src/services/reactive_theme/arcane_theme.dart";
 export "package:arcane_framework/src/services/reactive_theme/reactive_theme_service.dart";
 export "package:arcane_framework/src/services/reactive_theme/reactive_theme_switcher.dart";
 export "package:result_monad/result_monad.dart";

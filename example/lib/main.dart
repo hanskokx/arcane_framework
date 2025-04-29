@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        "The current theme mode is ${context.themeMode.name} and "
+                        "The current theme mode is ${Arcane.theme.currentModeOf(context).name} and "
                         "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
                         "following the system theme.",
                       ),
