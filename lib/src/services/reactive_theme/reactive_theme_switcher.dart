@@ -15,13 +15,17 @@ class ArcaneThemeSwitcher extends StatefulWidget {
   State<ArcaneThemeSwitcher> createState() => _ArcaneThemeSwitcherState();
 }
 
-class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher> {
+class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
+    with WidgetsBindingObserver {
   late final StreamSubscription<ThemeMode> _themeModeSubscription;
   late final StreamSubscription<ThemeData> _themeSubscription;
 
   @override
   void initState() {
     super.initState();
+    // Register as an observer to detect system theme changes
+    WidgetsBinding.instance.addObserver(this);
+
     _themeModeSubscription = ArcaneReactiveTheme.I.themeModeChanges.listen((_) {
       setState(() {});
     });
@@ -34,6 +38,8 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher> {
   void dispose() {
     _themeModeSubscription.cancel();
     _themeSubscription.cancel();
+    // Clean up the observer when the widget is disposed
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -45,5 +51,20 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher> {
       theme: ArcaneReactiveTheme.I.currentTheme,
       child: widget.child,
     );
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // When system brightness changes, find the current builder context
+    // and use it to check the system theme
+    if (mounted) {
+      // Use the current context from the key to check system theme
+      if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ArcaneReactiveTheme.I.followSystemTheme(context);
+        });
+      }
+    }
+    super.didChangePlatformBrightness();
   }
 }
