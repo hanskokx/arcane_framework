@@ -38,26 +38,41 @@ class ArcaneReactiveTheme extends ArcaneService {
     },
   );
 
-  final StreamController<ThemeMode> _themeStreamController =
+  final StreamController<ThemeMode> _themeModeStreamController =
       StreamController<ThemeMode>.broadcast(
+    onCancel: () {
+      I._themeModeStreamController.close();
+    },
+  );
+
+  final StreamController<ThemeData> _themeStreamController =
+      StreamController<ThemeData>.broadcast(
     onCancel: () {
       I._themeStreamController.close();
     },
   );
 
   /// Stream of `ThemeMode` changes that can be listened to for reactive UI updates.
-  Stream<ThemeMode> get themeChanges => I._themeStreamController.stream;
+  Stream<ThemeMode> get themeModeChanges => I._themeModeStreamController.stream;
+
+  /// Stream of `ThemeData` changes that can be listened to for reactive UI updates.
+  Stream<ThemeData> get themeDataChanges => I._themeStreamController.stream;
 
   /// Returns the `ThemeData` corresponding to the current system theme
-  ThemeMode get systemTheme => _currentSystemTheme;
+  ThemeMode get systemThemeMode => _currentSystemThemeMode;
 
   /// Tracks the current system theme mode
-  ThemeMode _currentSystemTheme = ThemeMode.system;
+  ThemeMode _currentSystemThemeMode = ThemeMode.system;
 
-  ThemeMode _currentTheme = ThemeMode.light;
+  ThemeMode _currentThemeMode = ThemeMode.light;
 
   /// The currently active theme mode (light or dark).
-  ThemeMode get currentTheme => _currentTheme;
+  ThemeMode get currentThemeMode => _currentThemeMode;
+
+  ThemeData _currentTheme = ThemeData();
+
+  /// The currently active theme style.
+  ThemeData get currentTheme => _currentTheme;
 
   /// The `ThemeData` for the dark theme.
   final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
@@ -101,7 +116,7 @@ class ArcaneReactiveTheme extends ArcaneService {
       _updateTheme(themeMode);
     } else {
       _updateTheme(
-        currentTheme == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
+        currentThemeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
       );
     }
 
@@ -124,10 +139,14 @@ class ArcaneReactiveTheme extends ArcaneService {
   ArcaneReactiveTheme followSystemTheme(BuildContext context) {
     _followingSystemTheme = true;
 
-    _currentSystemTheme = context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
-    _systemStreamController.add(_currentSystemTheme);
-    _updateTheme(_currentSystemTheme);
+    _currentSystemThemeMode =
+        context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    _systemStreamController.add(_currentSystemThemeMode);
+    _updateTheme(_currentSystemThemeMode);
 
+    final ThemeData theme = systemThemeMode == ThemeMode.dark ? dark : light;
+    _themeStreamController.add(theme);
+    _currentTheme = theme;
     notifyListeners();
 
     return I;
@@ -144,6 +163,8 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme setDarkTheme(ThemeData theme) {
     _darkTheme.value = theme;
+    _themeStreamController.add(theme);
+    _currentTheme = theme;
     notifyListeners();
     return I;
   }
@@ -159,6 +180,8 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme setLightTheme(ThemeData theme) {
     _lightTheme.value = theme;
+    _themeStreamController.add(theme);
+    _currentTheme = theme;
     notifyListeners();
     return I;
   }
@@ -173,12 +196,14 @@ class ArcaneReactiveTheme extends ArcaneService {
     _lightTheme.value = ThemeData.light();
     _followingSystemTheme = false;
     _updateTheme(ThemeMode.light);
+    _themeStreamController.add(_lightTheme.value);
+    _currentTheme = _lightTheme.value;
     notifyListeners();
   }
 
   /// Updates the current theme mode and broadcasts the change.
   void _updateTheme(ThemeMode themeMode) {
-    _currentTheme = themeMode;
-    _themeStreamController.add(themeMode);
+    _currentThemeMode = themeMode;
+    _themeModeStreamController.add(themeMode);
   }
 }
