@@ -1,4 +1,4 @@
-## 2.0.0-dev
+## 2.0.0
 
 ### Arcane
 
@@ -10,7 +10,8 @@
 - [CHANGE] The feature has been completely rewritten as an inherited widget, rather than using a `Cubit`.
 - [NEW] The `ArcaneEnvironment` widget now includes the `maybeOf(context)` and `of(context)` service locators.
 - [NEW] An `ArcaneEnvironmentProvider` widget has been added. This is used by `ArcaneApp` but can also be used independently when not using the `ArcaneApp` widget.
-- [NEW] The `ArcaneEnvironment`
+- [BREAKING] The locator for `ArcaneEnvironment` has been changed from `context.read<ArcaneEnvironment>()` to `ArcaneEnvironment.of(context)`
+- [BREAKING] Reading the current environment has been changed from `context.read<ArcaneEnvironment>().state` to `ArcaneEnvironment.of(context).environment`;
 
 ### ArcaneServiceProvider
 
@@ -33,13 +34,13 @@
 - [NEW] In addition to the existing `registerInterfaces` method, a new `registerInterface` method has been added.
 - [NEW] The following methods have been added: `unregisterInterface`, `unregisterInterfaces`, and `unregisterAllInterfaces`.
 - [NEW] Added a `reset` method that clears all registered interfaces, clears all persistent metadata, and de-initializes `ArcaneLogger`
+- [BREAKING] Added a `skipAutodetection` option (defaults to `false`) when invoking the `log` method. When set to `true`, automatic file and line number detection, as well as automatic module and method detection will not be performed (the module and method can still be added as properties). Skipping autodetection may help to increase performance, as a `StackTrace` is no longer generated and parsed. This property will need to be added to existing `LoggingInterface` implementations.
 
 ### Theme (ArcaneTheme)
 
-- [NEW] Added the `ArcaneTheme` inherited widget
 - [NEW] Added `themeMode` extension to `BuildContext` to get the current `ThemeMode` (e.g., light/dark)
 - [BREAKING] Completely rewrote `ArcaneReactiveTheme`
-- [NEW] Added the `ArcaneThemeSwitcher` widget.
+- [NEW] Added the `ArcaneThemeSwitcher` widget
 
 #### ArcaneReactiveTheme
 
@@ -54,6 +55,8 @@
 - [CHANGE] The `switchTheme` method now (optionally) takes in a `ThemeMode` parameter. If it is omitted, the new mode will be automatically determined.
 - [FIX] The `followSystemTheme` method will now correctly trigger widget rebuilds under the correct circumstances.
 - [FIX] Invoking the `setDarkTheme` and `setLightTheme` methods will trigger widget rebuilds under the correct circumstances.
+- [BREAKING] In order to enable following the system brightness changes, the `Arcane.theme.followSystemTheme(context)`/`ArcaneReactiveTheme.I.followSystemTheme(context)` method will need to be invoked once.
+- [NEW] When manually switching from following the system theme to a specific theme (e.g., `switchTheme()`), the system theme will no longer be followed. To follow the system theme once again, the `followSystemTheme(context)` method should be invoked.
 
 #### ArcaneThemeSwitcher
 
@@ -66,7 +69,11 @@
 
 ### Example
 
-- [FIX] The example has been completely reworked. It now includes examples of all features that Arcane has to offer
+- [FIX] The example has been completely reworked. It now includes examples of all features that Arcane has to offer.
+
+### Misc
+
+- [FIX] Dartdoc comments have been added throughout the framework where they were previously missing.
 
 ## 1.2.5
 
