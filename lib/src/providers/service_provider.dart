@@ -50,13 +50,8 @@ class ArcaneServiceProvider extends InheritedNotifier {
   /// ```dart
   /// final provider = ArcaneServiceProvider.of(context);
   /// ```
-  static ArcaneServiceProvider of(BuildContext context) {
-    try {
-      return context
-          .dependOnInheritedWidgetOfExactType<ArcaneServiceProvider>()!;
-    } catch (e) {
-      throw Exception("ArcaneServiceProvider not found in context");
-    }
+  static ArcaneServiceProvider? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<ArcaneServiceProvider>();
   }
 }
 
