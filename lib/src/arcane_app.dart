@@ -44,7 +44,7 @@ import "services/theme/theme_switcher.dart";
 ///   builder: (context, _) => MyApp(),
 /// );
 /// ```
-class ArcaneApp extends StatefulWidget {
+class ArcaneApp extends StatelessWidget {
   /// A list of Arcane services that will be made available to the application.
   final List<ArcaneService> services;
 
@@ -185,34 +185,5 @@ class _ArcaneAppState extends State<ArcaneApp> {
         ),
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Register as an observer to detect system theme changes
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    // Clean up the observer when the widget is disposed
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangePlatformBrightness() {
-    // When system brightness changes, find the current builder context
-    // and use it to check the system theme
-    if (mounted && _appKey.currentContext != null) {
-      // Use the current context from the key to check system theme
-      if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ArcaneReactiveTheme.I.followSystemTheme(context);
-        });
-      }
-    }
-    super.didChangePlatformBrightness();
   }
 }
