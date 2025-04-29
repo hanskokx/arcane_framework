@@ -353,6 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Text(
                         "Environment: ${ArcaneEnvironment.of(context).environment.name}",
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
