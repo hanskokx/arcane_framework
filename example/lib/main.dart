@@ -345,8 +345,26 @@ class _HomeScreenState extends State<HomeScreen> {
                               ArcaneEnvironment.of(context).environment;
                           if (currentEnvironment == Environment.normal) {
                             ArcaneEnvironment.of(context).enableDebugMode();
+                            Arcane.log(
+                              "Environment changed.",
+                              metadata: {
+                                "previous": ArcaneEnvironment.of(context)
+                                    .environment
+                                    .name,
+                                "current": Environment.debug.name,
+                              },
+                            );
                           } else {
                             ArcaneEnvironment.of(context).disableDebugMode();
+                            Arcane.log(
+                              "Environment changed.",
+                              metadata: {
+                                "previous": ArcaneEnvironment.of(context)
+                                    .environment
+                                    .name,
+                                "current": Environment.normal.name,
+                              },
+                            );
                           }
                         },
                         child: const Text("Switch environment"),
