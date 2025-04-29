@@ -17,11 +17,13 @@
 
 - [NEW] Added a new `ArcaneServiceProvider.maybeOf(context)` getter which returns a nullable `ArcaneServiceProvider` instance.
 - [NEW] `ArcaneServiceProvider` now includes a `serviceOfType<T>(context)` getter to retrieve a nullable registered service instance.
-- [NEW] An `addService` method was added to `ArcaneServiceProvider`
+- [NEW] An `addService` method was added to `ArcaneServiceProvider`.
+- [NEW] A `removeService` method was added to `ArcaneServiceProvider`.
 - [NEW] A `setServices` method was added to `ArcaneServiceProvider`. Invoking this method with a list of `ArcaneService` instances will replace all existing services in the `ArcaneServiceProvider`.
 - [DEPRECATED] `context.serviceOfType<T>` has been deprecated in favor of `context.service<T>`.
 - [NEW] `context.requiredService<T>` has been added to provide a mechanism for ensuring a particular service has been registered.
 - [NEW] Added `ArcaneService.ofType<T>(context)` and `ArcaneService.requiredOfType<T>(context)` locators, returning a nullable and non-nullable instance of a given service, respectively.
+- [BREAKING] Renamed `serviceInstances` to `registeredServices`.
 
 ### Authentication Service (ArcaneAuth)
 

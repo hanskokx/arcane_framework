@@ -22,7 +22,8 @@ import "package:flutter/widgets.dart";
 class ArcaneServiceProvider
     extends InheritedNotifier<ValueNotifier<List<ArcaneService>>> {
   /// A list of `ArcaneService` instances available through the provider.
-  List<ArcaneService> get serviceInstances => notifier!.value;
+  List<ArcaneService> get registeredServices =>
+      List<ArcaneService>.from(notifier?.value ?? []);
 
   /// Creates an `ArcaneServiceProvider` that provides [serviceInstances] to the widget tree.
   ///
@@ -75,7 +76,7 @@ class ArcaneServiceProvider
     final provider = maybeOf(context);
     if (provider == null) return null;
 
-    return provider.serviceInstances.whereType<T>().firstOrNull;
+    return provider.registeredServices.whereType<T>().firstOrNull;
   }
 
   /// Updates the service instances in this provider.
@@ -89,12 +90,12 @@ class ArcaneServiceProvider
   ///
   /// If a service of the same type already exists, it will be replaced.
   void addService(ArcaneService service) {
-    final int existingIndex = serviceInstances.indexWhere(
+    final int existingIndex = registeredServices.indexWhere(
       (s) => s.runtimeType == service.runtimeType,
     );
 
     final List<ArcaneService> newList =
-        List<ArcaneService>.from(serviceInstances);
+        List<ArcaneService>.from(registeredServices);
 
     if (existingIndex >= 0) {
       newList[existingIndex] = service;
@@ -103,6 +104,22 @@ class ArcaneServiceProvider
     }
 
     notifier?.value = newList;
+  }
+
+  /// Removes all services of the specified type from the registry.
+  /// Returns true if any services were removed, false otherwise.
+  void removeService<T extends ArcaneService>() {
+    final int existingIndex = registeredServices.indexWhere(
+      (s) => s.runtimeType == T,
+    );
+
+    if (existingIndex >= 0) {
+      final List<ArcaneService> newList =
+          List<ArcaneService>.from(registeredServices);
+
+      newList.removeAt(existingIndex);
+      notifier?.value = newList;
+    }
   }
 }
 
