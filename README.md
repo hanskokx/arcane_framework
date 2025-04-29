@@ -47,35 +47,49 @@ The following sections provide more information about how to use the framework f
 
 ### Services
 
-The Arcane Framework provides a centralized way to manage services across your application. This allows you to easily access and configure all of your services from anywhere in your app, without having to pass them down through multiple widgets.
+The Arcane Framework provides a centralized way to manage services across your application via a built-in service locator.
 
-A service's purpose is to facilitate cross-feature communication of small pieces of data. For example, one feature may ask a user for their favorite color, while another feature may use that color to change the background of a screen. The feature ingesting the users' favorite color should not care how the favorite color has been determined, nor should it rely directly upon the feature that determines said color. A service can be used to hold the color in question, effectively decoupling these two features. One service sets the value while another ingests it.
+#### Services overview
+
+Unlike most of the features in Arcane, a _service_ is broadly user-defined. What a service is, or does, is not rigorously enforced by the framework.
+
+The following tools are available for use in crafting your own services:
+
+- `ArcaneService`: The base class from which to extend your own services. Includes a `ChangeNotifier` and locators.
+- `ArcaneServiceProvider`: A widget which extends the `InheritedNotifier` class, used to manage `ArcaneService` instances. _This widget is already part of the `ArcaneApp` widget._
+- `service<T>` and `requiredService<T>` extensions on `BuildContext`: A nullable and non-nullable getter, respectively, to locate a given `ArcaneService` via `BuildContext`.
+
+### Defining an example `ArcaneService`
+
+As noted previously, _what_ a service is or does is not enforced by the framework. Therefore, the following example is only in service of the remainder of the documentation of the Arcane services feature.
+
+This example service is a singleton service that stores and provides access to a user's favorite color.
 
 ```dart
 class FavoriteColorService extends ArcaneService {
-  static final FavoriteColorService _instance = FavoriteColorService._internal();
-
-  factory FavoriteColorService() => I._instance;
-
   FavoriteColorService._internal();
+  static final FavoriteColorService _instance = FavoriteColorService._internal();
+  static FavoriteColorService get I => _instance;
+
+  final ValueNotifier<Color?> _notifier = ValueNotifier<Color?>(null);
+  ValueNotifier<Color?> get notifier => _notifier;
 
   Color? get myFavoriteColor => _notifier.value;
 
-  final ValueNotifier<Color?> _notifier = ValueNotifier<Color?>(null);
-
-  ValueNotifier<Color?> get notifier => _notifier;
-
-  void setMyFavoriteColor(Color? newValue) {
-    if (_notifier.value != newValue) {
-      _notifier.value = newValue;
+  void setMyFavoriteColor(Color? color) {
+    if (_notifier.value != color) {
+      _notifier.value = color;
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 }
 ```
 
-To register a service with Arcane, simply add the instance of the `ArcaneService` to your list of services when initializing the `ArcaneApp`.
+### Registering and unregistering an `ArcaneService`
+
+The quickest and easiest way to register an `ArcaneService` is to use the built-in `ArcaneApp` widget. However, this is not the _only_ method available.
+
+To register your `ArcaneService` using an app with the `ArcaneApp` widget, you have a couple of options. First, you can simply add the service (in our case, a singleton instance) to the `services` list directly:
 
 ```dart
 ArcaneApp(
@@ -86,14 +100,81 @@ ArcaneApp(
 ),
 ```
 
-Service properties can be accessed either directly (e.g., `FavoriteColorService.I.myFavoriteColor`) or via `BuildContext` (e.g., `context.serviceOfType<FavoriteColorService>()?.myFavoriteColor`). If the `notifyListeners()` method is included within your service, any widgets that are referencing the service property through `BuildContext` will automatically be notified of the change. Additionally, a listener can be added to watch the value for changes.
+You can also defer adding the service by invoking `ArcaneServiceProvider`. Note that this requires either `ArcaneServiceProvider` _or_ `ArcaneApp` (which already includes `ArcaneServiceProvider`) to be in your widget tree.
 
 ```dart
-FavoriteColorService.I.notifier.addListener(() {
-  final Color? color = FavoriteColorService.I.myFavoriteColor;
-  // Do something with the value
+// The service is not included at compile-time
+ArcaneApp(
+  child: MainApp(),
+),
+
+// Add the service at runtime
+ArcaneServiceProvider.of(context).addService(FavoriteColorService.I);
+```
+
+Unregistering an already registered `ArcaneService` is as simple as:
+
+```dart
+ArcaneServiceProvider.of(context).removeService<FavoriteColorService>()
+```
+
+### Locating an `ArcaneService`
+
+There are numerous ways to locate a registered `ArcaneService`. Feel free to use whatever method you prefer:
+
+```dart
+// If a service of the given type is not registered, `null` is returned.
+final FavoriteColorService? nullableService = ArcaneService.ofType<FavoriteColorService>(context);
+final FavoriteColorService? nullableViaContext = context.service<FavoriteColorService>();
+final FavoriteColorService? nullableViaProvider = ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
+
+// If a service of the given type is not registered, an exception is thrown.
+final FavoriteColorService nonNullableService = ArcaneService.requiredOfType<FavoriteColorService>(context);
+final FavoriteColorService nonNullableViaContext = context.requiredService<FavoriteColorService>();
+final FavoriteColorService nonNullableViaProvider = ArcaneServiceProvider.requiredServiceOfType<FavoriteColorService>(context);
+```
+
+In addition, you can locate a `ArcaneServiceProvider` in a similar way:
+
+```dart
+// Returns `null` if no `ArcaneServiceProvider` is found in the widget tree.
+final ArcaneServiceProvider? nullableProvider = ArcaneServiceProvider.maybeOf(context);
+
+// Throws an exception if no `ArcaneServiceProvider` is found in the widget tree.
+final ArcaneServiceProvider nonNullableProvider = ArcaneServiceProvider.of(context);
+```
+
+### Using `ArcaneService` services
+
+Since the `ArcaneService` class includes a `ChangeNotifier`, invoking the `notifyListeners()` method inside a service will trigger a rebuild. Using our `FavoriteColorService` from earlier, we can add a listener to our notifier value:
+
+```dart
+final FavoriteColorService service = ArcaneService.requiredOfType<FavoriteColorService>(context);
+
+service.notifier.addListener(() {
+  final Color? color = service.myFavoriteColor;
+  // Do something with our value
 });
 ```
+
+We can also simply user a `ValueListenableBuilder`:
+
+```dart
+ValueListenableBuilder(
+  valueListenable: ArcaneService.requiredOfType<FavoriteColorService>(context).notifier,
+  builder: (context, color, _) {
+    return Text("My favorite color is $color"),
+  }
+)
+```
+
+Meanwhile, setting the value in our service can be accomplished in the following manner:
+
+```dart
+ArcaneService.requiredOfType<FavoriteColorService>(context).setMyFavoriteColor(Colors.purple);
+```
+
+Again, this example is _not_ the only way the Arcane Service system can be utilized. One is limited only by their imagination!
 
 ### Feature Flags
 
