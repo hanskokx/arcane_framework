@@ -333,11 +333,11 @@ class ArcaneLogger {
   /// Initializes all registered [LoggingInterface]s by calling their
   /// [LoggingInterface.init] methods.
   Future<ArcaneLogger> initializeInterfaces() async {
-    if (!initialized) await _init();
-
     if (I._interfaces.isEmptyOrNull) {
       throw Exception("No logging interfaces have been registered.");
     }
+
+    if (!initialized) await _init();
 
     for (final LoggingInterface i in I._interfaces) {
       if (!i.initialized) await i.init();
