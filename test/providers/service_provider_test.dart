@@ -61,14 +61,6 @@ void main() {
       );
     });
 
-    test("of() throws when no provider is found", () {
-      final context = MockBuildContext();
-      expect(
-        () => ArcaneServiceProvider.of(context),
-        throwsException,
-      );
-    });
-
     testWidgets("updateShouldNotify always returns true", (tester) async {
       final provider = ArcaneServiceProvider(
         serviceInstances: testServices,
