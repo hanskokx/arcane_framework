@@ -1,5 +1,4 @@
 import "package:arcane_framework/arcane_framework.dart";
-import "package:arcane_framework/src/services/reactive_theme/reactive_theme_switcher.dart";
 import "package:flutter/material.dart";
 
 /// A root widget for an Arcane-powered application.
