@@ -2,7 +2,9 @@ name: Tests
 on:
   workflow_dispatch:
   pull_request:
-
+env:
+  PURO_FLUTTER_VERSION: ""
+  FLUTTER_VERSION: ""
 jobs:
   test:
     name: Analyze and test
