@@ -169,9 +169,9 @@ abstract class ArcaneService with ChangeNotifier {
   ///
   /// Example:
   /// ```dart
-  /// final myService = ArcaneService.of<MyService>(context);
+  /// final myService = ArcaneService.ofType<MyService>(context);
   /// ```
-  static T? of<T extends ArcaneService>(BuildContext context) =>
+  static T? ofType<T extends ArcaneService>(BuildContext context) =>
       context.service<T>();
 
   /// Retrieves a service of the specified type from the context.
@@ -180,8 +180,8 @@ abstract class ArcaneService with ChangeNotifier {
   ///
   /// Example:
   /// ```dart
-  /// final myService = ArcaneService.requiredOf<MyService>(context);
+  /// final myService = ArcaneService.requiredOfType<MyService>(context);
   /// ```
-  static T requiredOf<T extends ArcaneService>(BuildContext context) =>
+  static T requiredOfType<T extends ArcaneService>(BuildContext context) =>
       context.requiredService<T>();
 }

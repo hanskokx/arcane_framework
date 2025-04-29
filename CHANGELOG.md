@@ -21,8 +21,7 @@
 - [NEW] A `setServices` method was added to `ArcaneServiceProvider`. Invoking this method with a list of `ArcaneService` instances will replace all existing services in the `ArcaneServiceProvider`.
 - [DEPRECATED] `context.serviceOfType<T>` has been deprecated in favor of `context.service<T>`.
 - [NEW] `context.requiredService<T>` has been added to provide a mechanism for ensuring a particular service has been registered.
-- [NEW] `ArcaneService<T>.of(context)` has been added for easy access to service instances. It returns a nullable service instance.
-- [NEW] `ArcaneService<T>.requiredOf(context)` has been added. It returns a non-nullable service instance, and throws an exception if the service instance has not been registered.
+- [NEW] Added `ArcaneService.ofType<T>(context)` and `ArcaneService.requiredOfType<T>(context)` locators, returning a nullable and non-nullable instance of a given service, respectively.
 
 ### Authentication Service (ArcaneAuth)
 
