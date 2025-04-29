@@ -20,7 +20,7 @@ void main() {
           child: Builder(
             builder: (context) {
               final provider = ArcaneServiceProvider.of(context);
-              expect(provider.serviceInstances, equals(testServices));
+              expect(provider?.serviceInstances, equals(testServices));
               return const SizedBox();
             },
           ),
