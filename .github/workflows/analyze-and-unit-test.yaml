@@ -15,8 +15,6 @@ jobs:
       - name: Get Flutter version from .puro.json
         id: puro_version
         run: |
-          pwd
-          ls -al
           if [[ -f ".puro.json" ]]; then
             flutter_version=$(jq -r '.env' .puro.json)
             echo "PURO_FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
