@@ -29,6 +29,8 @@ jobs:
           flutter-version: ${{ env.PURO_FLUTTER_VERSION == 'stable' && '' || env.FLUTTER_VERSION }}
       - name: Install dependencies
         run: flutter pub get
+      - name: Run build_runner
+        run: dart run build_runner build -d
       - name: Analyze
         run: flutter analyze
       - name: Test

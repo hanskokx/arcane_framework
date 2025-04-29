@@ -20,12 +20,11 @@ To use Arcane Framework in your Dart or Flutter project, follow these steps:
 
  1. Add the dependency to your pubspec.yaml:
 
-  ```yaml
-  dependencies:
-    arcane_framework: <latest>
+  ```shell
+  flutter pub add arcane_framework
   ```
 
-  2. Wrap your `MaterialApp` or `CupertinoApp` with the `ArcaneApp` Widget, providing the necessary services and your root widget.
+ 2. Wrap your `MaterialApp` or `CupertinoApp` with the `ArcaneApp` Widget, providing the necessary services and your root widget.
 
   ```dart
   import 'package:arcane_framework/arcane_framework.dart';
@@ -36,7 +35,7 @@ To use Arcane Framework in your Dart or Flutter project, follow these steps:
         services: [
           MyArcaneService.I,
         ],
-        child: MyApp(...),
+        child: MainApp(),
       ),
     );
   }
@@ -74,7 +73,6 @@ class FavoriteColorService extends ArcaneService {
     notifyListeners();
   }
 }
-
 ```
 
 To register a service with Arcane, simply add the instance of the `ArcaneService` to your list of services when initializing the `ArcaneApp`.
@@ -84,7 +82,7 @@ ArcaneApp(
   services: [
     FavoriteColorService.I,
   ],
-  child: MyApp(...),
+  child: MainApp(),
 ),
 ```
 
