@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
             maxCrossAxisExtent: 300,
             padding: const EdgeInsets.all(16),
             children: [
+              // Theme
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -216,6 +217,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         );
                                       }
+
+                                      Arcane.log(
+                                        "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${themeColors[index]}",
+                                      );
                                     },
                                     child: Container(
                                       color: themeColors[index],
@@ -238,6 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
+              // Authentication
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -250,26 +257,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       ElevatedButton(
+                        onPressed: Feature.authentication.enabled
+                            ? () async {
+                                if (isSignedIn) {
+                                  await Arcane.auth.logOut(
+                                    onLoggedOut: () async {
+                                      setState(() {});
+                                    },
+                                  );
+                                } else {
+                                  await Arcane.auth.login<Credentials>(
+                                    input: (
+                                      email: "email",
+                                      password: "password",
+                                    ),
+                                    onLoggedIn: () async {
+                                      setState(() {});
+                                    },
+                                  );
+                                }
+                              }
+                            : null,
                         child: Text(isSignedIn ? "Sign out" : "Sign in"),
-                        onPressed: () async {
-                          if (isSignedIn) {
-                            await Arcane.auth.logOut(
-                              onLoggedOut: () async {
-                                setState(() {});
-                              },
-                            );
-                          } else {
-                            await Arcane.auth.login<Credentials>(
-                              input: (
-                                email: "email",
-                                password: "password",
-                              ),
-                              onLoggedIn: () async {
-                                setState(() {});
-                              },
-                            );
-                          }
-                        },
                       ),
                       Center(
                         child: Text("Status: ${Arcane.auth.status.name}"),
@@ -278,9 +287,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
+              // Feature flags
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        "Feature Flags",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: Feature.values.length,
+                          itemBuilder: (context, i) {
+                            final Feature feature = Feature.values[i];
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(feature.name),
+                                Switch(
+                                  value: feature.enabled,
+                                  onChanged: (_) {
+                                    feature.enabled
+                                        ? feature.disable()
+                                        : feature.enable();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+
+        // Logging
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: SizedBox(
@@ -297,6 +347,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     "Log messages will appear here",
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                if (Feature.logging.disabled)
+                  Text(
+                    "Logging feature is disabled.",
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                   ),
                 Expanded(
@@ -320,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _subscription = Arcane.logger.logStream.listen((message) {
       setState(() {
-        latestLogs.insert(0, message);
+        if (Feature.logging.enabled) latestLogs.insert(0, message);
       });
     });
   }
