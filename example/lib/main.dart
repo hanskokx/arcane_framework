@@ -326,6 +326,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
+              // Environment
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        "Environment",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          final Environment currentEnvironment =
+                              ArcaneEnvironment.of(context).environment;
+                          if (currentEnvironment == Environment.normal) {
+                            ArcaneEnvironment.of(context).enableDebugMode();
+                          } else {
+                            ArcaneEnvironment.of(context).disableDebugMode();
+                          }
+                        },
+                        child: const Text("Switch environment"),
+                      ),
+                      Text(
+                        "Environment: ${ArcaneEnvironment.of(context).environment.name}",
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
