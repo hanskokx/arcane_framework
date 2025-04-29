@@ -1,6 +1,72 @@
-## NEXT
+## 2.0.0-dev
 
-- Added `of(context)` extension to `ArcaneService`
+### Arcane
+
+- [FIX] The `Arcane` class is now `abstract`
+
+### ArcaneEnvironment
+
+- [CHANGE] The dependency on `flutter_bloc` has been removed.
+- [CHANGE] The feature has been completely rewritten as an inherited widget, rather than using a `Cubit`.
+- [NEW] The `ArcaneEnvironment` widget now includes the `maybeOf(context)` and `of(context)` service locators.
+- [NEW] An `ArcaneEnvironmentProvider` widget has been added. This is used by `ArcaneApp` but can also be used independently when not using the `ArcaneApp` widget.
+- [NEW] The `ArcaneEnvironment`
+
+### ArcaneServiceProvider
+
+- [BREAKING] `ArcaneServiceProvider.of(context)` now returns a nullable instance, rather than throwing an exception.
+
+### Authentication Service (ArcaneAuth)
+
+- [FIX] Switching between `Environment.normal` and `Environment.debug` now correctly notifies subscribers
+- [BREAKING] Switching between environments now remembers the previous authentication status (e.g., switching to debug mode and then back to normal mode will now remember whether you were authenticated or unauthenticated in normal mode when you switched to debug mode.)
+
+### Feature Flags Service (ArcaneFeatureFlags)
+
+- [NEW] A `reset` method has been added, which will remove all enabled features and de-initialize the service.
+
+### Logging Service (ArcaneLogger)
+
+- [NEW] A `logStream` has been added. This will stream all log messages that are sent to `ArcaneLogger`. These messages are not processed by any registered `LoggingInterface`.
+- [BREAKING] Invoking the `log` method no longer throws an exception if `ArcaneLogger` has not been initialized. Log messages will always be sent to the `logStream` and will only be sent to the registered `LoggingInterface`s if the `init` method has ben invoked.
+- [FIX] Automatic file and line number detection has been improved, both in terms of performance and in reliability.
+- [NEW] In addition to the existing `registerInterfaces` method, a new `registerInterface` method has been added.
+- [NEW] The following methods have been added: `unregisterInterface`, `unregisterInterfaces`, and `unregisterAllInterfaces`.
+- [NEW] Added a `reset` method that clears all registered interfaces, clears all persistent metadata, and de-initializes `ArcaneLogger`
+
+### Theme (ArcaneTheme)
+
+- [NEW] Added the `ArcaneTheme` inherited widget
+- [NEW] Added `themeMode` extension to `BuildContext` to get the current `ThemeMode` (e.g., light/dark)
+- [BREAKING] Completely rewrote `ArcaneReactiveTheme`
+- [NEW] Added the `ArcaneThemeSwitcher` widget.
+
+#### ArcaneReactiveTheme
+
+- [NEW] The `isFollowingSystemTheme` getter has been added.
+- [NEW] The `themeModeChanges` getter will stream events when the `ThemeMode` changes (e.g., light/dark)
+- [NEW] The `themeDataChanges` getter will stream events when the current `ThemeData` changes
+- [NEW] The `systemThemeMode` getter will return the OS-level brightness (e.g., light/dark)
+- [BREAKING] The `currentMode` getter was renamed to `currentThemeMode`
+- [NEW] The `currentTheme` getter was added to retrieve the current `ThemeData`.
+- [BREAKING] The `systemTheme` getter was replaced by the `systemThemeMode` getter
+- [NEW] A `currentModeOf(context)` getter was added. Using this value will trigger a rebuild when the mode changes.
+- [CHANGE] The `switchTheme` method now (optionally) takes in a `ThemeMode` parameter. If it is omitted, the new mode will be automatically determined.
+- [FIX] The `followSystemTheme` method will now correctly trigger widget rebuilds under the correct circumstances.
+- [FIX] Invoking the `setDarkTheme` and `setLightTheme` methods will trigger widget rebuilds under the correct circumstances.
+
+#### ArcaneThemeSwitcher
+
+- [NEW] This new widget will, when added to the widget tree, trigger rebuilds when the theme mode or theme style is updated via `ArcaneTheme`/`ArcaneReactiveTheme`.
+- [NEW] This widget has been added to `ArcaneApp`.
+
+### Testing
+
+- [NEW] Tests have been written for much of the framework.
+
+### Example
+
+- [FIX] The example has been completely reworked. It now includes examples of all features that Arcane has to offer
 
 ## 1.2.5
 
