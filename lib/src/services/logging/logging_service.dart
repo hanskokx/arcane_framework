@@ -180,10 +180,6 @@ class ArcaneLogger {
     /// impact performance.
     bool skipAutodetection = false,
   }) {
-    if (!I._initialized) {
-      throw Exception("ArcaneLogger has not yet been initialized.");
-    }
-
     metadata ??= <String, String>{};
     metadata.putIfAbsent("timestamp", () => DateTime.now().toIso8601String());
 
@@ -251,15 +247,15 @@ class ArcaneLogger {
         stackTrace: stackTrace,
         extra: extra,
       );
-
-      _logStreamController.add(
-        "$message ${{
-          "level": level,
-          "metadata": metadata,
-          "extra": extra,
-        }}",
-      );
     }
+
+    _logStreamController.add(
+      "$message ${{
+        "level": level,
+        "metadata": metadata,
+        "extra": extra,
+      }}",
+    );
   }
 
   /// Registers a [LoggingInterface] with the [ArcaneLogger].
