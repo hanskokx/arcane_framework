@@ -33,12 +33,13 @@ class ArcaneServiceProvider extends InheritedNotifier {
     super.key,
   });
 
-  /// Determines whether the widget should notify its dependents.
-  ///
-  /// This always returns `true`, meaning dependents will always be notified
-  /// when this widget is rebuilt.
   @override
-  bool updateShouldNotify(_) => true;
+  bool updateShouldNotify(covariant ArcaneServiceProvider oldWidget) {
+    return !const DeepCollectionEquality().equals(
+      serviceInstances,
+      oldWidget.serviceInstances,
+    );
+  }
 
   /// Retrieves the nearest `ArcaneServiceProvider` in the widget tree.
   ///
