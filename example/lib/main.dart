@@ -82,6 +82,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final StreamSubscription<String> _subscription;
   final List<String> latestLogs = [];
+  final List<Color> themeColors = [
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.purple,
+    Colors.deepPurple,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final bool isSignedIn = Arcane.auth.isSignedIn.value;
@@ -106,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         children: [
                           Switch(
-                            value: Arcane.theme.currentTheme == ThemeMode.dark,
+                            value:
+                                Arcane.theme.currentThemeMode == ThemeMode.dark,
                             thumbIcon:
                                 WidgetStateProperty.resolveWith((states) {
                               if (states.contains(WidgetState.selected)) {
@@ -116,14 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             }),
                             onChanged: (_) {
                               final ThemeMode oldTheme =
-                                  Arcane.theme.currentTheme;
+                                  Arcane.theme.currentThemeMode;
                               Arcane.theme.switchTheme();
                               Arcane.log(
                                 "Switching theme",
                                 metadata: {
                                   "followingSystemTheme":
                                       "${Arcane.theme.isFollowingSystemTheme}",
-                                  "newMode": Arcane.theme.currentTheme.name,
+                                  "newMode": Arcane.theme.currentThemeMode.name,
                                   "oldMode": oldTheme.name,
                                 },
                               );
@@ -136,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 value: Arcane.theme.isFollowingSystemTheme,
                                 onChanged: (value) {
                                   final ThemeMode oldTheme =
-                                      Arcane.theme.currentTheme;
+                                      Arcane.theme.currentThemeMode;
                                   if (value == true) {
                                     Arcane.theme.followSystemTheme(context);
                                     Arcane.log(
@@ -145,13 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                         "followingSystemTheme":
                                             "${Arcane.theme.isFollowingSystemTheme}",
                                         "newMode":
-                                            Arcane.theme.currentTheme.name,
+                                            Arcane.theme.currentThemeMode.name,
                                         "oldMode": oldTheme.name,
                                       },
                                     );
                                   } else {
                                     Arcane.theme.switchTheme(
-                                      themeMode: Arcane.theme.systemTheme,
+                                      themeMode: Arcane.theme.systemThemeMode,
                                     );
                                     Arcane.log(
                                       "Switching theme",
@@ -159,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         "followingSystemTheme":
                                             "${Arcane.theme.isFollowingSystemTheme}",
                                         "newMode":
-                                            Arcane.theme.currentTheme.name,
+                                            Arcane.theme.currentThemeMode.name,
                                         "oldMode": oldTheme.name,
                                       },
                                     );
@@ -171,8 +182,55 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
+                      SizedBox(
+                        height: 20,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          spacing: 8,
+                          children: [
+                            const Text("Color"),
+                            Expanded(
+                              child: ListView.separated(
+                                itemCount: themeColors.length,
+                                scrollDirection: Axis.horizontal,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 4),
+                                itemBuilder: (context, index) {
+                                  return InkWell(
+                                    onTap: () {
+                                      if (Arcane.theme.currentThemeMode ==
+                                          ThemeMode.dark) {
+                                        Arcane.theme.setDarkTheme(
+                                          ThemeData(
+                                            brightness: Brightness.dark,
+                                            colorSchemeSeed: themeColors[index],
+                                          ),
+                                        );
+                                      } else if (Arcane
+                                              .theme.currentThemeMode ==
+                                          ThemeMode.light) {
+                                        Arcane.theme.setLightTheme(
+                                          ThemeData(
+                                            brightness: Brightness.light,
+                                            colorSchemeSeed: themeColors[index],
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      color: themeColors[index],
+                                      width: 20,
+                                      height: 20,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       Text(
-                        "The current theme mode is ${context.themeMode.name} and\n"
+                        "The current theme mode is ${context.themeMode.name} and "
                         "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
                         "following the system theme.",
                       ),
