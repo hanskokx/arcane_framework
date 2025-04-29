@@ -24,6 +24,6 @@ extension ArcaneThemeContext on BuildContext {
   /// Get the current theme mode from the nearest ArcaneThemeInherited widget
   ThemeMode get themeMode {
     return ArcaneTheme.of(this)?.themeMode ??
-        ArcaneReactiveTheme.I.currentTheme;
+        ArcaneReactiveTheme.I.currentThemeMode;
   }
 }

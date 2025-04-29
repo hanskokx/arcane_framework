@@ -16,15 +16,15 @@ void main() {
 
     group("theme mode", () {
       test("initial mode is light", () {
-        expect(theme.currentTheme, equals(ThemeMode.light));
+        expect(theme.currentThemeMode, equals(ThemeMode.light));
       });
 
       test("switchTheme toggles between light and dark", () {
-        expect(theme.currentTheme, equals(ThemeMode.light));
+        expect(theme.currentThemeMode, equals(ThemeMode.light));
         theme.switchTheme();
-        expect(theme.currentTheme, equals(ThemeMode.dark));
+        expect(theme.currentThemeMode, equals(ThemeMode.dark));
         theme.switchTheme();
-        expect(theme.currentTheme, equals(ThemeMode.light));
+        expect(theme.currentThemeMode, equals(ThemeMode.light));
       });
 
       test("switching theme notifies listeners", () {
@@ -66,7 +66,7 @@ void main() {
         });
 
         theme.addListener(() {
-          currentTheme = theme.currentTheme;
+          currentTheme = theme.currentThemeMode;
         });
 
         expect(currentTheme, ThemeMode.system);
@@ -106,7 +106,7 @@ void main() {
         Arcane.theme.followSystemTheme(lightContext);
         await tester.pumpAndSettle();
 
-        expect(theme.currentTheme, equals(ThemeMode.light));
+        expect(theme.currentThemeMode, equals(ThemeMode.light));
 
         await tester.pumpWidget(
           const MediaQuery(
@@ -121,7 +121,7 @@ void main() {
         Arcane.theme.followSystemTheme(darkContext);
         await tester.pumpAndSettle();
 
-        expect(theme.currentTheme, equals(ThemeMode.dark));
+        expect(theme.currentThemeMode, equals(ThemeMode.dark));
       });
     });
   });
