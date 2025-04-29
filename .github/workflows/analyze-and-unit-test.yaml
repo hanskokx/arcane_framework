@@ -24,7 +24,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          flutter-version: ${{ env.PURO_FLUTTER_VERSION == 'stable' && '' || env.PURO_FLUTTER_VERSION }}
+          flutter-version: ${{ env.PURO_FLUTTER_VERSION == 'stable' && '' || env.FLUTTER_VERSION }}
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze
