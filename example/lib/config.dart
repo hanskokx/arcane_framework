@@ -1,5 +1,6 @@
 enum Feature {
   logging(true),
+  authentication(true),
   ;
 
   final bool enabledAtStartup;
