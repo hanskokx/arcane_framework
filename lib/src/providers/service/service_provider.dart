@@ -1,6 +1,4 @@
-import "package:arcane_framework/arcane_framework.dart";
-import "package:collection/collection.dart";
-import "package:flutter/widgets.dart";
+part of "arcane_service.dart";
 
 /// A provider that makes a list of `ArcaneService` instances available to the widget tree.
 ///
@@ -121,84 +119,4 @@ class ArcaneServiceProvider
       notifier?.value = newList;
     }
   }
-}
-
-/// An extension on `BuildContext` to provide easy access to `ArcaneService` instances
-/// that are registered in an `ArcaneServiceProvider`.
-///
-/// This extension provides methods for retrieving services in various ways.
-///
-/// Example usage:
-/// ```dart
-/// final myService = context.service<MyService>();
-/// ```
-extension ServiceProviderExtension on BuildContext {
-  /// Finds and returns the `ArcaneService` instance of type `T` that has been registered
-  /// in the `ArcaneServiceProvider` or in the list of built-in services (`Arcane.services`).
-  ///
-  /// If no such service is found, it returns `null`.
-  ///
-  /// Example:
-  /// ```dart
-  /// final myService = context.service<MyService>();
-  /// ```
-  T? service<T extends ArcaneService>() {
-    // First check built-in services
-    final builtInService = Arcane.services.whereType<T>().firstOrNull;
-    if (builtInService != null) return builtInService;
-
-    // Then check provider
-    return ArcaneServiceProvider.serviceOfType<T>(this);
-  }
-
-  /// Finds and returns the `ArcaneService` instance of type `T` that has been registered
-  /// in the `ArcaneServiceProvider` or in the list of built-in services (`Arcane.services`).
-  ///
-  /// Throws an assertion error if no service is found.
-  ///
-  /// Example:
-  /// ```dart
-  /// final myService = context.requiredService<MyService>();
-  /// ```
-  T requiredService<T extends ArcaneService>() {
-    final service = this.service<T>();
-    assert(service != null, "No service of type $T found");
-    return service!;
-  }
-
-  /// Legacy method to maintain backward compatibility.
-  ///
-  /// Prefer using `service<T>()` instead.
-  @Deprecated("Use service<T>() instead")
-  T? serviceOfType<T extends ArcaneService>() => service<T>();
-}
-
-/// An abstract class representing a service in the Arcane architecture.
-///
-/// Classes that extend `ArcaneService` can use `ChangeNotifier` functionality
-/// to notify listeners of changes. Services are typically registered in
-/// `ArcaneServiceProvider` and can be accessed using the `service`
-/// method on `BuildContext`.
-abstract class ArcaneService with ChangeNotifier {
-  /// Retrieves a service of the specified type from the context.
-  ///
-  /// Returns null if no service of type `T` is found.
-  ///
-  /// Example:
-  /// ```dart
-  /// final myService = ArcaneService.ofType<MyService>(context);
-  /// ```
-  static T? ofType<T extends ArcaneService>(BuildContext context) =>
-      context.service<T>();
-
-  /// Retrieves a service of the specified type from the context.
-  ///
-  /// Throws an assertion error if no service of type `T` is found.
-  ///
-  /// Example:
-  /// ```dart
-  /// final myService = ArcaneService.requiredOfType<MyService>(context);
-  /// ```
-  static T requiredOfType<T extends ArcaneService>(BuildContext context) =>
-      context.requiredService<T>();
 }
