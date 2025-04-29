@@ -33,7 +33,7 @@ To use Arcane Framework in your Dart or Flutter project, follow these steps:
     runApp(
       ArcaneApp(
         services: [
-          MyArcaneService.I,
+          MyArcaneService(),
         ],
         child: MainApp(),
       ),
@@ -55,7 +55,7 @@ A service's purpose is to facilitate cross-feature communication of small pieces
 class FavoriteColorService extends ArcaneService {
   static final FavoriteColorService _instance = FavoriteColorService._internal();
 
-  static FavoriteColorService get I => _instance;
+  factory FavoriteColorService() => I._instance;
 
   FavoriteColorService._internal();
 
