@@ -240,13 +240,15 @@ class ArcaneLogger {
 
     // Send logs to registered interface(s)
     for (final LoggingInterface i in I._interfaces) {
-      i.log(
-        message,
-        level: level,
-        metadata: metadata,
-        stackTrace: stackTrace,
-        extra: extra,
-      );
+      if (initialized) {
+        i.log(
+          message,
+          level: level,
+          metadata: metadata,
+          stackTrace: stackTrace,
+          extra: extra,
+        );
+      }
     }
 
     _logStreamController.add(
