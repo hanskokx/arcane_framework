@@ -719,7 +719,7 @@ class ArcaneServicesExample extends StatelessWidget {
     super.initState();
     _subscription = Arcane.logger.logStream.listen((message) {
       setState(() {
-        latestLogs.insert(0, message);
+        if (Feature.logging.enabled) latestLogs.insert(0, message);
       });
     });
   }
