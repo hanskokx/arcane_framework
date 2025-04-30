@@ -82,7 +82,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final StreamSubscription<String> _subscription;
-  late final StreamSubscription<Color> _serviceSubscription;
+
   final List<String> latestLogs = [];
   static const List<MaterialColor> colors = [
     Colors.red,
