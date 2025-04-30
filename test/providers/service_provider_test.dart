@@ -194,7 +194,7 @@ void main() {
           services: testServices,
           child: Builder(
             builder: (context) {
-              final service = ArcaneService.of<MockArcaneService>(context);
+              final service = ArcaneService.ofType<MockArcaneService>(context);
               expect(service, isNotNull);
               expect(service, isA<MockArcaneService>());
               return const SizedBox();
@@ -212,11 +212,12 @@ void main() {
           child: Builder(
             builder: (context) {
               final service =
-                  ArcaneService.requiredOf<MockArcaneService>(context);
+                  ArcaneService.requiredOfType<MockArcaneService>(context);
               expect(service, isA<MockArcaneService>());
 
               expect(
-                () => ArcaneService.requiredOf<UnregisteredService>(context),
+                () =>
+                    ArcaneService.requiredOfType<UnregisteredService>(context),
                 throwsA(isA<AssertionError>()),
               );
 

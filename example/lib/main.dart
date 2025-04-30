@@ -5,6 +5,7 @@ import "package:example/config.dart";
 import "package:example/interfaces/debug_auth_interface.dart";
 import "package:example/interfaces/debug_print_interface.dart";
 import "package:example/services/demo_service.dart";
+import "package:example/services/favorite_color_service.dart";
 import "package:example/theme/theme.dart";
 import "package:flutter/material.dart";
 
@@ -81,8 +82,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final StreamSubscription<String> _subscription;
+  late final StreamSubscription<Color> _serviceSubscription;
   final List<String> latestLogs = [];
-  final List<Color> themeColors = [
+  static const List<MaterialColor> colors = [
     Colors.red,
     Colors.orange,
     Colors.yellow,
@@ -94,7 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSignedIn = Arcane.auth.isSignedIn.value;
     return Column(
       children: [
         Expanded(
@@ -192,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Text("Color"),
                             Expanded(
                               child: ListView.separated(
-                                itemCount: themeColors.length,
+                                itemCount: colors.length,
                                 scrollDirection: Axis.horizontal,
                                 separatorBuilder: (_, __) =>
                                     const SizedBox(width: 4),
@@ -204,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Arcane.theme.setDarkTheme(
                                           ThemeData(
                                             brightness: Brightness.dark,
-                                            colorSchemeSeed: themeColors[index],
+                                            colorSchemeSeed: colors[index],
                                           ),
                                         );
                                       } else if (Arcane
@@ -213,17 +214,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Arcane.theme.setLightTheme(
                                           ThemeData(
                                             brightness: Brightness.light,
-                                            colorSchemeSeed: themeColors[index],
+                                            colorSchemeSeed: colors[index],
                                           ),
                                         );
                                       }
 
                                       Arcane.log(
-                                        "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${themeColors[index]}",
+                                        "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index]}",
                                       );
                                     },
                                     child: Container(
-                                      color: themeColors[index],
+                                      color: colors[index],
                                       width: 20,
                                       height: 20,
                                     ),
@@ -259,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ElevatedButton(
                         onPressed: Feature.authentication.enabled
                             ? () async {
-                                if (isSignedIn) {
+                                if (Arcane.auth.isSignedIn.value) {
                                   await Arcane.auth.logOut(
                                     onLoggedOut: () async {
                                       setState(() {});
@@ -278,7 +279,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 }
                               }
                             : null,
-                        child: Text(isSignedIn ? "Sign out" : "Sign in"),
+                        child: Text(
+                          Arcane.auth.isSignedIn.value ? "Sign out" : "Sign in",
+                        ),
                       ),
                       Center(
                         child: Text("Status: ${Arcane.auth.status.name}"),
@@ -372,6 +375,108 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         "Environment: ${ArcaneEnvironment.of(context).environment.name}",
                         textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Services
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        "Services",
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      ValueListenableBuilder(
+                        valueListenable:
+                            ArcaneService.ofType<FavoriteColorService>(
+                                  context,
+                                )?.notifier ??
+                                ValueNotifier(null),
+                        builder: (context, color, _) {
+                          return Text(
+                            color != null
+                                ? "Favorite color: ${color.name}"
+                                : "",
+                          );
+                        },
+                      ),
+                      ElevatedButton(
+                        onPressed: ArcaneServiceProvider.serviceOfType<
+                                    FavoriteColorService>(context) ==
+                                null
+                            ? () {
+                                ArcaneServiceProvider.of(context).addService(
+                                  FavoriteColorService.I,
+                                );
+                                Arcane.log(
+                                  "Service registered.",
+                                  metadata: {
+                                    "service": "FavoriteColorService",
+                                  },
+                                );
+                              }
+                            : () {
+                                ArcaneServiceProvider.of(context)
+                                    .removeService<FavoriteColorService>();
+                                Arcane.log(
+                                  "Service removed.",
+                                  metadata: {
+                                    "service": "FavoriteColorService",
+                                  },
+                                );
+                              },
+                        child: Text(
+                          '${ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context) == null ? 'Register' : 'Remove'} service',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          spacing: 8,
+                          children: [
+                            const Text("Color"),
+                            Expanded(
+                              child: ListView.separated(
+                                itemCount: colors.length,
+                                scrollDirection: Axis.horizontal,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 4),
+                                itemBuilder: (context, index) {
+                                  return InkWell(
+                                    onTap: () {
+                                      ArcaneService.ofType<
+                                          FavoriteColorService>(
+                                        context,
+                                      )?.setMyFavoriteColor(colors[index]);
+                                      Arcane.log(
+                                        "Set a color in FavoriteColorService",
+                                        metadata: {
+                                          "color": colors[index].name,
+                                        },
+                                      );
+                                    },
+                                    child: Container(
+                                      color: colors[index],
+                                      width: 20,
+                                      height: 20,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        "Service is ${ArcaneService.ofType<FavoriteColorService>(context) != null ? "" : "not "}registered",
                       ),
                     ],
                   ),
