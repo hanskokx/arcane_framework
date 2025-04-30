@@ -25,8 +25,8 @@ class FavoriteColorService extends ArcaneService {
   }
 }
 
-extension ColorName on MaterialColor {
-  String get name {
+extension MaterialColorName on MaterialColor {
+  String? get name {
     final double red = double.parse(r.toStringAsFixed(4));
     final double green = double.parse(g.toStringAsFixed(4));
     final double blue = double.parse(b.toStringAsFixed(4));
@@ -38,6 +38,24 @@ extension ColorName on MaterialColor {
     if (red == 0.6118 && green == 0.1529 && blue == 0.6902) return "indigo";
     if (red == 0.4039 && green == 0.2275 && blue == 0.7176) return "violet";
 
-    return "";
+    return null;
+  }
+}
+
+extension ColorName on Color {
+  String? get name {
+    final double red = double.parse(r.toStringAsFixed(4));
+    final double green = double.parse(g.toStringAsFixed(4));
+    final double blue = double.parse(b.toStringAsFixed(4));
+
+    if (red == 0.5647 && green == 0.2902 && blue == 0.2588) return "red";
+    if (red == 0.5216 && green == 0.3255 && blue == 0.0941) return "orange";
+    if (red == 0.4078 && green == 0.3725 && blue == 0.0706) return "yellow";
+    if (red == 0.2314 && green == 0.4118 && blue == 0.2235) return "green";
+    if (red == 0.2118 && green == 0.3804 && blue == 0.5569) return "blue";
+    if (red == 0.4824 && green == 0.3059 && blue == 0.498) return "indigo";
+    if (red == 0.4078 && green == 0.3294 && blue == 0.5569) return "violet";
+
+    return null;
   }
 }

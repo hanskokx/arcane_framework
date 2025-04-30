@@ -263,7 +263,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       );
                                     },
                                     child: Container(
-                                      color: colors[index],
+                                      decoration: BoxDecoration(
+                                        color: colors[index],
+                                        border: Arcane.theme.currentTheme
+                                                    .colorScheme.primary.name ==
+                                                colors[index].name
+                                            ? Border.all(width: 2)
+                                            : null,
+                                      ),
                                       width: 20,
                                       height: 20,
                                     ),
@@ -516,12 +523,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Arcane.log(
                                         "Set a color in FavoriteColorService",
                                         metadata: {
-                                          "color": colors[index].name,
+                                          "color":
+                                              colors[index].name ?? "Unknown",
                                         },
                                       );
                                     },
                                     child: Container(
-                                      color: colors[index],
+                                      decoration: BoxDecoration(
+                                        color: colors[index],
+                                        border: ArcaneService.ofType<
+                                                    FavoriteColorService>(
+                                                  context,
+                                                )?.myFavoriteColor?.name ==
+                                                colors[index].name
+                                            ? Border.all(width: 2)
+                                            : null,
+                                      ),
                                       width: 20,
                                       height: 20,
                                     ),
