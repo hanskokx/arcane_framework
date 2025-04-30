@@ -58,6 +58,8 @@ abstract class Arcane {
   /// - [stackTrace]: Optional stack trace information.
   /// - [metadata]: Optional additional metadata in key-value pairs.
   /// - [extra]: Optional data passed to the logger.
+  /// - [skipAutodetection]: Bypass automatically determining the module, method,
+  ///   and file/line number of log messages.
   static void log(
     String message, {
     String? module,
@@ -66,6 +68,7 @@ abstract class Arcane {
     StackTrace? stackTrace,
     Map<String, String>? metadata,
     Object? extra,
+    bool skipAutodetection = false,
   }) {
     ArcaneLogger.I.log(
       message,
@@ -75,6 +78,7 @@ abstract class Arcane {
       stackTrace: stackTrace,
       metadata: metadata,
       extra: extra,
+      skipAutodetection: skipAutodetection,
     );
   }
 }

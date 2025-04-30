@@ -4,51 +4,54 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:example/config.dart";
 import "package:example/interfaces/debug_auth_interface.dart";
 import "package:example/interfaces/debug_print_interface.dart";
-import "package:example/services/demo_service.dart";
 import "package:example/services/favorite_color_service.dart";
 import "package:example/theme/theme.dart";
 import "package:flutter/material.dart";
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+  // If any Feature enum items are `enabledAtStartup`, enable them within Arcane.
   for (final Feature feature in Feature.values) {
     if (feature.enabledAtStartup) Arcane.features.enableFeature(feature);
   }
 
-  await Future.wait([
-    Arcane.logger.registerInterfaces([
-      DebugPrint.I,
-    ]),
-    IdService.I.init(),
-  ]);
+  // Register the logging interface
+  await Arcane.logger.registerInterface(DebugPrint.I);
 
+  // Add some persistent metadata to be used in every future log message
   Arcane.logger.addPersistentMetadata({
-    "session_id": IdService.I.sessionId.value,
+    "demo": "This message will be included in all log messages.",
   });
 
+  // Register the authentication interface
   await Arcane.auth.registerInterface(DebugAuthInterface.I);
 
+  // Set the light and dark mode themes using our pre-defined ThemeData classes
   Arcane.theme
-    ..setDarkTheme(darkTheme)
-    ..setLightTheme(lightTheme);
+    ..setLightTheme(lightTheme)
+    ..setDarkTheme(darkTheme);
 
+  // Log a message that the app has been initialized
   Arcane.log(
     "Initialization complete.",
+    // Set an appropriate log level
     level: Level.info,
+    // The `module` and `method` are _often_ automatically determined, but they can be overridden.
     module: "main",
     method: "main",
+    // Skip autodetction of the `module`, `method`, and file/line number where logs originated from.
+    skipAutodetection: true,
+    // Add some optional metadata to be included in this single log message. This is added to the
+    // persistent metadata, if any has been set.
     metadata: {
       "ready": "true",
     },
   );
 
   runApp(
-    ArcaneApp(
-      services: [
-        IdService.I,
-      ],
-      child: const MainApp(),
+    // The `ArcaneApp` widget is optional but provides the `ArcaneEnvironmentProvider`,
+    // `ArcaneServiceProvider`, and `ArcaneThemeSwitcher` widgets.
+    const ArcaneApp(
+      child: MainApp(),
     ),
   );
 }
@@ -59,9 +62,13 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      // Use the light and dark theme objects registered in Arcane. If either style is
+      // updated in Arcane, the changes will reflect here. This allows for on-the-fly
+      // customizations without requiring compile-time themes to be pre-defined.
       theme: Arcane.theme.light,
       darkTheme: Arcane.theme.dark,
+      // By fetching the current ThemeMode from Arcane, the app will automatically rebuild
+      // when the theme is switched, either manually or automatically.
       themeMode: Arcane.theme.currentModeOf(context),
       home: Scaffold(
         appBar: AppBar(
@@ -81,9 +88,37 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final StreamSubscription<String> _subscription;
+  // Set up a subscriber that we can use to listen to logs in realtime.
+  // Note: this is completely optional and does _not_ impact whether logs are
+  // sent to any registered logging interfaces.
+  late final StreamSubscription<String> _logStreamSubscriber;
 
+  // Used to collect the logs from the stream.
   final List<String> latestLogs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Listens to the Arcane logger stream of logs and adds them to the latestLogs list.
+    _logStreamSubscriber = Arcane.logger.logStream.listen((message) {
+      // If [Feature.logging] is disabled, we won't add the logs to the list or trigger
+      // a rebuild.
+      if (Feature.logging.enabled) {
+        setState(() {
+          latestLogs.insert(0, message);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Don't forget to properly dispose of the subscriber
+    _logStreamSubscriber.cancel();
+    super.dispose();
+  }
+
+  // Some colors we'll use for our example
   static const List<MaterialColor> colors = [
     Colors.red,
     Colors.orange,
@@ -103,7 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
             maxCrossAxisExtent: 300,
             padding: const EdgeInsets.all(16),
             children: [
-              // Theme
+              // * Theme
+              // Arcane enables easy, dynamic theme switching. Themes can be switched
+              // at any time between light mode and dark mode, or set to follow the
+              // system theme. In addition, themes can be swapped out on-the-fly,
+              // enabling dynamic customizations and remote theme fetching.
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -220,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       }
 
                                       Arcane.log(
-                                        "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index]}",
+                                        "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
                                       );
                                     },
                                     child: Container(
@@ -245,7 +284,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Authentication
+              // * Authentication
+              // Arcane's authentication system provides a simple, standard interface
+              // for common authentication tasks - including registration and account
+              // management, logging in and out, etc. Authentication status is reflected
+              // in realtime within the application as changes happen, so you can focus
+              // on what's most important.
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -291,7 +335,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Feature flags
+              // * Feature flags
+              // Arcane's feature flag system is extremely simple and flexible to use.
+              // By registering _any_ enum (or even multiple enums!), features can be
+              // toggled on and off at any point. The feature flag system even offers
+              // a notifier, so you can listen to changes as they happen. Fetch your
+              // remote config and use it to dynamically enable and disable features
+              // with ease!
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -330,7 +380,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Environment
+              // * Environment
+              // Quickly and easily toggle between a "normal" and "debug" environment
+              // within your application. This is particularly useful during development
+              // when you may want to change the behavior of the application under
+              // certain conditions.
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -381,7 +435,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Services
+              // * Services
+              // Arcane's services system is flexible and minimal, leaving the power
+              // and control in developers' hands. This system powers much of Arcane
+              // internally, so you know it's reliable.
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -486,7 +543,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        // Logging
+        // * Logging
+        // Arcane's logging system gives developers the power to dynamically add and
+        // remove logging interfaces on-the-fly: try enabling a debug logging interface
+        // when the app is running in debug mode, adding a third-party logging interface
+        // when in production, and waiting until after the user has gone through the
+        // login process to ask them for permission to track. Include useful metadata,
+        // including persistent metadata, in your log messages. All of these things, and
+        // more, are possible when using Arcane's logging system.
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: SizedBox(
@@ -526,21 +590,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _subscription = Arcane.logger.logStream.listen((message) {
-      setState(() {
-        if (Feature.logging.enabled) latestLogs.insert(0, message);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
   }
 }
