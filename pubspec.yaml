@@ -12,11 +12,10 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  arcane_helper_utils: ^1.3.2
+  arcane_helper_utils: ^1.4.1
   collection: ^1.19.0
   flutter:
     sdk: flutter
-  flutter_bloc: ^9.1.0
   result_monad: ^2.3.2
 
 dev_dependencies:
