@@ -21,14 +21,14 @@ class ArcaneServiceProvider
     extends InheritedNotifier<ValueNotifier<List<ArcaneService>>> {
   /// A list of `ArcaneService` instances available through the provider.
   List<ArcaneService> get registeredServices =>
-      List<ArcaneService>.from(notifier?.value ?? []);
+      List<ArcaneService>.from([...?notifier?.value]);
 
   /// Creates an `ArcaneServiceProvider` that provides [serviceInstances] to the widget tree.
   ///
   /// The [child] widget will be the root of the widget subtree that has access to the services.
   ArcaneServiceProvider({
-    required List<ArcaneService> serviceInstances,
     required super.child,
+    List<ArcaneService> serviceInstances = const [],
     super.key,
   }) : super(
           notifier: ValueNotifier<List<ArcaneService>>(serviceInstances),
