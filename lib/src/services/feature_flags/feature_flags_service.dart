@@ -70,8 +70,7 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     if (_enabledFeatures.contains(feature)) return I;
 
-    _enabledFeatures.add(feature);
-    _notifier.value.add(feature);
+    _notifier.value = [..._enabledFeatures, feature];
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -100,8 +99,7 @@ class ArcaneFeatureFlags extends ArcaneService {
     if (!I._initialized) _init();
     if (!_enabledFeatures.contains(feature)) return I;
 
-    _enabledFeatures.remove(feature);
-    _notifier.value.remove(feature);
+    _notifier.value = [..._enabledFeatures]..removeWhere((i) => i == feature);
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -123,8 +121,9 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// It is called automatically when enabling or disabling features if they haven't
   /// already been initialized.
   void _init() {
-    _enabledFeatures.clear();
-    _notifier.value.clear();
+    _notifier.value = [];
+
+    notifier.addListener(_listener);
 
     I._initialized = true;
     notifyListeners();
@@ -135,10 +134,15 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// This method clears all enabled features, resets notification values,
   /// marks the flags as uninitialized, and notifies listeners of the changes.
   void reset() {
-    _enabledFeatures.clear();
-    _notifier.value.clear();
+    _notifier.value = [];
 
     I._initialized = false;
     notifyListeners();
+  }
+
+  void _listener() {
+    _enabledFeatures
+      ..clear()
+      ..addAll(notifier.value);
   }
 }

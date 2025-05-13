@@ -147,42 +147,47 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SizedBox(
-        height: 200,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Logging",
-              style: Theme.of(context).textTheme.headlineSmall,
+    return ValueListenableBuilder(
+      valueListenable: Arcane.features.notifier,
+      builder: (context, enabledFeatures, _) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            height: 200,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Logging",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                if (latestLogs.isEmpty)
+                  Text(
+                    "Log messages will appear here",
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ),
+                if (Feature.logging.disabled)
+                  Text(
+                    "Logging feature is disabled.",
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: latestLogs.length,
+                    itemBuilder: (context, index) {
+                      return Text(latestLogs[index]);
+                    },
+                  ),
+                ),
+              ],
             ),
-            if (latestLogs.isEmpty)
-              Text(
-                "Log messages will appear here",
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontStyle: FontStyle.italic,
-                    ),
-              ),
-            if (Feature.logging.disabled)
-              Text(
-                "Logging feature is disabled.",
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: latestLogs.length,
-                itemBuilder: (context, index) {
-                  return Text(latestLogs[index]);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -200,47 +205,52 @@ class ArcaneAuthExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ValueListenableBuilder(
-          valueListenable: Arcane.auth.isSignedIn,
-          builder: (context, isSignedIn, _) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  "Authentication",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                ElevatedButton(
-                  onPressed: Feature.authentication.enabled
-                      ? () async {
-                          if (isSignedIn) {
-                            await Arcane.auth.logOut();
-                          } else {
-                            await Arcane.auth.login<Credentials>(
-                              input: (
-                                email: "email",
-                                password: "password",
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  child: Text(
-                    isSignedIn ? "Sign out" : "Sign in",
-                  ),
-                ),
-                Center(
-                  child: Text("Status: ${Arcane.auth.status.name}"),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
+    return ValueListenableBuilder(
+      valueListenable: Arcane.features.notifier,
+      builder: (context, enabledFeatures, _) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ValueListenableBuilder(
+              valueListenable: Arcane.auth.isSignedIn,
+              builder: (context, isSignedIn, _) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      "Authentication",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    ElevatedButton(
+                      onPressed: Feature.authentication.enabled
+                          ? () async {
+                              if (isSignedIn) {
+                                await Arcane.auth.logOut();
+                              } else {
+                                await Arcane.auth.login<Credentials>(
+                                  input: (
+                                    email: "email",
+                                    password: "password",
+                                  ),
+                                );
+                              }
+                            }
+                          : null,
+                      child: Text(
+                        isSignedIn ? "Sign out" : "Sign in",
+                      ),
+                    ),
+                    Center(
+                      child: Text("Status: ${Arcane.auth.status.name}"),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -414,42 +424,47 @@ class ArcaneFeatureFlagsExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Feature Flags",
-              style: Theme.of(context).textTheme.headlineSmall,
+    return ValueListenableBuilder(
+      valueListenable: Arcane.features.notifier,
+      builder: (context, enabledFeatures, _) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Feature Flags",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: Feature.values.length,
+                    itemBuilder: (context, i) {
+                      final Feature feature = Feature.values[i];
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(feature.name),
+                          Switch(
+                            value: feature.enabled,
+                            onChanged: (_) {
+                              feature.enabled
+                                  ? feature.disable()
+                                  : feature.enable();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: Feature.values.length,
-                itemBuilder: (context, i) {
-                  final Feature feature = Feature.values[i];
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(feature.name),
-                      Switch(
-                        value: feature.enabled,
-                        onChanged: (_) {
-                          feature.enabled
-                              ? feature.disable()
-                              : feature.enable();
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
