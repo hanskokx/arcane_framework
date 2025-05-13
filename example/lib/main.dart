@@ -152,38 +152,43 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
       builder: (context, enabledFeatures, _) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            height: 200,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Logging",
-                  style: Theme.of(context).textTheme.headlineSmall,
+          child: Card(
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height / 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Logging",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    if (latestLogs.isEmpty)
+                      Text(
+                        "Log messages will appear here",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                    if (Feature.logging.disabled)
+                      Text(
+                        "Logging feature is disabled.",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: latestLogs.length,
+                        itemBuilder: (context, index) {
+                          return Text(latestLogs[index]);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                if (latestLogs.isEmpty)
-                  Text(
-                    "Log messages will appear here",
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
-                  ),
-                if (Feature.logging.disabled)
-                  Text(
-                    "Logging feature is disabled.",
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: latestLogs.length,
-                    itemBuilder: (context, index) {
-                      return Text(latestLogs[index]);
-                    },
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -544,98 +549,105 @@ class ArcaneServicesExample extends StatelessWidget {
   Widget build(BuildContext context) {
     final FavoriteColorService? service =
         ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Services",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            ValueListenableBuilder(
-              valueListenable: ArcaneService.ofType<FavoriteColorService>(
-                    context,
-                  )?.notifier ??
-                  ValueNotifier(null),
-              builder: (context, color, _) {
-                return Text(
+    final ValueNotifier<MaterialColor?> notifier =
+        service?.notifier ?? ValueNotifier(null);
+    return ValueListenableBuilder(
+      valueListenable: notifier,
+      builder: (context, color, _) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Services",
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Text(
                   color != null ? "Favorite color: ${color.name}" : "",
-                );
-              },
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (service == null) {
-                  ArcaneServiceProvider.of(context).addService(
-                    FavoriteColorService.I,
-                  );
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (service == null) {
+                      ArcaneServiceProvider.of(context).addService(
+                        FavoriteColorService.I,
+                      );
 
-                  Arcane.log(
-                    "Service registered.",
-                    metadata: {"service": "FavoriteColorService"},
-                  );
-                } else {
-                  ArcaneServiceProvider.of(context)
-                      .removeService<FavoriteColorService>();
+                      Arcane.log(
+                        "Service registered.",
+                        metadata: {"service": "FavoriteColorService"},
+                      );
+                    } else {
+                      ArcaneServiceProvider.of(context)
+                          .removeService<FavoriteColorService>();
 
-                  Arcane.log(
-                    "Service removed.",
-                    metadata: {"service": "FavoriteColorService"},
-                  );
-                }
-              },
-              child: Text('${service == null ? 'Register' : 'Remove'} service'),
-            ),
-            SizedBox(
-              height: 20,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                spacing: 8,
-                children: [
-                  const Text("Color"),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: colors.length,
-                      scrollDirection: Axis.horizontal,
-                      separatorBuilder: (_, __) => const SizedBox(width: 4),
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                          onTap: () {
-                            service?.setMyFavoriteColor(colors[index]);
-                            Arcane.log(
-                              "Set a color in FavoriteColorService",
-                              metadata: {
-                                "color": colors[index].name ?? "Unknown",
+                      Arcane.log(
+                        "Service removed.",
+                        metadata: {"service": "FavoriteColorService"},
+                      );
+                    }
+                  },
+                  child: Text(
+                    '${service == null ? 'Register' : 'Remove'} service',
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    spacing: 8,
+                    children: [
+                      const Text("Color"),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: colors.length,
+                          scrollDirection: Axis.horizontal,
+                          separatorBuilder: (_, __) => const SizedBox(width: 4),
+                          itemBuilder: (context, index) {
+                            return InkWell(
+                              onTap: () {
+                                if (service == null) {
+                                  Arcane.log(
+                                    "FavoriteColorService is not registered",
+                                  );
+                                  return;
+                                }
+
+                                service.setMyFavoriteColor(colors[index]);
+                                Arcane.log(
+                                  "Set a color in FavoriteColorService",
+                                  metadata: {
+                                    "color": colors[index].name ?? "Unknown",
+                                  },
+                                );
                               },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: colors[index],
+                                  border: color?.name == colors[index].name
+                                      ? Border.all(width: 2)
+                                      : null,
+                                ),
+                                width: 20,
+                                height: 20,
+                              ),
                             );
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colors[index],
-                              border: service?.myFavoriteColor?.name ==
-                                      colors[index].name
-                                  ? Border.all(width: 2)
-                                  : null,
-                            ),
-                            width: 20,
-                            height: 20,
-                          ),
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Text(
+                  "Service is ${service != null ? "" : "not "}registered",
+                ),
+              ],
             ),
-            Text(
-              "Service is ${service != null ? "" : "not "}registered",
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
