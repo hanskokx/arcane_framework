@@ -67,7 +67,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     _notifier.value = AuthenticationStatus.unauthenticated;
     _isSignedIn.value = isAuthenticated;
     _previousModeWhenSettingDebug = null;
-    notifyListeners();
   }
 
   /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
@@ -157,7 +156,6 @@ class ArcaneAuthenticationService extends ArcaneService {
       _notifier.value = newStatus;
       _isSignedIn.value = isAuthenticated;
     }
-    notifyListeners();
   }
 
   /// Logs the current user out. Upon successful logout, `status` will be set to

@@ -20,8 +20,6 @@ class FavoriteColorService extends ArcaneService {
     if (_notifier.value != newValue) {
       _notifier.value = newValue;
     }
-
-    notifyListeners();
   }
 }
 

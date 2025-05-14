@@ -82,7 +82,6 @@ class ArcaneFeatureFlags extends ArcaneService {
       );
     }
 
-    notifyListeners();
     return I;
   }
 
@@ -111,7 +110,6 @@ class ArcaneFeatureFlags extends ArcaneService {
       );
     }
 
-    notifyListeners();
     return I;
   }
 
@@ -121,12 +119,9 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// It is called automatically when enabling or disabling features if they haven't
   /// already been initialized.
   void _init() {
-    _notifier.value = [];
-
-    notifier.addListener(_listener);
-
+    if (I._initialized) return;
+    reset();
     I._initialized = true;
-    notifyListeners();
   }
 
   /// Resets the feature flags to their initial state.
@@ -134,10 +129,11 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// This method clears all enabled features, resets notification values,
   /// marks the flags as uninitialized, and notifies listeners of the changes.
   void reset() {
+    notifier
+      ..removeListener(_listener)
+      ..addListener(_listener);
     _notifier.value = [];
-
     I._initialized = false;
-    notifyListeners();
   }
 
   void _listener() {
