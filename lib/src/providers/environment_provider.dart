@@ -14,11 +14,10 @@ class ArcaneEnvironment extends InheritedWidget {
   /// Creates an `ArcaneEnvironment` widget.
   const ArcaneEnvironment({
     required this.environment,
-    required Widget child,
     required void Function(Environment) switchEnvironment,
-    Key? key,
-  })  : _switchEnvironment = switchEnvironment,
-        super(key: key, child: child);
+    required super.child,
+    super.key,
+  }) : _switchEnvironment = switchEnvironment;
 
   /// Retrieves the `ArcaneEnvironment` instance from the nearest ancestor.
   ///

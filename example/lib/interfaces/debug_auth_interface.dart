@@ -25,7 +25,9 @@ class DebugAuthInterface
       );
 
   @override
-  Future<Result<void, String>> logout() async {
+  Future<Result<void, String>> logout({
+    Future<void> Function()? onLoggedOut,
+  }) async {
     Arcane.log("Logging out");
 
     _isSignedIn = false;
