@@ -50,13 +50,13 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
-  Future<String?> get accessToken =>
-      authInterface?.accessToken ?? Future.value("");
+  Future<String?> get accessToken async =>
+      await authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
-  Future<String?> get refreshToken =>
-      authInterface?.refreshToken ?? Future.value("");
+  Future<String?> get refreshToken async =>
+      await authInterface?.refreshToken ?? Future.value("");
 
   AuthenticationStatus? _previousModeWhenSettingDebug;
 
@@ -169,11 +169,12 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     if (!isAuthenticated) Result.error("User is not authenticated.");
 
-    final Result<void, String> loggedOut = await authInterface!.logout();
+    final Result<void, String> loggedOut = await authInterface!.logout(
+      onLoggedOut: onLoggedOut,
+    );
 
     if (loggedOut.isSuccess) {
       setUnauthenticated();
-      if (onLoggedOut != null) await onLoggedOut();
     }
 
     _previousModeWhenSettingDebug = null;
@@ -192,11 +193,11 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     final Result<void, String> result = await authInterface!.login(
       input: input,
+      onLoggedIn: onLoggedIn,
     );
 
     if (result.isSuccess) {
       setAuthenticated();
-      if (onLoggedIn != null) await onLoggedIn();
     }
 
     return result;
