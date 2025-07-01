@@ -1,69 +1,109 @@
-# Arcane Framework: Agnostic Reusable Component Architecture for New Ecosystems
+# Arcane Framework
 
-The Arcane Framework is a powerful Dart package designed to provide a robust architecture for managing key application services such as logging, authentication, secure storage, feature flags, theming, and more. This framework is ideal for building scalable applications that require dynamic configuration and service management.
+> _**A**gnostic **R**eusable **C**omponent **A**rchitecture for **N**ew
+> **E**cosystems_
 
-[![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)](https://pub.dev/packages/arcane_analysis)
+![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)
+
+The Arcane Framework is a powerful Dart package designed to provide a robust
+architecture for managing key application services such as logging,
+authentication, secure storage, feature flags, theming, and more. This framework
+is ideal for building scalable applications that require dynamic configuration
+and service management.
+
+- [Arcane Framework](#arcane-framework)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Services](#services)
+      - [Defining an example `ArcaneService`](#defining-an-example-arcaneservice)
+      - [Registering and unregistering an `ArcaneService`](#registering-and-unregistering-an-arcaneservice)
+      - [Locating an `ArcaneService`](#locating-an-arcaneservice)
+      - [Using `ArcaneService` services](#using-arcaneservice-services)
+    - [Feature Flags](#feature-flags)
+    - [Logging](#logging)
+    - [Authentication](#authentication)
+    - [Dynamic Theming](#dynamic-theming)
+  - [Contributing](#contributing)
 
 ## Features
 
-- **Service Management**: Centralized access to multiple services (logging, authentication, theming, etc.).
-- **Feature Flags**: Dynamically enable or disable features using `ArcaneFeatureFlags`.
-- **Logging**: Easily log messages with metadata, stack traces, and different log levels via `ArcaneLogger`.
-- **Authentication**: Built-in support for handling user authentication workflows.
-- **Theming**: Switch between light and dark themes with `ArcaneReactiveTheme`.
+- **Service Management**: Centralized access to multiple services (logging,
+  authentication, theming, etc.).
+- **Feature Flags**: Dynamically enable or disable features using
+  `ArcaneFeatureFlags`.
+- **Logging**: Easily log messages with metadata, stack traces, and different
+  log levels via `ArcaneLogger`.
+- **Authentication**: Built-in support for handling user authentication
+  workflows.
+- **Dynamic Theming**: Switch between light and dark themes with
+  `ArcaneReactiveTheme`.
 
-## Getting Started
+## Installation
 
 To use Arcane Framework in your Dart or Flutter project, follow these steps:
 
-### Installation
+ 1. Add the dependency to your `pubspec.yaml`:
 
- 1. Add the dependency to your pubspec.yaml:
+    ```shell
+    flutter pub add arcane_framework
+    ```
 
-  ```shell
-  flutter pub add arcane_framework
-  ```
+ 2. (optional) Wrap your `MaterialApp` or `CupertinoApp` with the `ArcaneApp`
+    Widget:
 
- 2. Wrap your `MaterialApp` or `CupertinoApp` with the `ArcaneApp` Widget, providing the necessary services and your root widget.
-
-  ```dart
-  import 'package:arcane_framework/arcane_framework.dart';
-
-  void main() {
-    runApp(
-      ArcaneApp(
-        services: [
-          MyArcaneService(),
-        ],
-        child: MainApp(),
-      ),
-    );
-  }
-  ```
+    ```dart
+    import 'package:arcane_framework/arcane_framework.dart';
+    
+    void main() {
+      runApp(
+        ArcaneApp(
+          child: MainApp(),
+        ),
+      );
+    }
+    ```
 
 ## Usage
 
-The following sections provide more information about how to use the framework features.
+The following sections provide more information about how to use the package's
+available features.
 
 ### Services
 
-The Arcane Framework provides a centralized way to manage services across your application via a built-in service locator.
+The Arcane Framework provides a centralized way to manage services across your
+application, while optionally leveraging a built-in service locator.
 
-#### Services overview
+Unlike most of the features in Arcane, a _service_ is broadly user-defined. What
+a service is, or does, is not rigorously enforced by the framework itself. What
+an `ArcaneService` offers, however, is the ability to be registered (and
+unregistered), as well as located via `BuildContext`. The locators are the key
+value proposition that Arcane provides.
 
-Unlike most of the features in Arcane, a _service_ is broadly user-defined. What a service is, or does, is not rigorously enforced by the framework.
+The following tools are provided by Arcane to assist with creating and using
+services:
 
-The following tools are available for use in crafting your own services:
+- `ArcaneService`: The base class from which to extend your own services. This
+  what Arcane uses to locate services.
+- `ArcaneServiceProvider`: A widget used to provide access to registered
+  `ArcaneService` instances. **Note**: This widget is already part of the*
+  `ArcaneApp`*widget, however if you are not using the `ArcaneApp` widget you
+  can instead use this widget directly.
+- The `service<T>` and `requiredService<T>` extensions on `BuildContext`:
+  nullable and non-nullable getters used to locate a given `ArcaneService` via
+  `BuildContext`. **Note**: Use of these extensions requires that an
+  `ArcaneServiceProvider` widget is in your widget tree, either by adding it
+  directly or by using the `ArcaneApp` widget.
 
-- `ArcaneService`: The base class from which to extend your own services. Includes a `ChangeNotifier` and locators.
-- `ArcaneServiceProvider`: A widget which extends the `InheritedNotifier` class, used to manage `ArcaneService` instances. _This widget is already part of the `ArcaneApp` widget._
-- `service<T>` and `requiredService<T>` extensions on `BuildContext`: A nullable and non-nullable getter, respectively, to locate a given `ArcaneService` via `BuildContext`.
+#### Defining an example `ArcaneService`
 
-### Defining an example `ArcaneService`
+As noted previously, _what_ a service is or does is not enforced by the
+framework. Therefore, the following example is only in service of the remainder
+of the documentation of the Arcane services feature.
 
-As noted previously, _what_ a service is or does is not enforced by the framework. Therefore, the following example is only in service of the remainder of the documentation of the Arcane services feature.
-
-This example service is a singleton service that stores and provides access to a user's favorite color.
+This example service is a singleton service that stores and provides access to a
+user's favorite color, leveraging a `ValueNotifier` to trigger rebuilds as
+appropriate:
 
 ```dart
 class FavoriteColorService extends ArcaneService {
@@ -79,17 +119,19 @@ class FavoriteColorService extends ArcaneService {
   void setMyFavoriteColor(Color? color) {
     if (_notifier.value != color) {
       _notifier.value = color;
-      notifyListeners();
     }
   }
 }
 ```
 
-### Registering and unregistering an `ArcaneService`
+#### Registering and unregistering an `ArcaneService`
 
-The quickest and easiest way to register an `ArcaneService` is to use the built-in `ArcaneApp` widget. However, this is not the _only_ method available.
+The quickest and easiest way to register an `ArcaneService` is to use the
+built-in `ArcaneApp` widget. However, this is not the _only_ method available.
 
-To register your `ArcaneService` using an app with the `ArcaneApp` widget, you have a couple of options. First, you can simply add the service (in our case, a singleton instance) to the `services` list directly:
+To register your `ArcaneService` using an app with the `ArcaneApp` widget, you
+have a couple of options. First, you can simply add the service (in our case, a
+singleton instance) to the `services` list directly:
 
 ```dart
 ArcaneApp(
@@ -100,7 +142,9 @@ ArcaneApp(
 ),
 ```
 
-You can also defer adding the service by invoking `ArcaneServiceProvider`. Note that this requires either `ArcaneServiceProvider` _or_ `ArcaneApp` (which already includes `ArcaneServiceProvider`) to be in your widget tree.
+You can also defer adding the service by invoking `ArcaneServiceProvider`. Note
+that this requires either `ArcaneServiceProvider` _or_ `ArcaneApp` (which
+already includes `ArcaneServiceProvider`) to be in your widget tree.
 
 ```dart
 // The service is not included at compile-time
@@ -118,9 +162,10 @@ Unregistering an already registered `ArcaneService` is as simple as:
 ArcaneServiceProvider.of(context).removeService<FavoriteColorService>()
 ```
 
-### Locating an `ArcaneService`
+#### Locating an `ArcaneService`
 
-There are numerous ways to locate a registered `ArcaneService`. Feel free to use whatever method you prefer:
+There are numerous ways to locate a registered `ArcaneService`. Feel free to use
+whatever method you prefer:
 
 ```dart
 // If a service of the given type is not registered, `null` is returned.
@@ -144,9 +189,12 @@ final ArcaneServiceProvider? nullableProvider = ArcaneServiceProvider.maybeOf(co
 final ArcaneServiceProvider nonNullableProvider = ArcaneServiceProvider.of(context);
 ```
 
-### Using `ArcaneService` services
+#### Using `ArcaneService` services
 
-Since the `ArcaneService` class includes a `ChangeNotifier`, invoking the `notifyListeners()` method inside a service will trigger a rebuild. Using our `FavoriteColorService` from earlier, we can add a listener to our notifier value:
+Since the `ArcaneService` class includes a `ChangeNotifier`, invoking the
+`notifyListeners()` method inside a service will trigger a rebuild. Using our
+`FavoriteColorService` from earlier, we can add a listener to our notifier
+value:
 
 ```dart
 final FavoriteColorService service = ArcaneService.requiredOfType<FavoriteColorService>(context);
@@ -168,17 +216,26 @@ ValueListenableBuilder(
 )
 ```
 
-Meanwhile, setting the value in our service can be accomplished in the following manner:
+Meanwhile, setting the value in our service can be accomplished in the following
+manner:
 
 ```dart
 ArcaneService.requiredOfType<FavoriteColorService>(context).setMyFavoriteColor(Colors.purple);
 ```
 
-Again, this example is _not_ the only way the Arcane Service system can be utilized. One is limited only by their imagination!
+Again, this example is _not_ the only way the Arcane Service system can be
+utilized. One is limited only by their imagination!
 
 ### Feature Flags
 
-You can easily manage feature flags using the `ArcaneFeatureFlags` built-in service. Feature flags are useful for enabling or disabling different parts of your application under different circumstances. For example, you may want to enable a new feature only once it has finished development and testing, while still having the ability to ship the unfinished code. You could also leverage feature flags to enable different modes within your application (e.g., "free" vs "paid"). Furthermore, they can be used for A/B testing. The options are truly unlimited.
+You can easily manage feature flags using the `ArcaneFeatureFlags` built-in
+service. Feature flags are useful for enabling or disabling different parts of
+your application under different circumstances. For example, you may want to
+enable a new feature only once it has finished development and testing, while
+still having the ability to ship the unfinished code. You could also leverage
+feature flags to enable different modes within your application (e.g., "free" vs
+"paid"). Furthermore, they can be used for A/B testing. The options are truly
+unlimited.
 
 To get started, create an `enum` to define your features:
 
@@ -197,10 +254,11 @@ enum Feature {
 }
 ```
 
-Next, ensure that your features are enabled at startup by registering them within the feature flag service:
+Next, ensure that your features are enabled at startup by registering them
+within the feature flag service:
 
 ```dart
-  void main() {
+void main() {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Register your Enum that you'll be using to enable and disable features.
@@ -212,7 +270,8 @@ Next, ensure that your features are enabled at startup by registering them withi
   }
 ```
 
-When you want to determine if a feature is enabled, you can use one of the helper extensions:
+When you want to determine if a feature is enabled, you can use one of the
+helper extensions:
 
 ```dart
 // Via an enum extension
@@ -234,13 +293,15 @@ Arcane.features.disableFeature(Feature.awesomeFeature);
 Arcane.features.enableFeature(Feature.prettyOkFeature);
 ```
 
-To get a list of the currently enabled features, simply ask the Arcane feature flag service:
+To get a list of the currently enabled features, simply ask the Arcane feature
+flag service:
 
 ```dart
 final List<Enum> enabledFeatures = Arcane.features.enabledFeatures;
 ```
 
-It is also possible to add a listener to watch for changes in the enabled features.
+It is also possible to add a listener to watch for changes in the enabled
+features.
 
 ```dart
 Arcane.features.notifier.addListener(() {
@@ -248,13 +309,18 @@ Arcane.features.notifier.addListener(() {
 });
 ```
 
-Note that it is possible to register multiple different `Enum` types in the feature flag service, should one have a need to do so.
+Note that it is possible to register multiple different `Enum` types in the
+feature flag service, should one have a need to do so.
 
 ### Logging
 
-The Arcane Framework provides a robust logging system for your application. This allows you to easily log messages with metadata, stack traces, and different log levels. The framework also provides an easy way to configure the logger's behavior (e.g., whether or not to show stack traces).
+The Arcane Framework provides a robust logging system for your application. This
+allows you to easily log messages with metadata, stack traces, and different log
+levels. The framework also provides an easy way to configure the logger's
+behavior (e.g., whether or not to show stack traces).
 
-To get started, first create one or more logging interfaces, extending the `LoggingInterface` base class.
+To get started, first create one or more logging interfaces, extending the
+`LoggingInterface` base class.
 
 ```dart
 class DebugConsole implements LoggingInterface {
@@ -299,7 +365,8 @@ await Arcane.logger.registerInterfaces([
 await Arcane.logger.initializeInterfaces();
 ```
 
-Finally, add any additional persistent metadata to your log messages (optional) and log a message:
+Finally, add any additional persistent metadata to your log messages (optional)
+and log a message:
 
 ```dart
 // Add metadata to the logger
@@ -321,13 +388,20 @@ Arcane.log(
 
 Multiple logging interfaces can be registered simultaneously.
 
-**Important**: Logging interfaces should generally be initialized after being registered with the logger service. This ensures that all logging interfaces are properly initialized before any messages are logged. This should typically be done manually in order to properly present the user with a message stating that they're about to be prompted for tracking permissions (on iOS).
+**Important**: Logging interfaces should generally be initialized after being
+registered with the logger service. This ensures that all logging interfaces are
+properly initialized before any messages are logged. This should typically be
+done manually in order to properly present the user with a message stating that
+they're about to be prompted for tracking permissions (on iOS).
 
 ### Authentication
 
-The Arcane Framework provides a useful interface for performing common authentication tasks, such as registration, password resets, login, log out, and enabling a debug mode.
+The Arcane Framework provides a useful interface for performing common
+authentication tasks, such as registration, password resets, login, log out, and
+enabling a debug mode.
 
-To get started, create an authentication interface provider and register it in the Arcane authentication module:
+To get started, create an authentication interface provider and register it in
+the Arcane authentication module:
 
 ```dart
 import "package:arcane_framework/arcane_framework.dart";
@@ -448,7 +522,8 @@ class DebugAuthInterface
 await Arcane.auth.registerInterface(AuthProviderInterface.I);
 ```
 
-Once your interface has been created and registered, you can use it to perform a number of common authentication tasks:
+Once your interface has been created and registered, you can use it to perform a
+number of common authentication tasks:
 
 ```dart
 // Register an account using the ArcaneAuthAccountRegistration mixin
@@ -490,9 +565,12 @@ await Arcane.auth.logout();
 
 ### Dynamic Theming
 
-The Arcane Framework provides a simple interface for managing themes in your application, with dynamic switching between dark and light themes based on the user's system settings, or manually switching between themes.
+The Arcane Framework provides a simple interface for managing themes in your
+application, with dynamic switching between dark and light themes based on the
+user's system settings, or manually switching between themes.
 
-To get started, first register your `ThemeData` objects with the Arcane theme module:
+To get started, first register your `ThemeData` objects with the Arcane theme
+module:
 
 ```dart
 void main() {
@@ -582,10 +660,11 @@ Arcane.theme.setLightTheme(customLightTheme);
 
 ## Contributing
 
-We welcome contributions to the Arcane Framework. If you’d like to contribute, please:
+We welcome contributions to the Arcane Framework. If you’d like to contribute,
+please:
 
-  1. Fork the repository.
-  2. Create a new feature branch.
-  3. Submit a pull request with a description of your changes.
+ 1. Fork the repository.
+ 2. Create a new feature branch.
+ 3. Submit a pull request with a description of your changes.
 
 For detailed information on how to contribute, please refer to CONTRIBUTING.md.

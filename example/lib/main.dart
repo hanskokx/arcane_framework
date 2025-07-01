@@ -270,6 +270,9 @@ class ArcaneThemeExample extends StatelessWidget {
     super.key,
   });
 
+  static final Listenable themeListenable =
+      Listenable.merge([Arcane.theme.darkTheme, Arcane.theme.lightTheme]);
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -355,49 +358,57 @@ class ArcaneThemeExample extends StatelessWidget {
                 children: [
                   const Text("Color"),
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: colors.length,
-                      scrollDirection: Axis.horizontal,
-                      separatorBuilder: (_, __) => const SizedBox(width: 4),
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                          onTap: () {
-                            if (Arcane.theme.currentThemeMode ==
-                                ThemeMode.dark) {
-                              Arcane.theme.setDarkTheme(
-                                ThemeData(
-                                  brightness: Brightness.dark,
-                                  colorSchemeSeed: colors[index],
-                                ),
-                              );
-                            } else if (Arcane.theme.currentThemeMode ==
-                                ThemeMode.light) {
-                              Arcane.theme.setLightTheme(
-                                ThemeData(
-                                  brightness: Brightness.light,
-                                  colorSchemeSeed: colors[index],
-                                ),
-                              );
-                            }
+                    child: StreamBuilder(
+                      stream: Arcane.theme.themeDataChanges,
+                      builder: (context, themeData) => ListView.separated(
+                        itemCount: colors.length,
+                        scrollDirection: Axis.horizontal,
+                        separatorBuilder: (_, __) => const SizedBox(width: 4),
+                        itemBuilder: (context, index) {
+                          return InkWell(
+                            onTap: () {
+                              if (context.themeMode == ThemeMode.dark) {
+                                Arcane.theme.setDarkTheme(
+                                  ThemeData(
+                                    brightness: Brightness.dark,
+                                    colorSchemeSeed: colors[index],
+                                  ),
+                                );
+                              } else if (context.themeMode == ThemeMode.light) {
+                                Arcane.theme.setLightTheme(
+                                  ThemeData(
+                                    brightness: Brightness.light,
+                                    colorSchemeSeed: colors[index],
+                                  ),
+                                );
+                              }
 
-                            Arcane.log(
-                              "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colors[index],
-                              border: Arcane.theme.currentTheme.colorScheme
-                                          .primary.name ==
-                                      colors[index].name
-                                  ? Border.all(width: 2)
-                                  : null,
+                              Arcane.log(
+                                "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
+                              );
+                            },
+                            child: StreamBuilder<ThemeMode>(
+                              stream: Arcane.theme.themeModeChanges,
+                              builder: (context, themeMode) {
+                                return Container(
+                                  key:
+                                      Key("${colors[index]}-${themeMode.data}"),
+                                  decoration: BoxDecoration(
+                                    color: colors[index],
+                                    border: themeData.data?.colorScheme.primary
+                                                .name ==
+                                            colors[index].name
+                                        ? Border.all(width: 2)
+                                        : null,
+                                  ),
+                                  width: 20,
+                                  height: 20,
+                                );
+                              },
                             ),
-                            width: 20,
-                            height: 20,
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
