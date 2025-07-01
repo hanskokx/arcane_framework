@@ -270,9 +270,6 @@ class ArcaneThemeExample extends StatelessWidget {
     super.key,
   });
 
-  static final Listenable themeListenable =
-      Listenable.merge([Arcane.theme.darkTheme, Arcane.theme.lightTheme]);
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -313,37 +310,40 @@ class ArcaneThemeExample extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Checkbox(
-                      value: Arcane.theme.isFollowingSystemTheme,
-                      onChanged: (value) {
-                        final ThemeMode oldTheme =
-                            Arcane.theme.currentThemeMode;
-                        if (value == true) {
-                          Arcane.theme.followSystemTheme(context);
-                          Arcane.log(
-                            "Switching theme",
-                            metadata: {
-                              "followingSystemTheme":
-                                  "${Arcane.theme.isFollowingSystemTheme}",
-                              "newMode": Arcane.theme.currentThemeMode.name,
-                              "oldMode": oldTheme.name,
-                            },
-                          );
-                        } else {
-                          Arcane.theme.switchTheme(
-                            themeMode: Arcane.theme.systemThemeMode,
-                          );
-                          Arcane.log(
-                            "Switching theme",
-                            metadata: {
-                              "followingSystemTheme":
-                                  "${Arcane.theme.isFollowingSystemTheme}",
-                              "newMode": Arcane.theme.currentThemeMode.name,
-                              "oldMode": oldTheme.name,
-                            },
-                          );
-                        }
-                      },
+                    ValueListenableBuilder<bool>(
+                      valueListenable: Arcane.theme.followingSystemThemeChanges,
+                      builder: (context, isFollowingSystem, _) => Checkbox(
+                        value: isFollowingSystem,
+                        onChanged: (value) {
+                          final ThemeMode oldTheme =
+                              Arcane.theme.currentThemeMode;
+                          if (value == true) {
+                            Arcane.theme.followSystemTheme(context);
+                            Arcane.log(
+                              "Switching theme",
+                              metadata: {
+                                "followingSystemTheme":
+                                    "${Arcane.theme.isFollowingSystemTheme}",
+                                "newMode": Arcane.theme.currentThemeMode.name,
+                                "oldMode": oldTheme.name,
+                              },
+                            );
+                          } else {
+                            Arcane.theme.switchTheme(
+                              themeMode: Arcane.theme.systemThemeMode,
+                            );
+                            Arcane.log(
+                              "Switching theme",
+                              metadata: {
+                                "followingSystemTheme":
+                                    "${Arcane.theme.isFollowingSystemTheme}",
+                                "newMode": Arcane.theme.currentThemeMode.name,
+                                "oldMode": oldTheme.name,
+                              },
+                            );
+                          }
+                        },
+                      ),
                     ),
                     const Text("Follow system"),
                   ],
@@ -359,8 +359,9 @@ class ArcaneThemeExample extends StatelessWidget {
                   const Text("Color"),
                   Expanded(
                     child: ValueListenableBuilder<ThemeData>(
-                      valueListenable: Arcane.theme.themeDataChanges,
-                      builder: (context, themeData, _) => ListView.separated(
+                      valueListenable: Arcane.theme.effectiveThemeChanges,
+                      builder: (context, effectiveTheme, _) =>
+                          ListView.separated(
                         itemCount: colors.length,
                         scrollDirection: Axis.horizontal,
                         separatorBuilder: (_, __) => const SizedBox(width: 4),
@@ -387,23 +388,34 @@ class ArcaneThemeExample extends StatelessWidget {
                                 "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
                               );
                             },
-                            child: ValueListenableBuilder<ThemeMode>(
-                              valueListenable: Arcane.theme.themeModeChanges,
-                              builder: (context, themeMode, _) {
-                                return Container(
-                                  key: Key("${colors[index]}-${themeMode}"),
-                                  decoration: BoxDecoration(
-                                    color: colors[index],
-                                    border:
-                                        themeData.colorScheme.primary.name ==
-                                                colors[index].name
-                                            ? Border.all(width: 2)
-                                            : null,
-                                  ),
-                                  width: 20,
-                                  height: 20,
-                                );
-                              },
+                            child: Container(
+                              key: Key(
+                                  "${colors[index]}-${Arcane.theme.currentThemeMode}"),
+                              decoration: BoxDecoration(
+                                color: colors[index],
+                                border:
+                                    effectiveTheme.colorScheme.primary.name ==
+                                            colors[index].name
+                                        ? Border.all(
+                                            width: 2,
+                                            color: Colors.white,
+                                          )
+                                        : null,
+                                boxShadow:
+                                    effectiveTheme.colorScheme.primary.name ==
+                                            colors[index].name
+                                        ? [
+                                            const BoxShadow(
+                                              color: Colors.black,
+                                              spreadRadius: 1,
+                                              blurRadius: 1,
+                                              offset: Offset(0, 0),
+                                            ),
+                                          ]
+                                        : null,
+                              ),
+                              width: 20,
+                              height: 20,
                             ),
                           );
                         },

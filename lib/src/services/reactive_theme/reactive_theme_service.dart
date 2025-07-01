@@ -66,6 +66,22 @@ class ArcaneReactiveTheme extends ArcaneService {
   final ValueNotifier<ThemeData> _themeNotifier =
       ValueNotifier<ThemeData>(ThemeData.light());
 
+  /// ValueListenable that rebuilds when the effective theme changes.
+  /// This includes theme mode changes and active theme data changes.
+  /// Use this for most UI components that need to react to theme changes.
+  ValueListenable<ThemeData> get effectiveThemeChanges =>
+      I._effectiveThemeNotifier;
+
+  final ValueNotifier<ThemeData> _effectiveThemeNotifier =
+      ValueNotifier<ThemeData>(ThemeData.light());
+
+  /// ValueListenable that notifies when the system theme following state changes.
+  ValueListenable<bool> get followingSystemThemeChanges =>
+      I._followingSystemThemeNotifier;
+
+  final ValueNotifier<bool> _followingSystemThemeNotifier =
+      ValueNotifier<bool>(false);
+
   // ************************************************************************ //
   // * MARK: Light/Dark theme
   // ************************************************************************ //
@@ -101,6 +117,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
     _followingSystemTheme = false;
+    _followingSystemThemeNotifier.value = false;
 
     if (themeMode != null) {
       _updateTheme(themeMode);
@@ -127,6 +144,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme followSystemTheme(BuildContext context) {
     _followingSystemTheme = true;
+    _followingSystemThemeNotifier.value = true;
 
     _currentSystemThemeMode =
         context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
@@ -152,6 +170,7 @@ class ArcaneReactiveTheme extends ArcaneService {
     if (_currentThemeMode == ThemeMode.dark) {
       _themeNotifier.value = theme;
       _currentTheme = theme;
+      _effectiveThemeNotifier.value = theme;
     }
 
     return I;
@@ -173,6 +192,7 @@ class ArcaneReactiveTheme extends ArcaneService {
     if (_currentThemeMode == ThemeMode.light) {
       _themeNotifier.value = theme;
       _currentTheme = theme;
+      _effectiveThemeNotifier.value = theme;
     }
 
     return I;
@@ -187,9 +207,11 @@ class ArcaneReactiveTheme extends ArcaneService {
     _darkTheme.value = ThemeData.dark();
     _lightTheme.value = ThemeData.light();
     _followingSystemTheme = false;
+    _followingSystemThemeNotifier.value = false;
     _updateTheme(ThemeMode.light);
     _themeNotifier.value = _lightTheme.value;
     _currentTheme = _lightTheme.value;
+    _effectiveThemeNotifier.value = _lightTheme.value;
   }
 
   /// Updates the current theme mode and broadcasts the change.
@@ -201,6 +223,7 @@ class ArcaneReactiveTheme extends ArcaneService {
     final ThemeData newTheme = themeMode == ThemeMode.dark ? dark : light;
     _currentTheme = newTheme;
     _themeNotifier.value = newTheme;
+    _effectiveThemeNotifier.value = newTheme;
   }
 
   /// Disposes of the theme service resources.
@@ -212,6 +235,8 @@ class ArcaneReactiveTheme extends ArcaneService {
     _systemThemeNotifier.dispose();
     _themeModeNotifier.dispose();
     _themeNotifier.dispose();
+    _effectiveThemeNotifier.dispose();
+    _followingSystemThemeNotifier.dispose();
     _darkTheme.dispose();
     _lightTheme.dispose();
     super.dispose();

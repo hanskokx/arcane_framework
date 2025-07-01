@@ -98,11 +98,16 @@ class MockArcaneAuthInterface extends _i1.Mock
           as _i5.Future<void>);
 
   @override
-  _i5.Future<_i2.Result<void, String>> logout() =>
+  _i5.Future<_i2.Result<void, String>> logout({
+    _i5.Future<void> Function()? onLoggedOut,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#logout, []),
+            Invocation.method(#logout, [], {#onLoggedOut: onLoggedOut}),
             returnValue: _i5.Future<_i2.Result<void, String>>.value(
-              _FakeResult_0<void, String>(this, Invocation.method(#logout, [])),
+              _FakeResult_0<void, String>(
+                this,
+                Invocation.method(#logout, [], {#onLoggedOut: onLoggedOut}),
+              ),
             ),
           )
           as _i5.Future<_i2.Result<void, String>>);
