@@ -82,6 +82,16 @@ class ArcaneReactiveTheme extends ArcaneService {
   final ValueNotifier<bool> _followingSystemThemeNotifier =
       ValueNotifier<bool>(false);
 
+  /// Combined Listenable that merges all theme-related changes.
+  /// Use this for widgets that need to rebuild on any theme change.
+  Listenable get themeChanges => I._combinedThemeListenable;
+
+  late final Listenable _combinedThemeListenable = Listenable.merge([
+    _effectiveThemeNotifier,
+    _followingSystemThemeNotifier,
+    _themeModeNotifier,
+  ]);
+
   // ************************************************************************ //
   // * MARK: Light/Dark theme
   // ************************************************************************ //

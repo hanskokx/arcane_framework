@@ -269,170 +269,172 @@ class ArcaneThemeExample extends StatelessWidget {
   const ArcaneThemeExample({
     super.key,
   });
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Theme",
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Column(
+    return ListenableBuilder(
+      listenable: Arcane.theme.themeChanges,
+      builder: (context, _) {
+        final ThemeData effectiveTheme = Arcane.theme.currentTheme;
+        final bool isFollowingSystem = Arcane.theme.isFollowingSystemTheme;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Switch(
-                  value: Arcane.theme.currentThemeMode == ThemeMode.dark,
-                  thumbIcon: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Icon(Icons.dark_mode);
-                    }
-                    return const Icon(Icons.light_mode);
-                  }),
-                  onChanged: (_) {
-                    final ThemeMode oldTheme = Arcane.theme.currentThemeMode;
-                    Arcane.theme.switchTheme();
-                    Arcane.log(
-                      "Switching theme",
-                      metadata: {
-                        "followingSystemTheme":
-                            "${Arcane.theme.isFollowingSystemTheme}",
-                        "newMode": Arcane.theme.currentThemeMode.name,
-                        "oldMode": oldTheme.name,
-                      },
-                    );
-                  },
+                Text(
+                  "Theme",
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Column(
                   children: [
-                    ValueListenableBuilder<bool>(
-                      valueListenable: Arcane.theme.followingSystemThemeChanges,
-                      builder: (context, isFollowingSystem, _) => Checkbox(
-                        value: isFollowingSystem,
-                        onChanged: (value) {
-                          final ThemeMode oldTheme =
-                              Arcane.theme.currentThemeMode;
-                          if (value == true) {
-                            Arcane.theme.followSystemTheme(context);
-                            Arcane.log(
-                              "Switching theme",
-                              metadata: {
-                                "followingSystemTheme":
-                                    "${Arcane.theme.isFollowingSystemTheme}",
-                                "newMode": Arcane.theme.currentThemeMode.name,
-                                "oldMode": oldTheme.name,
-                              },
-                            );
-                          } else {
-                            Arcane.theme.switchTheme(
-                              themeMode: Arcane.theme.systemThemeMode,
-                            );
-                            Arcane.log(
-                              "Switching theme",
-                              metadata: {
-                                "followingSystemTheme":
-                                    "${Arcane.theme.isFollowingSystemTheme}",
-                                "newMode": Arcane.theme.currentThemeMode.name,
-                                "oldMode": oldTheme.name,
-                              },
-                            );
-                          }
-                        },
-                      ),
+                    Switch(
+                      value: Arcane.theme.currentThemeMode == ThemeMode.dark,
+                      thumbIcon: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(Icons.dark_mode);
+                        }
+                        return const Icon(Icons.light_mode);
+                      }),
+                      onChanged: (_) {
+                        final ThemeMode oldTheme =
+                            Arcane.theme.currentThemeMode;
+                        Arcane.theme.switchTheme();
+                        Arcane.log(
+                          "Switching theme",
+                          metadata: {
+                            "followingSystemTheme":
+                                "${Arcane.theme.isFollowingSystemTheme}",
+                            "newMode": Arcane.theme.currentThemeMode.name,
+                            "oldMode": oldTheme.name,
+                          },
+                        );
+                      },
                     ),
-                    const Text("Follow system"),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: isFollowingSystem,
+                          onChanged: (value) {
+                            final ThemeMode oldTheme =
+                                Arcane.theme.currentThemeMode;
+                            if (value == true) {
+                              Arcane.theme.followSystemTheme(context);
+                              Arcane.log(
+                                "Switching theme",
+                                metadata: {
+                                  "followingSystemTheme":
+                                      "${Arcane.theme.isFollowingSystemTheme}",
+                                  "newMode": Arcane.theme.currentThemeMode.name,
+                                  "oldMode": oldTheme.name,
+                                },
+                              );
+                            } else {
+                              Arcane.theme.switchTheme(
+                                themeMode: Arcane.theme.systemThemeMode,
+                              );
+                              Arcane.log(
+                                "Switching theme",
+                                metadata: {
+                                  "followingSystemTheme":
+                                      "${Arcane.theme.isFollowingSystemTheme}",
+                                  "newMode": Arcane.theme.currentThemeMode.name,
+                                  "oldMode": oldTheme.name,
+                                },
+                              );
+                            }
+                          },
+                        ),
+                        const Text("Follow system"),
+                      ],
+                    ),
                   ],
+                ),
+                SizedBox(
+                  height: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    spacing: 8,
+                    children: [
+                      const Text("Color"),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: colors.length,
+                          scrollDirection: Axis.horizontal,
+                          separatorBuilder: (_, __) => const SizedBox(width: 4),
+                          itemBuilder: (context, index) {
+                            return InkWell(
+                              onTap: () {
+                                if (context.themeMode == ThemeMode.dark) {
+                                  Arcane.theme.setDarkTheme(
+                                    ThemeData(
+                                      brightness: Brightness.dark,
+                                      colorSchemeSeed: colors[index],
+                                    ),
+                                  );
+                                } else if (context.themeMode ==
+                                    ThemeMode.light) {
+                                  Arcane.theme.setLightTheme(
+                                    ThemeData(
+                                      brightness: Brightness.light,
+                                      colorSchemeSeed: colors[index],
+                                    ),
+                                  );
+                                }
+
+                                Arcane.log(
+                                  "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
+                                );
+                              },
+                              child: Container(
+                                key: Key(
+                                    "${colors[index]}-${Arcane.theme.currentThemeMode}"),
+                                decoration: BoxDecoration(
+                                  color: colors[index],
+                                  border:
+                                      effectiveTheme.colorScheme.primary.name ==
+                                              colors[index].name
+                                          ? Border.all(
+                                              width: 2,
+                                              color: Colors.white,
+                                            )
+                                          : null,
+                                  boxShadow:
+                                      effectiveTheme.colorScheme.primary.name ==
+                                              colors[index].name
+                                          ? [
+                                              const BoxShadow(
+                                                color: Colors.black,
+                                                spreadRadius: 1,
+                                                blurRadius: 1,
+                                                offset: Offset(0, 0),
+                                              ),
+                                            ]
+                                          : null,
+                                ),
+                                width: 20,
+                                height: 20,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  "The current theme mode is ${Arcane.theme.currentModeOf(context).name} and "
+                  "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
+                  "following the system theme.",
                 ),
               ],
             ),
-            SizedBox(
-              height: 20,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                spacing: 8,
-                children: [
-                  const Text("Color"),
-                  Expanded(
-                    child: ValueListenableBuilder<ThemeData>(
-                      valueListenable: Arcane.theme.effectiveThemeChanges,
-                      builder: (context, effectiveTheme, _) =>
-                          ListView.separated(
-                        itemCount: colors.length,
-                        scrollDirection: Axis.horizontal,
-                        separatorBuilder: (_, __) => const SizedBox(width: 4),
-                        itemBuilder: (context, index) {
-                          return InkWell(
-                            onTap: () {
-                              if (context.themeMode == ThemeMode.dark) {
-                                Arcane.theme.setDarkTheme(
-                                  ThemeData(
-                                    brightness: Brightness.dark,
-                                    colorSchemeSeed: colors[index],
-                                  ),
-                                );
-                              } else if (context.themeMode == ThemeMode.light) {
-                                Arcane.theme.setLightTheme(
-                                  ThemeData(
-                                    brightness: Brightness.light,
-                                    colorSchemeSeed: colors[index],
-                                  ),
-                                );
-                              }
-
-                              Arcane.log(
-                                "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
-                              );
-                            },
-                            child: Container(
-                              key: Key(
-                                  "${colors[index]}-${Arcane.theme.currentThemeMode}"),
-                              decoration: BoxDecoration(
-                                color: colors[index],
-                                border:
-                                    effectiveTheme.colorScheme.primary.name ==
-                                            colors[index].name
-                                        ? Border.all(
-                                            width: 2,
-                                            color: Colors.white,
-                                          )
-                                        : null,
-                                boxShadow:
-                                    effectiveTheme.colorScheme.primary.name ==
-                                            colors[index].name
-                                        ? [
-                                            const BoxShadow(
-                                              color: Colors.black,
-                                              spreadRadius: 1,
-                                              blurRadius: 1,
-                                              offset: Offset(0, 0),
-                                            ),
-                                          ]
-                                        : null,
-                              ),
-                              width: 20,
-                              height: 20,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              "The current theme mode is ${Arcane.theme.currentModeOf(context).name} and "
-              "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
-              "following the system theme.",
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
