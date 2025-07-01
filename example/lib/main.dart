@@ -358,9 +358,9 @@ class ArcaneThemeExample extends StatelessWidget {
                 children: [
                   const Text("Color"),
                   Expanded(
-                    child: StreamBuilder(
-                      stream: Arcane.theme.themeDataChanges,
-                      builder: (context, themeData) => ListView.separated(
+                    child: ValueListenableBuilder<ThemeData>(
+                      valueListenable: Arcane.theme.themeDataChanges,
+                      builder: (context, themeData, _) => ListView.separated(
                         itemCount: colors.length,
                         scrollDirection: Axis.horizontal,
                         separatorBuilder: (_, __) => const SizedBox(width: 4),
@@ -387,19 +387,18 @@ class ArcaneThemeExample extends StatelessWidget {
                                 "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
                               );
                             },
-                            child: StreamBuilder<ThemeMode>(
-                              stream: Arcane.theme.themeModeChanges,
-                              builder: (context, themeMode) {
+                            child: ValueListenableBuilder<ThemeMode>(
+                              valueListenable: Arcane.theme.themeModeChanges,
+                              builder: (context, themeMode, _) {
                                 return Container(
-                                  key:
-                                      Key("${colors[index]}-${themeMode.data}"),
+                                  key: Key("${colors[index]}-${themeMode}"),
                                   decoration: BoxDecoration(
                                     color: colors[index],
-                                    border: themeData.data?.colorScheme.primary
-                                                .name ==
-                                            colors[index].name
-                                        ? Border.all(width: 2)
-                                        : null,
+                                    border:
+                                        themeData.colorScheme.primary.name ==
+                                                colors[index].name
+                                            ? Border.all(width: 2)
+                                            : null,
                                   ),
                                   width: 20,
                                   height: 20,

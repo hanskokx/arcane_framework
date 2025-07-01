@@ -8,6 +8,11 @@ void main() {
 
     setUp(() {
       theme = ArcaneReactiveTheme.I;
+      theme.reset();
+    });
+
+    tearDown(() {
+      theme.reset();
     });
 
     test("singleton instance is consistent", () {
@@ -29,7 +34,7 @@ void main() {
 
       test("switching theme notifies listeners", () {
         var notified = false;
-        theme.addListener(() => notified = true);
+        theme.themeModeChanges.addListener(() => notified = true);
         theme.switchTheme();
         expect(notified, true);
       });
@@ -55,7 +60,7 @@ void main() {
       test("theme updates notify listeners", () {
         bool darkNotified = false;
         bool lightNotified = false;
-        ThemeMode currentTheme = ThemeMode.system;
+        ThemeMode currentTheme = theme.currentThemeMode;
 
         theme.darkTheme.addListener(() {
           darkNotified = true;
@@ -65,29 +70,41 @@ void main() {
           lightNotified = true;
         });
 
-        theme.addListener(() {
+        theme.themeModeChanges.addListener(() {
           currentTheme = theme.currentThemeMode;
         });
 
-        expect(currentTheme, ThemeMode.system);
+        expect(currentTheme, ThemeMode.light);
 
-        theme.setDarkTheme(ThemeData.dark());
-        theme.setLightTheme(ThemeData.light());
+        // Use custom themes to ensure ValueNotifier detects changes
+        final customDarkTheme = ThemeData.dark().copyWith(
+          primaryColor: Colors.purple,
+        );
+        final customLightTheme = ThemeData.light().copyWith(
+          primaryColor: Colors.orange,
+        );
+
+        theme.setDarkTheme(customDarkTheme);
+        theme.setLightTheme(customLightTheme);
 
         expect(darkNotified, true);
         expect(lightNotified, true);
 
         theme.switchTheme();
-        expect(currentTheme, ThemeMode.light);
+        expect(currentTheme, ThemeMode.dark);
 
         theme.switchTheme();
-        expect(currentTheme, ThemeMode.dark);
+        expect(currentTheme, ThemeMode.light);
       });
     });
 
     group("system theme following", () {
       setUp(() {
-        Arcane.theme.reset();
+        theme.reset();
+      });
+
+      tearDown(() {
+        theme.reset();
       });
 
       testWidgets("followSystemTheme updates theme based on context brightness",

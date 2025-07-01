@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/material.dart";
 
@@ -17,27 +15,15 @@ class ArcaneThemeSwitcher extends StatefulWidget {
 
 class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
     with WidgetsBindingObserver {
-  late final StreamSubscription<ThemeMode> _themeModeSubscription;
-  late final StreamSubscription<ThemeData> _themeSubscription;
-
   @override
   void initState() {
     super.initState();
     // Register as an observer to detect system theme changes
     WidgetsBinding.instance.addObserver(this);
-
-    _themeModeSubscription = ArcaneReactiveTheme.I.themeModeChanges.listen((_) {
-      setState(() {});
-    });
-    _themeSubscription = ArcaneReactiveTheme.I.themeDataChanges.listen((_) {
-      setState(() {});
-    });
   }
 
   @override
   void dispose() {
-    _themeModeSubscription.cancel();
-    _themeSubscription.cancel();
     // Clean up the observer when the widget is disposed
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -45,11 +31,21 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
 
   @override
   Widget build(BuildContext context) {
-    return _ArcaneTheme(
-      themeMode: ArcaneReactiveTheme.I.currentThemeMode,
-      followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
-      theme: ArcaneReactiveTheme.I.currentTheme,
-      child: widget.child,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ArcaneReactiveTheme.I.themeModeChanges,
+      builder: (BuildContext context, ThemeMode themeMode, Widget? child) {
+        return ValueListenableBuilder<ThemeData>(
+          valueListenable: ArcaneReactiveTheme.I.themeDataChanges,
+          builder: (BuildContext context, ThemeData themeData, Widget? child) {
+            return _ArcaneTheme(
+              themeMode: themeMode,
+              followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
+              theme: themeData,
+              child: widget.child,
+            );
+          },
+        );
+      },
     );
   }
 
