@@ -31,14 +31,14 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ArcaneReactiveTheme.I.themeModeChanges,
-      builder: (BuildContext context, ThemeMode themeMode, Widget? child) {
+    return ListenableBuilder(
+      listenable: ArcaneReactiveTheme.I.themeChanges,
+      builder: (BuildContext context, Widget? child) {
         return ValueListenableBuilder<ThemeData>(
           valueListenable: ArcaneReactiveTheme.I.themeDataChanges,
           builder: (BuildContext context, ThemeData themeData, Widget? child) {
             return _ArcaneTheme(
-              themeMode: themeMode,
+              themeMode: ArcaneReactiveTheme.I.currentThemeMode,
               followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
               theme: themeData,
               child: widget.child,
