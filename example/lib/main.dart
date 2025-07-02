@@ -19,7 +19,7 @@ Future<void> main() async {
 
   // Add some persistent metadata to be used in every future log message
   Arcane.logger.addPersistentMetadata({
-    "demo": "This message will be included in all log messages.",
+    "demo": "Hello, World!",
   });
 
   // Register the authentication interface
@@ -383,29 +383,20 @@ class ArcaneThemeExample extends StatelessWidget {
                               );
                             },
                             child: Container(
-                              key: Key(
-                                  "${colors[index]}-${Arcane.theme.currentThemeMode}"),
                               decoration: BoxDecoration(
                                 color: colors[index],
-                                border: Arcane.theme.currentTheme.colorScheme
-                                            .primary.name ==
+                                border: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .name ==
                                         colors[index].name
                                     ? Border.all(
                                         width: 2,
-                                        color: Colors.white,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : Colors.black,
                                       )
-                                    : null,
-                                boxShadow: Arcane.theme.currentTheme.colorScheme
-                                            .primary.name ==
-                                        colors[index].name
-                                    ? [
-                                        const BoxShadow(
-                                          color: Colors.black,
-                                          spreadRadius: 1,
-                                          blurRadius: 1,
-                                          offset: Offset(0, 0),
-                                        ),
-                                      ]
                                     : null,
                               ),
                               width: 20,

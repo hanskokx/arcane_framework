@@ -2,20 +2,20 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 
-part "reactive_theme_extensions.dart";
+part "theme_extensions.dart";
 
 /// A singleton service that manages theme switching and customization for the application.
 ///
-/// `ArcaneReactiveTheme` allows switching between light and dark themes and provides
+/// `ArcaneTheme` allows switching between light and dark themes and provides
 /// methods to customize the themes. The current theme mode can be accessed, and the
 /// theme can be switched at runtime.
 ///
 /// System theme changes are detected by the `ArcaneApp` widget, which ensures
 /// theme updates happen automatically when the device theme changes.
-class ArcaneReactiveTheme extends ArcaneService {
-  ArcaneReactiveTheme._internal();
-  static final ArcaneReactiveTheme _instance = ArcaneReactiveTheme._internal();
-  static ArcaneReactiveTheme get I => _instance;
+class ArcaneTheme extends ArcaneService {
+  ArcaneTheme._internal();
+  static final ArcaneTheme _instance = ArcaneTheme._internal();
+  static ArcaneTheme get I => _instance;
 
   // ************************************************************************ //
   // * MARK: System theme
@@ -39,7 +39,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   // ************************************************************************ //
   // * MARK: ThemeMode
   // ************************************************************************ //
-  /// Returns the current `ThemeMode` being used by `ArcaneReactiveTheme`.
+  /// Returns the current `ThemeMode` being used by `ArcaneTheme`.
   /// Will automatically update when the theme changes.
   ThemeMode currentModeOf(BuildContext context) => context.themeMode;
 
@@ -119,13 +119,13 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.switchTheme();
+  /// ArcaneTheme.I.switchTheme();
   /// // or
-  /// ArcaneReactiveTheme.I.switchTheme(themeMode: ThemeMode.dark);
+  /// ArcaneTheme.I.switchTheme(themeMode: ThemeMode.dark);
   /// // or
   /// Arcane.theme.switchTheme(themeMode: ThemeMode.light);
   /// ```
-  ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
+  ArcaneTheme switchTheme({ThemeMode? themeMode}) {
     _followingSystemTheme = false;
     _followingSystemThemeNotifier.value = false;
 
@@ -148,11 +148,11 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.followSystemTheme(context);
+  /// ArcaneTheme.I.followSystemTheme(context);
   /// // or
   /// Arcane.theme.followSystemTheme(context);
   /// ```
-  ArcaneReactiveTheme followSystemTheme(BuildContext context) {
+  ArcaneTheme followSystemTheme(BuildContext context) {
     _followingSystemTheme = true;
     _followingSystemThemeNotifier.value = true;
 
@@ -171,9 +171,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.setDarkTheme(customDarkTheme);
+  /// ArcaneTheme.I.setDarkTheme(customDarkTheme);
   /// ```
-  ArcaneReactiveTheme setDarkTheme(ThemeData theme) {
+  ArcaneTheme setDarkTheme(ThemeData theme) {
     _darkTheme.value = theme;
 
     // Only update current theme if we're currently in dark mode
@@ -193,9 +193,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.setLightTheme(customLightTheme);
+  /// ArcaneTheme.I.setLightTheme(customLightTheme);
   /// ```
-  ArcaneReactiveTheme setLightTheme(ThemeData theme) {
+  ArcaneTheme setLightTheme(ThemeData theme) {
     _lightTheme.value = theme;
 
     // Only update current theme if we're currently in light mode

@@ -14,7 +14,7 @@
 ///   `ArcaneFeatureFlags`.
 /// - **Logging**: Flexible logging with different severity levels
 ///   (`debug`, `info`, `error`, etc.).
-/// - **Theming**: Easy light/dark mode switching with `ArcaneReactiveTheme`.
+/// - **Theming**: Easy light/dark mode switching with `ArcaneTheme`.
 /// - **Authentication**: Manage user login, sign up, and token-based
 ///   authentication.
 ///
@@ -44,6 +44,6 @@ export "package:arcane_framework/src/providers/service/arcane_service.dart";
 export "package:arcane_framework/src/services/authentication/authentication_service.dart";
 export "package:arcane_framework/src/services/feature_flags/feature_flags_service.dart";
 export "package:arcane_framework/src/services/logging/logging_service.dart";
-export "package:arcane_framework/src/services/reactive_theme/reactive_theme_service.dart";
-export "package:arcane_framework/src/services/reactive_theme/reactive_theme_switcher.dart";
+export "package:arcane_framework/src/services/theme/reactive_theme_switcher.dart";
+export "package:arcane_framework/src/services/theme/theme_service.dart";
 export "package:result_monad/result_monad.dart";

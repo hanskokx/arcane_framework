@@ -26,9 +26,9 @@ abstract class Arcane {
 
   /// Provides access to the singleton instance of the theme management service.
   ///
-  /// `ArcaneReactiveTheme` allows switching between light and dark themes and
+  /// `ArcaneTheme` allows switching between light and dark themes and
   /// customizing them.
-  static ArcaneReactiveTheme get theme => ArcaneReactiveTheme.I;
+  static ArcaneTheme get theme => ArcaneTheme.I;
 
   /// Returns a list of all services available in the Arcane framework.
   ///

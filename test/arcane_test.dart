@@ -8,7 +8,7 @@ void main() {
   setUpAll(() {
     ArcaneFeatureFlags.I.reset();
     ArcaneAuthenticationService.I.reset();
-    ArcaneReactiveTheme.I.reset();
+    ArcaneTheme.I.reset();
   });
 
   group("Arcane", () {
@@ -16,7 +16,7 @@ void main() {
       final services = Arcane.services;
       expect(services, contains(isA<ArcaneFeatureFlags>()));
       expect(services, contains(isA<ArcaneAuthenticationService>()));
-      expect(services, contains(isA<ArcaneReactiveTheme>()));
+      expect(services, contains(isA<ArcaneTheme>()));
     });
   });
 }

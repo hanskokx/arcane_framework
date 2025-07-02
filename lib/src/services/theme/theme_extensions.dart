@@ -1,4 +1,4 @@
-part of "reactive_theme_service.dart";
+part of "theme_service.dart";
 
 /// An extension on `BuildContext` to check the current system dark mode setting.
 ///

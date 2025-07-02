@@ -32,14 +32,14 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ArcaneReactiveTheme.I.themeChanges,
+      listenable: ArcaneTheme.I.themeChanges,
       builder: (BuildContext context, Widget? child) {
         return ValueListenableBuilder<ThemeData>(
-          valueListenable: ArcaneReactiveTheme.I.themeDataChanges,
+          valueListenable: ArcaneTheme.I.themeDataChanges,
           builder: (BuildContext context, ThemeData themeData, Widget? child) {
             return _ArcaneTheme(
-              themeMode: ArcaneReactiveTheme.I.currentThemeMode,
-              followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
+              themeMode: ArcaneTheme.I.currentThemeMode,
+              followSystem: ArcaneTheme.I.isFollowingSystemTheme,
               theme: themeData,
               child: widget.child,
             );
@@ -55,9 +55,9 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
     // and use it to check the system theme
     if (mounted) {
       // Use the current context from the key to check system theme
-      if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
+      if (ArcaneTheme.I.isFollowingSystemTheme) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ArcaneReactiveTheme.I.followSystemTheme(context);
+          ArcaneTheme.I.followSystemTheme(context);
         });
       }
     }
@@ -92,7 +92,6 @@ class _ArcaneTheme extends InheritedWidget {
 extension ArcaneThemeContext on BuildContext {
   /// Get the current theme mode from the nearest ArcaneThemeInherited widget
   ThemeMode get themeMode {
-    return _ArcaneTheme.of(this)?.themeMode ??
-        ArcaneReactiveTheme.I.currentThemeMode;
+    return _ArcaneTheme.of(this)?.themeMode ?? ArcaneTheme.I.currentThemeMode;
   }
 }
