@@ -32,19 +32,19 @@ class DebugAuthInterface
 
     _isSignedIn = false;
 
-    return Result.ok(null);
+    return const Result.ok(null);
   }
 
   @override
-  Future<Result<void, String>> login<Credentials>({
-    Credentials? input,
+  Future<Result<void, String>> login<T>({
+    T? input,
     Future<void> Function()? onLoggedIn,
   }) async {
     final bool alreadyLoggedIn = await isSignedIn;
 
-    if (alreadyLoggedIn) return Result.ok(null);
+    if (alreadyLoggedIn) return const Result.ok(null);
 
-    final credentials = input as ({String email, String password});
+    final credentials = input as Credentials;
 
     final String email = credentials.email;
     final String password = credentials.password;
@@ -53,7 +53,7 @@ class DebugAuthInterface
 
     _isSignedIn = true;
 
-    return Result.ok(null);
+    return const Result.ok(null);
   }
 
   @override
@@ -61,15 +61,15 @@ class DebugAuthInterface
     T? input,
   }) async {
     Arcane.log("Re-sending verification code to $input");
-    return Result.ok("Code sent");
+    return const Result.ok("Code sent");
   }
 
   @override
-  Future<Result<SignUpStep, String>> register<Credentials>({
-    Credentials? input,
+  Future<Result<SignUpStep, String>> register<T>({
+    T? input,
   }) async {
     if (input != null) {
-      final credentials = input as ({String email, String password});
+      final credentials = input as Credentials;
 
       final String email = credentials.email;
       final String password = credentials.password;
@@ -77,7 +77,7 @@ class DebugAuthInterface
       Arcane.log("Creating account for $email with password $password");
     }
 
-    return Result.ok(SignUpStep.confirmSignUp);
+    return const Result.ok(SignUpStep.confirmSignUp);
   }
 
   @override
@@ -88,7 +88,7 @@ class DebugAuthInterface
     Arcane.log(
       "Confirming registration for $username with code $confirmationCode",
     );
-    return Result.ok(true);
+    return const Result.ok(true);
   }
 
   @override
@@ -98,7 +98,7 @@ class DebugAuthInterface
     String? code,
   }) async {
     Arcane.log("Resetting password for $email");
-    return Result.ok(true);
+    return const Result.ok(true);
   }
 
   @override

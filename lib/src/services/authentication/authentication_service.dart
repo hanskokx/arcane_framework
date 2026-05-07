@@ -164,10 +164,10 @@ class ArcaneAuthenticationService extends ArcaneService {
     Future<void> Function()? onLoggedOut,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    if (!isAuthenticated) Result.error("User is not authenticated.");
+    if (!isAuthenticated) const Result.error("User is not authenticated.");
 
     final Result<void, String> loggedOut = await authInterface!.logout(
       onLoggedOut: onLoggedOut,
@@ -188,7 +188,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     Future<void> Function()? onLoggedIn,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     final Result<void, String> result = await authInterface!.login(
@@ -210,11 +210,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     T? input,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -226,7 +226,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -241,11 +241,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     required String confirmationCode,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -258,7 +258,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -270,11 +270,11 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// registration.
   Future<Result<String, String>> resendVerificationCode(String email) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -285,7 +285,7 @@ class ArcaneAuthenticationService extends ArcaneService {
         auth.resendVerificationCode(input: email);
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -305,11 +305,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     String? confirmationCode,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthPasswordManagement) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support password management.",
       );
     }
@@ -323,7 +323,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }

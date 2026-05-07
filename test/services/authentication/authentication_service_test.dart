@@ -23,10 +23,10 @@ void main() {
 
       // Set up default mock behaviors
       when(mockInterface.login(input: anyNamed("input"))).thenAnswer(
-        (_) async => Result.ok(null),
+        (_) async => const Result.ok(null),
       );
       when(mockInterface.logout()).thenAnswer(
-        (_) async => Result.ok(null),
+        (_) async => const Result.ok(null),
       );
       when(mockInterface.init()).thenAnswer(
         (_) async {},
@@ -61,7 +61,7 @@ void main() {
     testWidgets("login with failure", (WidgetTester tester) async {
       // Reset the mock behavior for this specific test
       when(mockInterface.login(input: anyNamed("input")))
-          .thenAnswer((_) async => Result.error("error"));
+          .thenAnswer((_) async => const Result.error("error"));
 
       final result = await ArcaneAuthenticationService.I
           .login(input: {"username": "test"});
