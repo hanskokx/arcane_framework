@@ -13,14 +13,14 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  arcane_helper_utils: ^1.4.5
+  arcane_helper_utils: any
   collection: ^1.19.0
   flutter:
     sdk: flutter
   result_monad: ^4.0.0
 
 dev_dependencies:
-  arcane_analysis: ^1.0.3
+  arcane_analysis: any
   build_runner: ^2.4.1
   flutter_test:
     sdk: flutter
