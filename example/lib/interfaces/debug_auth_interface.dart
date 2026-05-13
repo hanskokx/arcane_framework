@@ -32,7 +32,7 @@ class DebugAuthInterface
 
     _isSignedIn = false;
 
-    return const Result.ok(null);
+    return Result.ok(null);
   }
 
   @override
@@ -42,7 +42,7 @@ class DebugAuthInterface
   }) async {
     final bool alreadyLoggedIn = await isSignedIn;
 
-    if (alreadyLoggedIn) return const Result.ok(null);
+    if (alreadyLoggedIn) return Result.ok(null);
 
     final credentials = input as Credentials;
 
@@ -53,7 +53,7 @@ class DebugAuthInterface
 
     _isSignedIn = true;
 
-    return const Result.ok(null);
+    return Result.ok(null);
   }
 
   @override
@@ -61,7 +61,7 @@ class DebugAuthInterface
     T? input,
   }) async {
     Arcane.log("Re-sending verification code to $input");
-    return const Result.ok("Code sent");
+    return Result.ok("Code sent");
   }
 
   @override
@@ -77,7 +77,7 @@ class DebugAuthInterface
       Arcane.log("Creating account for $email with password $password");
     }
 
-    return const Result.ok(SignUpStep.confirmSignUp);
+    return Result.ok(SignUpStep.confirmSignUp);
   }
 
   @override
@@ -88,7 +88,7 @@ class DebugAuthInterface
     Arcane.log(
       "Confirming registration for $username with code $confirmationCode",
     );
-    return const Result.ok(true);
+    return Result.ok(true);
   }
 
   @override
@@ -98,7 +98,7 @@ class DebugAuthInterface
     String? code,
   }) async {
     Arcane.log("Resetting password for $email");
-    return const Result.ok(true);
+    return Result.ok(true);
   }
 
   @override
