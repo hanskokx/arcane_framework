@@ -24,10 +24,9 @@ enum SignUpStep {
 
 /// An enum representing the authentication status of a user.
 ///
-/// This enum has three possible states:
+/// This enum has two possible states:
 /// - `authenticated`: The user is authenticated.
 /// - `unauthenticated`: The user is not authenticated.
-/// - `debug`: The application is in debug mode for testing.
 ///
 /// Example:
 /// ```dart
@@ -41,13 +40,7 @@ enum AuthenticationStatus {
   authenticated,
 
   /// The user is not authenticated.
-  unauthenticated,
-
-  /// The application is in debug mode, typically for testing or development purposes.
-  debug;
-
-  /// Returns `true` if the current status is `debug`.
-  bool get isDebug => this == debug;
+  unauthenticated;
 
   /// Returns `true` if the current status is `authenticated`.
   bool get isAuthenticated => this == authenticated;
@@ -56,15 +49,39 @@ enum AuthenticationStatus {
   bool get isUnauthenticated => this == unauthenticated;
 }
 
-/// An enum representing the different application environments.
+/// A value object representing the current application environment.
 ///
-/// This enum has two possible values:
-/// - `debug`: The application is in debug mode, typically for development and testing.
-/// - `normal`: The application is running in a normal mode, for production or standard use.
-enum Environment {
-  /// The debug environment for development and testing purposes.
-  debug,
+/// Built-in values are available through [Environment.debug] and
+/// [Environment.normal], but custom values can be created for app-specific
+/// environments such as `staging`.
+class Environment {
+  /// Creates an environment with a human-readable [name].
+  const Environment(this.name);
 
-  /// The normal environment for production use.
-  normal,
+  /// Built-in debug environment for development and testing purposes.
+  static const Environment debug = Environment("debug");
+
+  /// Built-in normal environment for production use.
+  static const Environment normal = Environment("normal");
+
+  /// Human-readable environment name.
+  final String name;
+
+  /// Returns `true` when this environment is the built-in debug environment.
+  bool get isDebug => this == debug;
+
+  /// Returns `true` when this environment is the built-in normal environment.
+  bool get isNormal => this == normal;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Environment && other.name == name;
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  String toString() => "Environment($name)";
 }

@@ -3,8 +3,8 @@ import "package:flutter/widgets.dart";
 
 /// An `InheritedWidget` that provides access to the application environment.
 ///
-/// The `ArcaneEnvironment` widget holds the current environment (`debug` or `normal`)
-/// and allows descendant widgets to access it.
+/// The `ArcaneEnvironment` widget holds the current environment and allows
+/// descendant widgets to access and mutate it.
 class ArcaneEnvironment extends InheritedWidget {
   /// The current application environment.
   final Environment environment;
@@ -41,6 +41,9 @@ class ArcaneEnvironment extends InheritedWidget {
   bool updateShouldNotify(ArcaneEnvironment oldWidget) {
     return environment != oldWidget.environment;
   }
+
+  void setEnvironment(Environment environment) =>
+      _switchEnvironment(environment);
 
   void enableDebugMode() => _switchEnvironment(Environment.debug);
   void disableDebugMode() => _switchEnvironment(Environment.normal);
@@ -81,16 +84,19 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   /// Enables debug mode by setting the environment to `Environment.debug`.
   void enableDebugMode() {
     if (_environment == Environment.debug) return;
-    setState(() {
-      _environment = Environment.debug;
-    });
+    setEnvironment(Environment.debug);
   }
 
   /// Disables debug mode by setting the environment to `Environment.normal`.
   void disableDebugMode() {
     if (_environment == Environment.normal) return;
+    setEnvironment(Environment.normal);
+  }
+
+  void setEnvironment(Environment environment) {
+    if (_environment == environment) return;
     setState(() {
-      _environment = Environment.normal;
+      _environment = environment;
     });
   }
 
@@ -98,11 +104,7 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   Widget build(BuildContext context) {
     return ArcaneEnvironment(
       environment: _environment,
-      switchEnvironment: (Environment environment) {
-        setState(() {
-          _environment = environment;
-        });
-      },
+      switchEnvironment: setEnvironment,
       child: widget.child,
     );
   }

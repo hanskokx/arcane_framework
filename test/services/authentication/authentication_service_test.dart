@@ -102,6 +102,7 @@ void main() {
       await tester.pump();
       ArcaneEnvironment.of(capturedContext).enableDebugMode();
       await tester.pump();
+
       expect(
         ArcaneEnvironment.of(capturedContext).environment,
         equals(Environment.debug),
@@ -140,6 +141,70 @@ void main() {
         ArcaneEnvironment.of(capturedContext).environment,
         equals(Environment.normal),
       );
+    });
+
+    testWidgets(
+      "setDebug and setNormal do not mutate authentication status",
+      (WidgetTester tester) async {
+        late BuildContext capturedContext;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ArcaneEnvironmentProvider(
+              child: Builder(
+                builder: (context) {
+                  capturedContext = context;
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        );
+
+        await ArcaneAuthenticationService.I.login(
+          input: {"username": "test"},
+        );
+
+        expect(ArcaneAuthenticationService.I.isAuthenticated, true);
+
+        await ArcaneAuthenticationService.I.setDebug(capturedContext);
+        expect(
+          ArcaneAuthenticationService.I.status,
+          AuthenticationStatus.authenticated,
+        );
+
+        await ArcaneAuthenticationService.I.setNormal(capturedContext);
+        expect(
+          ArcaneAuthenticationService.I.status,
+          AuthenticationStatus.authenticated,
+        );
+      },
+    );
+
+    testWidgets("supports custom environment values",
+        (WidgetTester tester) async {
+      late BuildContext capturedContext;
+
+      const Environment staging = Environment("staging");
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ArcaneEnvironmentProvider(
+            child: Builder(
+              builder: (context) {
+                capturedContext = context;
+                return Container();
+              },
+            ),
+          ),
+        ),
+      );
+
+      ArcaneEnvironment.of(capturedContext).setEnvironment(staging);
+      await tester.pump();
+
+      expect(ArcaneEnvironment.of(capturedContext).environment, staging);
+      expect(ArcaneEnvironment.of(capturedContext).environment.name, "staging");
     });
 
     test("statusChanges emits authentication updates", () async {

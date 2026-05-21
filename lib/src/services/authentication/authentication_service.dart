@@ -41,7 +41,6 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Available values:
   /// - `authenticated`: The user has successfully authenticated and is logged in.
   /// - `unauthenticated`: The user has not yet logged in.
-  /// - `debug`: Debug mode has been enabled, enabling development features.
   AuthenticationStatus get status => _notifier.value;
 
   static ArcaneAuthInterface? _authInterface;
@@ -50,8 +49,8 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// been registered.
   ArcaneAuthInterface? get authInterface => _authInterface;
 
-  /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
-  bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
+  /// Returns `true` when the current status is authenticated.
+  bool get isAuthenticated => status == AuthenticationStatus.authenticated;
 
   final ValueNotifier<bool> _isSignedIn = ValueNotifier<bool>(false);
 
@@ -79,8 +78,6 @@ class ArcaneAuthenticationService extends ArcaneService {
   Future<String?> get refreshToken async =>
       await authInterface?.refreshToken ?? Future.value("");
 
-  AuthenticationStatus? _previousModeWhenSettingDebug;
-
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
   Future<void> reset() async {
@@ -89,7 +86,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     _isSignedIn.value = isAuthenticated;
     _statusController.add(_notifier.value);
     _signedInController.add(_isSignedIn.value);
-    _previousModeWhenSettingDebug = null;
   }
 
   /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
@@ -102,9 +98,9 @@ class ArcaneAuthenticationService extends ArcaneService {
     await authInterface.init();
   }
 
-  /// Sets `status` to `AuthenticationStatus.debug`. If `onDebugModeSet` has
-  /// been specified, the method will be triggered after the new status has been
-  /// set.
+  /// Enables the debug environment.
+  ///
+  /// This method does not mutate authentication status.
   Future<void> setDebug(
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
@@ -116,26 +112,17 @@ class ArcaneAuthenticationService extends ArcaneService {
 
       if (previousEnvironment == Environment.debug) return;
 
-      _previousModeWhenSettingDebug = status;
-
       arcaneEnvironment.enableDebugMode();
 
-      final Environment currentEnvironment = arcaneEnvironment.environment;
-
-      if (previousEnvironment == currentEnvironment) {
-        throw Exception("Unable to switch to debug mode.");
-      }
-
-      _setStatus(AuthenticationStatus.debug);
       if (onDebugModeSet != null) await onDebugModeSet();
     } catch (e) {
       rethrow;
     }
   }
 
-  /// Sets `status` to `AuthenticationStatus.normal`. If `onDebugModeUnset` has
-  /// been specified, the method will be triggered after the new status has been
-  /// set.
+  /// Enables the normal environment.
+  ///
+  /// This method does not mutate authentication status.
   Future<void> setNormal(
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
@@ -149,15 +136,6 @@ class ArcaneAuthenticationService extends ArcaneService {
 
       arcaneEnvironment.disableDebugMode();
 
-      final Environment currentEnvironment = arcaneEnvironment.environment;
-
-      if (previousEnvironment == currentEnvironment) {
-        throw Exception("Unable to switch to normal mode.");
-      }
-
-      _setStatus(
-        _previousModeWhenSettingDebug ?? AuthenticationStatus.unauthenticated,
-      );
       if (onDebugModeUnset != null) await onDebugModeUnset();
     } catch (_) {
       throw Exception("No ArcaneEnvironment found in BuildContext");
@@ -210,8 +188,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     if (loggedOut.isSuccess) {
       setUnauthenticated();
     }
-
-    _previousModeWhenSettingDebug = null;
 
     return loggedOut;
   }
