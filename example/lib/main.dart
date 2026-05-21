@@ -505,9 +505,17 @@ class ArcaneFeatureFlagsExample extends StatelessWidget {
 // when you may want to change the behavior of the application under
 // certain conditions.
 class ArcaneEnvironmentExample extends StatelessWidget {
+  static const Environment stagingEnvironment = Environment("staging");
+
   const ArcaneEnvironmentExample({
     super.key,
   });
+
+  Environment _nextEnvironment(Environment current) {
+    if (current == Environment.normal) return Environment.debug;
+    if (current == Environment.debug) return stagingEnvironment;
+    return Environment.normal;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -524,31 +532,25 @@ class ArcaneEnvironmentExample extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final Environment currentEnvironment =
-                    ArcaneEnvironment.of(context).environment;
-                if (currentEnvironment == Environment.normal) {
-                  ArcaneEnvironment.of(context).enableDebugMode();
-                  Arcane.log(
-                    "Environment changed.",
-                    metadata: {
-                      "previous":
-                          ArcaneEnvironment.of(context).environment.name,
-                      "current": Environment.debug.name,
-                    },
-                  );
-                } else {
-                  ArcaneEnvironment.of(context).disableDebugMode();
-                  Arcane.log(
-                    "Environment changed.",
-                    metadata: {
-                      "previous":
-                          ArcaneEnvironment.of(context).environment.name,
-                      "current": Environment.normal.name,
-                    },
-                  );
-                }
+                final ArcaneEnvironment environment = ArcaneEnvironment.of(
+                  context,
+                );
+                final Environment previousEnvironment = environment.environment;
+                final Environment nextEnvironment = _nextEnvironment(
+                  previousEnvironment,
+                );
+
+                environment.setEnvironment(nextEnvironment);
+
+                Arcane.log(
+                  "Environment changed.",
+                  metadata: {
+                    "previous": previousEnvironment.name,
+                    "current": nextEnvironment.name,
+                  },
+                );
               },
-              child: const Text("Switch environment"),
+              child: const Text("Cycle environment"),
             ),
             Text(
               "Environment: ${ArcaneEnvironment.of(context).environment.name}",

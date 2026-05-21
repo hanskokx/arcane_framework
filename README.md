@@ -738,6 +738,38 @@ void dispose() {
 }
 ```
 
+### Application Environments
+
+Arcane environments are value-based and extensible. Two built-in values are
+provided (`Environment.normal` and `Environment.debug`), and applications can define
+their own environments (for example, `staging`).
+
+```dart
+const Environment staging = Environment("staging");
+
+class EnvironmentSwitcher extends StatelessWidget {
+  const EnvironmentSwitcher({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+
+    return ElevatedButton(
+      onPressed: () {
+        arcaneEnvironment.setEnvironment(staging);
+      },
+      child: const Text("Use staging"),
+    );
+  }
+}
+```
+
+`enableDebugMode()` and `disableDebugMode()` are still available convenience
+helpers that map to the built-in debug and normal environments.
+
+Authentication status is intentionally separate from environment. Switching
+environments does not change `AuthenticationStatus`.
+
 ### Dynamic Theming
 
 The Arcane Framework provides a simple interface for managing themes in your

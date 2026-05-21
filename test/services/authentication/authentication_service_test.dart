@@ -243,5 +243,30 @@ void main() {
       ArcaneAuthenticationService.I.setAuthenticated();
       await secondEvent;
     });
+
+    test("statusChanges and signedInChanges stay coherent", () async {
+      ArcaneAuthenticationService.I.setUnauthenticated();
+
+      final statusEvents = expectLater(
+        ArcaneAuthenticationService.I.statusChanges,
+        emitsInOrder(
+          <AuthenticationStatus>[
+            AuthenticationStatus.authenticated,
+            AuthenticationStatus.unauthenticated,
+          ],
+        ),
+      );
+
+      final signedInEvents = expectLater(
+        ArcaneAuthenticationService.I.signedInChanges,
+        emitsInOrder(<bool>[true, false]),
+      );
+
+      ArcaneAuthenticationService.I.setAuthenticated();
+      ArcaneAuthenticationService.I.setUnauthenticated();
+
+      await statusEvents;
+      await signedInEvents;
+    });
   });
 }
