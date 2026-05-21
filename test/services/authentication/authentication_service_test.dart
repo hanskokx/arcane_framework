@@ -1,38 +1,36 @@
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:mockito/annotations.dart";
-import "package:mockito/mockito.dart";
+import "package:mocktail/mocktail.dart";
 
-import "authentication_service_test.mocks.dart";
+class MockArcaneAuthInterface extends Mock implements ArcaneAuthInterface {}
 
-@GenerateMocks([
-  ArcaneAuthInterface,
-  ArcaneEnvironmentProvider,
-])
 void main() {
-  late ArcaneAuthInterface mockInterface;
+  late ArcaneAuthInterface authInterface;
 
   group("ArcaneAuthenticationService", () {
     setUp(() async {
-      // Initialize mocks
-      mockInterface = MockArcaneAuthInterface();
+      authInterface = MockArcaneAuthInterface();
 
       // Initialize the service
       await ArcaneAuthenticationService.I.reset();
 
-      // Set up default mock behaviors
-      when(mockInterface.login(input: anyNamed("input"))).thenAnswer(
-        (_) async => const Result.ok(null),
-      );
-      when(mockInterface.logout()).thenAnswer(
-        (_) async => const Result.ok(null),
-      );
-      when(mockInterface.init()).thenAnswer(
-        (_) async {},
-      );
+      when(() => authInterface.init()).thenAnswer((_) async {});
 
-      await ArcaneAuthenticationService.I.registerInterface(mockInterface);
+      when(
+        () => authInterface.login<Map<String, String>>(
+          input: any(named: "input"),
+          onLoggedIn: any(named: "onLoggedIn"),
+        ),
+      ).thenAnswer((_) async => const Result.ok(null));
+
+      when(
+        () => authInterface.logout(
+          onLoggedOut: any(named: "onLoggedOut"),
+        ),
+      ).thenAnswer((_) async => const Result.ok(null));
+
+      await ArcaneAuthenticationService.I.registerInterface(authInterface);
     });
 
     testWidgets("login with success", (WidgetTester tester) async {
@@ -59,9 +57,12 @@ void main() {
     });
 
     testWidgets("login with failure", (WidgetTester tester) async {
-      // Reset the mock behavior for this specific test
-      when(mockInterface.login(input: anyNamed("input")))
-          .thenAnswer((_) async => const Result.error("error"));
+      when(
+        () => authInterface.login<Map<String, String>>(
+          input: any(named: "input"),
+          onLoggedIn: any(named: "onLoggedIn"),
+        ),
+      ).thenAnswer((_) async => const Result.error("error"));
 
       final result = await ArcaneAuthenticationService.I
           .login(input: {"username": "test"});
@@ -139,6 +140,43 @@ void main() {
         ArcaneEnvironment.of(capturedContext).environment,
         equals(Environment.normal),
       );
+    });
+
+    test("statusChanges emits authentication updates", () async {
+      final statusEvent = expectLater(
+        ArcaneAuthenticationService.I.statusChanges,
+        emits(AuthenticationStatus.authenticated),
+      );
+
+      ArcaneAuthenticationService.I.setAuthenticated();
+      await statusEvent;
+    });
+
+    test("signedInChanges emits signed-in updates", () async {
+      final signedInEvent = expectLater(
+        ArcaneAuthenticationService.I.signedInChanges,
+        emits(true),
+      );
+
+      ArcaneAuthenticationService.I.setAuthenticated();
+      await signedInEvent;
+    });
+
+    test("statusChanges works after listener cancellation", () async {
+      final firstSubscription =
+          ArcaneAuthenticationService.I.statusChanges.listen((_) {});
+      await firstSubscription.cancel();
+
+      // Ensure a deterministic baseline before asserting the next stream event.
+      ArcaneAuthenticationService.I.setUnauthenticated();
+
+      final secondEvent = expectLater(
+        ArcaneAuthenticationService.I.statusChanges,
+        emits(AuthenticationStatus.authenticated),
+      );
+
+      ArcaneAuthenticationService.I.setAuthenticated();
+      await secondEvent;
     });
   });
 }

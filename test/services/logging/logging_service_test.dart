@@ -96,6 +96,32 @@ void main() {
   });
 
   group("ArcaneLogger", () {
+    group("stream lifecycle", () {
+      test("logStream remains usable after listener cancellation", () async {
+        String? firstMessage;
+        final firstSubscription = Arcane.logger.logStream.listen((message) {
+          firstMessage = message;
+        });
+
+        Arcane.log("first");
+        await Future<void>.delayed(Duration.zero);
+        expect(firstMessage, contains("first"));
+
+        await firstSubscription.cancel();
+
+        String? secondMessage;
+        final secondSubscription = Arcane.logger.logStream.listen((message) {
+          secondMessage = message;
+        });
+
+        Arcane.log("second");
+        await Future<void>.delayed(Duration.zero);
+        expect(secondMessage, contains("second"));
+
+        await secondSubscription.cancel();
+      });
+    });
+
     group("interface management", () {
       test("registerInterfaces adds interfaces correctly", () async {
         await Arcane.logger.registerInterface(myInterface);

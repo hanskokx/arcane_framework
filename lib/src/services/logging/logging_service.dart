@@ -42,15 +42,15 @@ class ArcaneLogger {
   /// Additional metadata that is included in all logs.
   Map<String, String> get additionalMetadata => I._additionalMetadata;
 
-  final StreamController<String> _logStreamController =
-      StreamController<String>.broadcast(
-    onCancel: () {
-      I._logStreamController.close();
-    },
-  );
+  StreamController<String>? _logStreamController;
+
+  StreamController<String> get _logController {
+    _logStreamController ??= StreamController<String>.broadcast();
+    return _logStreamController!;
+  }
 
   /// Stream of log messages being received and sent to the registered interfaces.
-  Stream<String> get logStream => I._logStreamController.stream;
+  Stream<String> get logStream => I._logController.stream;
 
   bool _initialized = false;
 
@@ -297,7 +297,7 @@ class ArcaneLogger {
       }
     }
 
-    _logStreamController.add(
+    _logController.add(
       "${event.message} ${{
         "level": event.level,
         "metadata": event.metadata,
@@ -480,10 +480,17 @@ class ArcaneLogger {
   /// clearing all registered [LoggingInterface]s and marking the logging
   /// service as no longer being initialized.
   void reset() {
+    dispose();
     I._interfaceRegistrations.clear();
     I._interceptors.clear();
     I._initialized = false;
     I._additionalMetadata.clear();
+  }
+
+  /// Closes logger streams and allows lazy recreation on subsequent access.
+  void dispose() {
+    unawaited(_logStreamController?.close());
+    _logStreamController = null;
   }
 
   LogEvent? _runInterceptors(

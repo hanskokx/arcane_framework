@@ -1,5 +1,41 @@
 ## Unreleased
 
+### Authentication Service (ArcaneAuth) Updates
+
+- [NEW] Added `statusChanges` stream to observe `AuthenticationStatus` updates.
+- [NEW] Added `signedInChanges` stream to observe sign-in state changes.
+- [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+
+### Feature Flags Service (ArcaneFeatureFlags) Updates
+
+- [NEW] Added `enabledFeaturesChanges` stream to observe enabled feature
+  updates in realtime.
+- [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+
+### Logging Service (ArcaneLogger) Updates
+
+- [FIX] `logStream` no longer closes when an individual listener cancels
+  (prevents stale stream state during widget lifecycle changes and hot reload
+  flows).
+- [NEW] Added explicit `dispose` cleanup for logger stream resources.
+
+### Theme (ArcaneTheme) Updates
+
+- [FIX] Reactive theme stream controllers now close only during service dispose,
+  preventing stream shutdown when a single subscriber cancels.
+
+### Test Coverage Updates
+
+- [NEW] Added regression tests for stream listener cancellation and
+  re-subscription in logging, theme, feature flags, and authentication.
+
+### Documentation and Example Updates
+
+- [UPDATE] README now documents stream APIs for authentication, feature flags,
+  logging, and reactive theme, including subscription lifecycle patterns.
+- [UPDATE] Example README now includes run instructions and references for
+  stream lifecycle usage in the demo app.
+
 ### Logging Service (Upcoming Contract Changes)
 
 - [BREAKING] `LoggingInterface` no longer includes built-in singleton-style

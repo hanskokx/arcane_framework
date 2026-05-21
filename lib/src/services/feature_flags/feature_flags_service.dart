@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/foundation.dart";
 
@@ -37,6 +39,18 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// A `ValueNotifier` that notifies listeners when the list of enabled features changes.
   ValueNotifier<List<Enum>> get notifier => _notifier;
 
+  StreamController<List<Enum>>? _enabledFeaturesStreamController;
+
+  StreamController<List<Enum>> get _enabledFeaturesController {
+    _enabledFeaturesStreamController ??=
+        StreamController<List<Enum>>.broadcast();
+    return _enabledFeaturesStreamController!;
+  }
+
+  /// Stream of enabled feature list updates.
+  Stream<List<Enum>> get enabledFeaturesChanges =>
+      I._enabledFeaturesController.stream;
+
   /// Indicates whether the feature flags have been initialized.
   bool _initialized = false;
 
@@ -71,6 +85,7 @@ class ArcaneFeatureFlags extends ArcaneService {
     if (_enabledFeatures.contains(feature)) return I;
 
     _notifier.value = [..._enabledFeatures, feature];
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -99,6 +114,7 @@ class ArcaneFeatureFlags extends ArcaneService {
     if (!_enabledFeatures.contains(feature)) return I;
 
     _notifier.value = [..._enabledFeatures]..removeWhere((i) => i == feature);
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
@@ -133,7 +149,15 @@ class ArcaneFeatureFlags extends ArcaneService {
       ..removeListener(_listener)
       ..addListener(_listener);
     _notifier.value = [];
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
     I._initialized = false;
+  }
+
+  @override
+  void dispose() {
+    unawaited(_enabledFeaturesStreamController?.close());
+    _enabledFeaturesStreamController = null;
+    super.dispose();
   }
 
   void _listener() {

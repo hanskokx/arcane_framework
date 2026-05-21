@@ -38,6 +38,8 @@ and service management.
   workflows.
 - **Dynamic Theming**: Switch between light and dark themes with
   `ArcaneReactiveTheme`.
+- **Realtime Streams**: In addition to `ValueNotifier`s, core services expose
+  broadcast streams for reactive consumers.
 
 ## Installation
 
@@ -309,6 +311,27 @@ Arcane.features.notifier.addListener(() {
 });
 ```
 
+If you prefer stream-based subscriptions, you can listen to
+`enabledFeaturesChanges` and cancel the subscription in `dispose`.
+
+```dart
+late final StreamSubscription<List<Enum>> subscription;
+
+@override
+void initState() {
+  super.initState();
+  subscription = Arcane.features.enabledFeaturesChanges.listen((features) {
+    print("Features changed: $features");
+  });
+}
+
+@override
+void dispose() {
+  subscription.cancel();
+  super.dispose();
+}
+```
+
 Note that it is possible to register multiple different `Enum` types in the
 feature flag service, should one have a need to do so.
 
@@ -431,6 +454,27 @@ Arcane.log(
   metadata: {"key": "value", "attempt": 1},
   stackTrace: StackTrace.current,
 );
+```
+
+You can also listen to `logStream` for realtime log events, and cancel and
+re-register subscribers as widget lifecycles change:
+
+```dart
+late final StreamSubscription<String> logSubscription;
+
+@override
+void initState() {
+  super.initState();
+  logSubscription = Arcane.logger.logStream.listen((message) {
+    debugPrint("Log stream event: $message");
+  });
+}
+
+@override
+void dispose() {
+  logSubscription.cancel();
+  super.dispose();
+}
 ```
 
 You can also add and remove global interceptors after startup. Because every
@@ -667,6 +711,33 @@ final result = await Arcane.auth.login(
 await Arcane.auth.logout();
 ```
 
+Authentication updates can also be consumed through streams:
+
+```dart
+late final StreamSubscription<AuthenticationStatus> statusSubscription;
+late final StreamSubscription<bool> signedInSubscription;
+
+@override
+void initState() {
+  super.initState();
+
+  statusSubscription = Arcane.auth.statusChanges.listen((status) {
+    debugPrint("Auth status changed: $status");
+  });
+
+  signedInSubscription = Arcane.auth.signedInChanges.listen((signedIn) {
+    debugPrint("Is signed in: $signedIn");
+  });
+}
+
+@override
+void dispose() {
+  statusSubscription.cancel();
+  signedInSubscription.cancel();
+  super.dispose();
+}
+```
+
 ### Dynamic Theming
 
 The Arcane Framework provides a simple interface for managing themes in your
@@ -704,20 +775,20 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   @override
+  void didChangeDependencies() {
+    Arcane.theme.followSystemTheme(context);
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ArcaneApp(
       child: MaterialApp(
         theme: Arcane.theme.light,
         darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.systemTheme.value,
+        themeMode: Arcane.theme.currentModeOf(context),
       ),
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    Arcane.theme.followSystemTheme(context);
-    super.didChangeDependencies();
   }
 }
 ```
@@ -727,13 +798,15 @@ or manually control the theme mode:
 ```dart
 // Manually control the theme mode
 class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ArcaneApp(
       child: MaterialApp(
         theme: Arcane.theme.light,
         darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.currentMode,
+        themeMode: Arcane.theme.currentModeOf(context),
       ),
     );
   }
@@ -747,7 +820,7 @@ Then, you can switch modes whenever you want:
 Arcane.theme.switchTheme();
 
 // Access current theme data
-final ThemeData currentTheme = Arcane.theme.currentMode == ThemeMode.dark
+final ThemeData currentTheme = Arcane.theme.currentThemeMode == ThemeMode.dark
   ? Arcane.theme.dark
   : Arcane.theme.light;
 
@@ -760,6 +833,32 @@ Arcane.theme.setDarkTheme(customDarkTheme);
 
 // Set a custom light theme
 Arcane.theme.setLightTheme(customLightTheme);
+```
+
+You can subscribe to theme streams to react to theme updates outside of widget
+build methods:
+
+```dart
+late final StreamSubscription<ThemeMode> modeSubscription;
+late final StreamSubscription<ThemeData> themeSubscription;
+
+@override
+void initState() {
+  super.initState();
+  modeSubscription = Arcane.theme.themeModeChanges.listen((mode) {
+    debugPrint("Theme mode changed: $mode");
+  });
+  themeSubscription = Arcane.theme.themeDataChanges.listen((themeData) {
+    debugPrint("Theme data changed: ${themeData.brightness}");
+  });
+}
+
+@override
+void dispose() {
+  modeSubscription.cancel();
+  themeSubscription.cancel();
+  super.dispose();
+}
 ```
 
 ## Contributing

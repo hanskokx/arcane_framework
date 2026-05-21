@@ -25,6 +25,17 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// A `ValueNotifier` that emits the current `AuthenticationStatus`.
   ValueNotifier<AuthenticationStatus> get notifier => _notifier;
 
+  StreamController<AuthenticationStatus>? _statusStreamController;
+
+  StreamController<AuthenticationStatus> get _statusController {
+    _statusStreamController ??=
+        StreamController<AuthenticationStatus>.broadcast();
+    return _statusStreamController!;
+  }
+
+  /// Stream of authentication status updates.
+  Stream<AuthenticationStatus> get statusChanges => I._statusController.stream;
+
   /// Returns the current `AuthenticationStatus`.
   ///
   /// Available values:
@@ -47,6 +58,16 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// A `ValueNotifier` that emits `true` if the user is currently signed in.
   ValueNotifier<bool> get isSignedIn => _isSignedIn;
 
+  StreamController<bool>? _signedInStreamController;
+
+  StreamController<bool> get _signedInController {
+    _signedInStreamController ??= StreamController<bool>.broadcast();
+    return _signedInStreamController!;
+  }
+
+  /// Stream of signed-in boolean updates.
+  Stream<bool> get signedInChanges => I._signedInController.stream;
+
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
@@ -66,6 +87,8 @@ class ArcaneAuthenticationService extends ArcaneService {
     _authInterface = null;
     _notifier.value = AuthenticationStatus.unauthenticated;
     _isSignedIn.value = isAuthenticated;
+    _statusController.add(_notifier.value);
+    _signedInController.add(_isSignedIn.value);
     _previousModeWhenSettingDebug = null;
   }
 
@@ -155,7 +178,18 @@ class ArcaneAuthenticationService extends ArcaneService {
     if (_notifier.value != newStatus) {
       _notifier.value = newStatus;
       _isSignedIn.value = isAuthenticated;
+      _statusController.add(_notifier.value);
+      _signedInController.add(_isSignedIn.value);
     }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_statusStreamController?.close());
+    unawaited(_signedInStreamController?.close());
+    _statusStreamController = null;
+    _signedInStreamController = null;
+    super.dispose();
   }
 
   /// Logs the current user out. Upon successful logout, `status` will be set to

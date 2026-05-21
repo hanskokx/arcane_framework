@@ -21,7 +21,6 @@ dependencies:
 
 dev_dependencies:
   arcane_analysis: any
-  build_runner: ^2.4.1
   flutter_test:
     sdk: flutter
-  mockito: ^5.4.5
+  mocktail: ^1.0.5

@@ -1,8 +1,5 @@
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:mockito/mockito.dart";
-
-class MockLoggingInterface extends Mock implements LoggingInterface {}
 
 void main() {
   setUpAll(() {

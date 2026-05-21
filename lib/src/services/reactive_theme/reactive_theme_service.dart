@@ -34,12 +34,12 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// Tracks the current system theme mode
   ThemeMode _currentSystemThemeMode = ThemeMode.system;
 
-  final StreamController<ThemeMode> _systemStreamController =
-      StreamController<ThemeMode>.broadcast(
-    onCancel: () {
-      I._systemStreamController.close();
-    },
-  );
+  StreamController<ThemeMode>? _systemStreamController;
+
+  StreamController<ThemeMode> get _systemController {
+    _systemStreamController ??= StreamController<ThemeMode>.broadcast();
+    return _systemStreamController!;
+  }
 
   // ************************************************************************ //
   // * MARK: ThemeMode
@@ -53,14 +53,14 @@ class ArcaneReactiveTheme extends ArcaneService {
   ThemeMode _currentThemeMode = ThemeMode.light;
 
   /// Stream of `ThemeMode` changes that can be listened to for reactive UI updates.
-  Stream<ThemeMode> get themeModeChanges => I._themeModeStreamController.stream;
+  Stream<ThemeMode> get themeModeChanges => I._themeModeController.stream;
 
-  final StreamController<ThemeMode> _themeModeStreamController =
-      StreamController<ThemeMode>.broadcast(
-    onCancel: () {
-      I._themeModeStreamController.close();
-    },
-  );
+  StreamController<ThemeMode>? _themeModeStreamController;
+
+  StreamController<ThemeMode> get _themeModeController {
+    _themeModeStreamController ??= StreamController<ThemeMode>.broadcast();
+    return _themeModeStreamController!;
+  }
 
   // ************************************************************************ //
   // * MARK: ThemeData
@@ -70,14 +70,14 @@ class ArcaneReactiveTheme extends ArcaneService {
   ThemeData _currentTheme = ThemeData();
 
   /// Stream of `ThemeData` changes that can be listened to for reactive UI updates.
-  Stream<ThemeData> get themeDataChanges => I._themeStreamController.stream;
+  Stream<ThemeData> get themeDataChanges => I._themeController.stream;
 
-  final StreamController<ThemeData> _themeStreamController =
-      StreamController<ThemeData>.broadcast(
-    onCancel: () {
-      I._themeStreamController.close();
-    },
-  );
+  StreamController<ThemeData>? _themeStreamController;
+
+  StreamController<ThemeData> get _themeController {
+    _themeStreamController ??= StreamController<ThemeData>.broadcast();
+    return _themeStreamController!;
+  }
 
   // ************************************************************************ //
   // * MARK: Light/Dark theme
@@ -143,11 +143,11 @@ class ArcaneReactiveTheme extends ArcaneService {
 
     _currentSystemThemeMode =
         context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
-    _systemStreamController.add(_currentSystemThemeMode);
+    _systemController.add(_currentSystemThemeMode);
     _updateTheme(_currentSystemThemeMode);
 
     final ThemeData theme = systemThemeMode == ThemeMode.dark ? dark : light;
-    _themeStreamController.add(theme);
+    _themeController.add(theme);
     _currentTheme = theme;
 
     return I;
@@ -164,7 +164,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme setDarkTheme(ThemeData theme) {
     _darkTheme.value = theme;
-    _themeStreamController.add(theme);
+    _themeController.add(theme);
     _currentTheme = theme;
 
     return I;
@@ -181,7 +181,7 @@ class ArcaneReactiveTheme extends ArcaneService {
   /// ```
   ArcaneReactiveTheme setLightTheme(ThemeData theme) {
     _lightTheme.value = theme;
-    _themeStreamController.add(theme);
+    _themeController.add(theme);
     _currentTheme = theme;
 
     return I;
@@ -197,13 +197,26 @@ class ArcaneReactiveTheme extends ArcaneService {
     _lightTheme.value = ThemeData.light();
     _followingSystemTheme = false;
     _updateTheme(ThemeMode.light);
-    _themeStreamController.add(_lightTheme.value);
+    _themeController.add(_lightTheme.value);
     _currentTheme = _lightTheme.value;
+  }
+
+  @override
+  void dispose() {
+    unawaited(_systemStreamController?.close());
+    unawaited(_themeModeStreamController?.close());
+    unawaited(_themeStreamController?.close());
+
+    _systemStreamController = null;
+    _themeModeStreamController = null;
+    _themeStreamController = null;
+
+    super.dispose();
   }
 
   /// Updates the current theme mode and broadcasts the change.
   void _updateTheme(ThemeMode themeMode) {
     _currentThemeMode = themeMode;
-    _themeModeStreamController.add(themeMode);
+    _themeModeController.add(themeMode);
   }
 }
