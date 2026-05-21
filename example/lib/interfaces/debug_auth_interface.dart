@@ -5,10 +5,7 @@ typedef Credentials = ({String email, String password});
 class DebugAuthInterface
     with ArcaneAuthAccountRegistration, ArcaneAuthPasswordManagement
     implements ArcaneAuthInterface {
-  DebugAuthInterface._internal();
-
-  static final ArcaneAuthInterface _instance = DebugAuthInterface._internal();
-  static ArcaneAuthInterface get I => _instance;
+  DebugAuthInterface();
 
   @override
   Future<bool> get isSignedIn => Future.value(_isSignedIn);

@@ -9,13 +9,27 @@ import "package:example/theme/theme.dart";
 import "package:flutter/material.dart";
 
 Future<void> main() async {
+  final DebugPrint debugPrintInterface = DebugPrint();
+  final DebugAuthInterface debugAuthInterface = DebugAuthInterface();
+
   // If any Feature enum items are `enabledAtStartup`, enable them within Arcane.
   for (final Feature feature in Feature.values) {
     if (feature.enabledAtStartup) Arcane.features.enableFeature(feature);
   }
 
   // Register the logging interface
-  await Arcane.logger.registerInterface(DebugPrint.I);
+  await Arcane.logger.registerInterface(
+    debugPrintInterface,
+    interceptors: [
+      LogInterceptor((event, {required context}) {
+        if (context.interface is DebugPrint && Feature.logging.disabled) {
+          return null;
+        }
+
+        return event;
+      }),
+    ],
+  );
 
   // Add some persistent metadata to be used in every future log message
   Arcane.logger.addPersistentMetadata({
@@ -23,7 +37,7 @@ Future<void> main() async {
   });
 
   // Register the authentication interface
-  await Arcane.auth.registerInterface(DebugAuthInterface.I);
+  await Arcane.auth.registerInterface(debugAuthInterface);
 
   // Set the light and dark mode themes using our pre-defined ThemeData classes
   Arcane.theme

@@ -315,55 +315,102 @@ feature flag service, should one have a need to do so.
 ### Logging
 
 The Arcane Framework provides a robust logging system for your application. This
-allows you to easily log messages with metadata, stack traces, and different log
-levels. The framework also provides an easy way to configure the logger's
-behavior (e.g., whether or not to show stack traces).
+allows you to log messages with metadata, stack traces, and different log
+levels while routing a single log event to multiple destinations.
 
-To get started, first create one or more logging interfaces, extending the
-`LoggingInterface` base class.
+To get started, first create one or more logging interfaces by extending
+`LoggingInterface`.
 
 ```dart
-class DebugConsole implements LoggingInterface {
-  static final DebugConsole _instance = DebugConsole._internal();
-  static DebugConsole get I => _instance;
-  DebugConsole._internal();
-
-  final bool _initialized = true;
-
-  @override
-  bool get initialized => I._initialized;
-
-
+class DebugConsole extends LoggingInterface {
   @override
   void log(
     String message, {
-    Map<String, dynamic>? metadata,
+    Map<String, Object?>? metadata,
     Level? level,
     StackTrace? stackTrace,
+    Object? extra,
   }) {
     debugPrint(
       "$message\n"
       "$metadata\n",
     );
   }
-
-  @override
-  Future<LoggingInterface?> init() async => I;
 }
 ```
 
-Next, register your logging interface with the Arcane logger service:
+If your destination needs setup (SDK start, permission checks, etc.), opt into
+the initialization lifecycle with `LoggingInitializationMixin`:
 
 ```dart
-// Register your logging interface(s)
-await Arcane.logger.registerInterfaces([
-  DebugConsole.I,
-]);
+class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
+  @override
+  Future<void> init() async {
+    if (initialized) return;
 
-// Initialize registered logging interfaces
-// NOTE: This step may be deferred until a user has consented to app tracking.
+    // Configure and start the SDK.
+    await super.init();
+  }
+
+  @override
+  void log(
+    String message, {
+    Map<String, Object?>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+    Object? extra,
+  }) {
+    if (!initialized) return;
+    // Forward to the SDK.
+  }
+}
+```
+
+Next, register your logging interface with the Arcane logger service. You can
+attach interceptors when registering an interface, or add global interceptors
+later at runtime.
+
+```dart
+final DebugConsole debugConsole = DebugConsole();
+
+await Arcane.logger.registerInterface(
+  debugConsole,
+  interceptors: [
+    LogInterceptor((event, {required LogInterceptorContext context}) {
+      if (context.interface is DebugConsole && event.level == Level.debug) {
+        return null;
+      }
+
+      return event;
+    }),
+  ],
+);
+
+Arcane.logger.registerInterceptor(
+  LogInterceptor((event, {required context}) {
+    return event.copyWith(
+      metadata: {
+        ...?event.metadata,
+        "session": "startup",
+      },
+    );
+  }),
+);
+
+// Optional: initialize only interfaces that implement LoggingInitializable
+// (for example, SDK-backed loggers that mix in LoggingInitializationMixin).
 await Arcane.logger.initializeInterfaces();
 ```
+
+Global interceptors are evaluated for each registered interface, and interface
+interceptors run immediately after them for that same destination. Every
+interceptor receives a `LogInterceptorContext` whose `interface` value is the
+current destination, which allows a single global interceptor to allow one
+interface to receive an event while dropping it for another.
+
+Returning `null` from an interceptor drops the event for the current scope.
+Returning a modified `LogEvent` allows you to rewrite the message, metadata,
+level, stack trace, or extra payload before it is logged.
 
 Finally, add any additional persistent metadata to your log messages (optional)
 and log a message:
@@ -381,18 +428,75 @@ Arcane.log(
   level: Level.debug,
   module: "ModuleName",
   method: "MethodName",
-  metadata: {"key": "value"},
+  metadata: {"key": "value", "attempt": 1},
   stackTrace: StackTrace.current,
 );
 ```
 
-Multiple logging interfaces can be registered simultaneously.
+You can also add and remove global interceptors after startup. Because every
+interceptor receives a `LogInterceptorContext`, a single global interceptor can
+still make interface-specific decisions by checking `context.interface`. If you
+prefer, you can also define your own interceptor class by implementing
+`LogInterceptor` instead of using the callback constructor.
 
-**Important**: Logging interfaces should generally be initialized after being
-registered with the logger service. This ensures that all logging interfaces are
-properly initialized before any messages are logged. This should typically be
-done manually in order to properly present the user with a message stating that
-they're about to be prompted for tracking permissions (on iOS).
+```dart
+final LogInterceptor redactSecrets = LogInterceptor((
+  event, {
+  required LogInterceptorContext context,
+}) {
+  final Object? token = event.metadata?["token"];
+  if (token == null) return event;
+
+  return event.copyWith(
+    metadata: {
+      ...?event.metadata,
+      "token": "[redacted]",
+    },
+  );
+});
+
+Arcane.logger.registerInterceptor(redactSecrets);
+Arcane.logger.unregisterInterceptor(redactSecrets);
+```
+
+If you prefer a reusable named type, you can also implement `LogInterceptor`
+directly:
+
+```dart
+class RedactingLogInterceptor implements LogInterceptor {
+  const RedactingLogInterceptor();
+
+  @override
+  LogEvent? call(
+    LogEvent event, {
+    required LogInterceptorContext context,
+  }) {
+    final Object? token = event.metadata?["token"];
+    if (token == null) return event;
+
+    return event.copyWith(
+      metadata: {
+        ...?event.metadata,
+        "token": "[redacted]",
+      },
+    );
+  }
+}
+
+final LogInterceptor redactSecrets = RedactingLogInterceptor();
+
+Arcane.logger.registerInterceptor(redactSecrets);
+Arcane.logger.unregisterInterceptor(redactSecrets);
+```
+
+Multiple logging interfaces and multiple interceptors can be registered
+simultaneously. Interface-specific interceptors receive copied `LogEvent`
+instances, so mutations made for one destination do not leak into another.
+
+**Important**: Initialization is now optional per interface. Call
+`initializeInterfaces()` when you have interfaces that opt into
+`LoggingInitializable` (for example via `LoggingInitializationMixin`). Simple
+destinations like a debug console can skip initialization entirely.
 
 ### Authentication
 

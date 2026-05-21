@@ -1,3 +1,65 @@
+## Unreleased
+
+### Logging Service (Upcoming Contract Changes)
+
+- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
+  initialization state.
+- [NEW] Added optional lifecycle capability via `LoggingInitializable` and
+  `LoggingInitializationMixin`.
+- [NEW] Added optional `feature` tag to `LoggingInterface` via constructor.
+- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
+  implement `LoggingInitializable`; other interfaces are skipped.
+
+#### Migration (LoggingInterface Contract)
+
+- For simple loggers (debug console style), remove `initialized`/`init`
+   boilerplate.
+
+Before:
+
+```dart
+class DebugConsole implements LoggingInterface {
+  @override
+  bool get initialized => true;
+
+  @override
+  Future<LoggingInterface?> init() async => this;
+
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {}
+}
+```
+
+After:
+
+```dart
+class DebugConsole extends LoggingInterface {
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {}
+}
+```
+
+- For SDK-backed loggers, opt into initialization with the mixin.
+
+```dart
+class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
+  @override
+  Future<void> init() async {
+    if (initialized) return;
+    // Start SDK.
+    await super.init();
+  }
+
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {
+    if (!initialized) return;
+    // Send to SDK.
+  }
+}
+```
+
+- If desired, adopt `feature` for destination-aware filtering in interceptors.
+
 ## 2.0.0
 
 ### Arcane
