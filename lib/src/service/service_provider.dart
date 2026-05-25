@@ -15,7 +15,8 @@ part of "arcane_service.dart";
 /// ```
 /// To access the provided services:
 /// ```dart
-/// final myService = ArcaneServiceProvider.of<MyService>(context);
+/// final provider = ArcaneServiceProvider.of(context);
+/// final myService = ArcaneServiceProvider.serviceOfType<MyService>(context);
 /// ```
 class ArcaneServiceProvider
     extends InheritedNotifier<ValueNotifier<List<ArcaneService>>> {
@@ -57,9 +58,7 @@ class ArcaneServiceProvider
   /// ```dart
   /// final provider = ArcaneServiceProvider.of(context);
   /// ```
-  static ArcaneServiceProvider of<T extends ArcaneService>(
-    BuildContext context,
-  ) {
+  static ArcaneServiceProvider of(BuildContext context) {
     final provider = maybeOf(context);
     assert(provider != null, "No ArcaneServiceProvider found in context");
     return provider!;
@@ -71,7 +70,7 @@ class ArcaneServiceProvider
   ///
   /// Example:
   /// ```dart
-  /// final myService = ArcaneServiceProvider.of<MyService>(context);
+  /// final myService = ArcaneServiceProvider.serviceOfType<MyService>(context);
   /// ```
   static T? serviceOfType<T extends ArcaneService>(BuildContext context) {
     final provider = maybeOf(context);
@@ -86,7 +85,7 @@ class ArcaneServiceProvider
   ///
   /// Example:
   /// ```dart
-  /// final myService = ArcaneServiceProvider.of<MyService>(context);
+  /// final myService = ArcaneServiceProvider.requiredServiceOfType<MyService>(context);
   /// ```
   static T requiredServiceOfType<T extends ArcaneService>(
     BuildContext context,
