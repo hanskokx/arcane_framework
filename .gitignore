@@ -51,3 +51,6 @@ app.*.map.json
 **/android/app/profile
 **/android/app/release
 
+# Example builds
+**/example/.metadata
+**/example/web/
