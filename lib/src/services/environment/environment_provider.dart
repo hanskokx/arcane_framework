@@ -1,11 +1,16 @@
-import "package:arcane_framework/arcane_framework.dart";
+import "package:arcane_framework/src/arcane.dart";
 import "package:flutter/widgets.dart";
+
+import "environment_interface.dart";
 
 /// An `InheritedWidget` that provides access to the application environment.
 ///
-/// The `ArcaneEnvironment` widget holds the current environment (`debug` or `normal`)
-/// and allows descendant widgets to access it.
+/// The `ArcaneEnvironment` widget holds the current environment and allows
+/// descendant widgets to access and mutate it.
 class ArcaneEnvironment extends InheritedWidget {
+  /// Returns the current environment (alias for [environment]) for API consistency.
+  Environment get current => environment;
+
   /// The current application environment.
   final Environment environment;
 
@@ -14,11 +19,10 @@ class ArcaneEnvironment extends InheritedWidget {
   /// Creates an `ArcaneEnvironment` widget.
   const ArcaneEnvironment({
     required this.environment,
-    required Widget child,
     required void Function(Environment) switchEnvironment,
-    Key? key,
-  })  : _switchEnvironment = switchEnvironment,
-        super(key: key, child: child);
+    required super.child,
+    super.key,
+  }) : _switchEnvironment = switchEnvironment;
 
   /// Retrieves the `ArcaneEnvironment` instance from the nearest ancestor.
   ///
@@ -42,6 +46,9 @@ class ArcaneEnvironment extends InheritedWidget {
   bool updateShouldNotify(ArcaneEnvironment oldWidget) {
     return environment != oldWidget.environment;
   }
+
+  void setEnvironment(Environment environment) =>
+      _switchEnvironment(environment);
 
   void enableDebugMode() => _switchEnvironment(Environment.debug);
   void disableDebugMode() => _switchEnvironment(Environment.normal);
@@ -73,37 +80,57 @@ class ArcaneEnvironmentProvider extends StatefulWidget {
 class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   late Environment _environment;
 
+  void _handleEnvironmentChange() {
+    if (!mounted) return;
+
+    final nextEnvironment = Arcane.environment.current;
+    if (nextEnvironment == _environment) return;
+
+    setState(() {
+      _environment = nextEnvironment;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _environment = widget.environment;
+    _environment = Arcane.environment.current;
+
+    if (_environment != widget.environment) {
+      Arcane.environment.setEnvironment(widget.environment);
+      _environment = Arcane.environment.current;
+    }
+
+    Arcane.environment.notifier.addListener(_handleEnvironmentChange);
+  }
+
+  @override
+  void dispose() {
+    Arcane.environment.notifier.removeListener(_handleEnvironmentChange);
+    super.dispose();
   }
 
   /// Enables debug mode by setting the environment to `Environment.debug`.
   void enableDebugMode() {
     if (_environment == Environment.debug) return;
-    setState(() {
-      _environment = Environment.debug;
-    });
+    setEnvironment(Environment.debug);
   }
 
   /// Disables debug mode by setting the environment to `Environment.normal`.
   void disableDebugMode() {
     if (_environment == Environment.normal) return;
-    setState(() {
-      _environment = Environment.normal;
-    });
+    setEnvironment(Environment.normal);
+  }
+
+  void setEnvironment(Environment environment) {
+    Arcane.environment.setEnvironment(environment);
   }
 
   @override
   Widget build(BuildContext context) {
     return ArcaneEnvironment(
       environment: _environment,
-      switchEnvironment: (Environment environment) {
-        setState(() {
-          _environment = environment;
-        });
-      },
+      switchEnvironment: setEnvironment,
       child: widget.child,
     );
   }

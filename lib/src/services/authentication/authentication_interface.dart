@@ -36,7 +36,11 @@ abstract class ArcaneAuthInterface {
   /// This method terminates the current session and removes any stored tokens.
   /// Returns a `Result` that either contains a `void` on success or an error
   /// message.
-  Future<Result<void, String>> logout();
+  /// Upon a successful logout, the `onLoggedOut` method will be called if it
+  /// has been provided.
+  Future<Result<void, String>> logout({
+    Future<void> Function()? onLoggedOut,
+  });
 
   /// Logs the user in using an optional, generic `T` type of input.
   /// This login method is a generic method that can be used to login with any
@@ -44,6 +48,8 @@ abstract class ArcaneAuthInterface {
   /// and password. Any type of input can be passed in, and it will be handled
   /// by the implementation of the method wihin the specific authentication
   /// service.
+  /// Upon a successful login, the `onLoggedIn` method will be called if it
+  /// has been provided.
   ///
   /// Example:
   /// ```dart

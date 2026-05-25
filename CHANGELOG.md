@@ -1,3 +1,294 @@
+## Unreleased
+
+### Arcane Framework
+
+- [NEW] `ArcaneApp` now owns and publishes a live service registry for
+  provider-aware static lookups.
+- [CHANGE] `Arcane.features`, `Arcane.auth`, `Arcane.theme`, and
+  `Arcane.environment` now prefer the live `ArcaneApp` registry instance when
+  available, then fall back to built-in singletons.
+- [BREAKING] `Arcane` is now a static utility surface (no instantiable
+  singleton constructor).
+- [BREAKING] Several `package:arcane_framework/src/...` import paths changed
+  (for example, `src/providers/...` -> `src/service/...` and
+  `src/services/reactive_theme/...` -> `src/services/theme/...`). Consumers
+  importing from `src` directly must update import paths.
+- [NEW] Added optional `ArcaneApp.builder` callback (TransitionBuilder style)
+  for capturing provider-aware build contexts from within `ArcaneApp`.
+- [DEPRECATED] `ArcaneApp.child` is now deprecated in favor of
+  `ArcaneApp.builder` (legacy child usage remains supported during migration).
+- [DEPRECATED] `BuildContext.serviceOfType<T>()` is now deprecated in favor of
+  `BuildContext.service<T>()`.
+
+### Environment Service
+
+- [NEW] Added `ArcaneEnvironmentService` as a singleton `ArcaneService` instance.
+- [CHANGE] Changed `ArcaneEnvironment` is no longer a `Cubit` and is now an
+  `InheritedWidget`.
+- [NEW] Added `Arcane.environment` shortcut for direct environment access.
+- [NEW] Added environment service to `Arcane.services` built-in list.
+- [CHANGE] `ArcaneEnvironmentProvider` is now a `StatefulWidget` instead of a
+  `StatelessWidget` with a `BlocProvider`.
+- [NEW] `ArcaneEnvironmentProvider` now provides methods for
+  `enableDebugMode()`, `disableDebugMode()` and `setEnvironment()`.
+- [NEW] Added `environmentChanges` stream for realtime environment updates.
+
+#### Migration Steps (ArcaneEnvironment)
+
+1. The `state` getter has been removed from `ArcaneEnvironment`. If you previously accessed environment state via `Arcane.environment.state`, update your code to use the new API:
+
+   - **Before:**
+
+     ```dart
+     final env = Arcane.environment.state;
+     ```
+
+   - **After:**
+
+     ```dart
+     final env = Arcane.environment.current;
+     ```
+
+2. If you were using `Cubit`-style APIs, migrate to the new `InheritedWidget`/`ValueNotifier`-based approach. See the README for updated usage examples.
+
+### Authentication Service
+
+- [BREAKING] `ArcaneAuthInterface.logout` now accepts optional
+  `onLoggedOut` callback parameters. `ArcaneAuthInterface` implementers must
+  update logout signature to accept optional `onLoggedOut`. See the migration
+  steps for further details.
+- [NEW] Added `statusChanges` stream to observe `AuthenticationStatus` updates.
+- [NEW] Added `signedInChanges` stream to observe sign-in state changes.
+- [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+
+#### Migration Steps (ArcaneAuthInterface)
+
+1. Update `ArcaneAuthInterface` implementations to accept the new optional
+   `onLoggedOut` callback parameter in `logout(...)`.
+2. If your implementation performs cleanup side effects on logout, invoke
+   `onLoggedOut` when provided.
+3. Run tests to confirm your authentication adapter still satisfies your
+   login/logout flows.
+
+Before:
+
+```dart
+@override
+Future<Result<void, String>> logout() async {
+  // ...
+  return Result.ok(null);
+}
+```
+
+After:
+
+```dart
+@override
+Future<Result<void, String>> logout({
+  Future<void> Function()? onLoggedOut,
+}) async {
+  // ...
+  if (onLoggedOut != null) await onLoggedOut();
+  return Result.ok(null);
+}
+```
+
+### Feature Flag Service
+
+- [CHANGE] Renamed service class `ArcaneFeatureFlags` to
+  `ArcaneFeatureFlagService`.
+- [NEW] Added backward compatibility typedef:
+  `typedef ArcaneFeatureFlags = ArcaneFeatureFlagService`.
+- [NEW] Added `enabledFeaturesChanges` stream to observe enabled feature
+  updates in realtime.
+- [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+- [NEW] Added `ArcaneFeatureFlagProvider` (`InheritedWidget`) and
+  `ArcaneFeatureFlagsProvider` (`StatefulWidget`) for first-class feature-flag
+  integration in the widget tree.
+- [DEPRECATED] `ArcaneFeatureFlagsScope` has been renamed to
+  `ArcaneFeatureFlagProvider`.
+- [NEW] Added `BuildContext` convenience accessors for feature flags, including
+  `context.featureFlags`, `context.maybeFeatureFlags`,
+  `context.isFeatureEnabled(...)`, and `context.isFeatureDisabled(...)`.
+- [NEW] `ArcaneApp` now includes `ArcaneFeatureFlagsProvider` by default,
+  enabling rebuilds for widgets that depend on
+  `ArcaneFeatureFlagProvider.of(context)`.
+- [UPDATE] README now documents `ArcaneFeatureFlagProvider` and `ArcaneApp`
+  provider composition.
+
+### Theme Service
+
+- [CHANGE] Renamed `ArcaneReactiveTheme` to `ArcaneThemeService` for clearer
+  naming.
+- [NEW] Added backward compatibility typedef:
+  `typedef ArcaneReactiveTheme = ArcaneThemeService`.
+- [FIX] Theme initialization now respects `ThemeMode.system` and initializes
+  `ThemeData` using the effective brightness.
+- [FIX] `ArcaneThemeSwitcher` now initializes system-follow behavior once on
+  first dependency resolution.
+- [FIX] `ArcaneThemeSwitcher` now defaults to `followSystemTheme(context)` when
+  mounted under `ArcaneApp`, so system-follow is enabled by default and system
+  brightness changes are handled framework-side (no app-level observer needed).
+- [FIX] `switchTheme()` now toggles from the effective theme when current mode
+  is `ThemeMode.system` (system dark -> light, system light -> dark).
+- [CHANGE] `context.isDarkMode` now reflects effective app theme brightness
+  (`Theme.of(context).brightness`) instead of raw platform brightness.
+- [FIX] `followSystemTheme()` now reads platform brightness directly to avoid
+  coupling system-follow behavior to app theme overrides.
+- [NEW] Added assignment-style theme setters: `Arcane.theme.dark = ...` and
+  `Arcane.theme.light = ...` (in addition to `setDarkTheme` /
+  `setLightTheme`).
+- [FIX] Reactive theme stream controllers now close only during service dispose,
+  preventing stream shutdown when a single subscriber cancels.
+- [FIX] Setting a theme (e.g., dark) while in the opposite mode (e.g., light) no
+  longer changes the current brightness or rendered theme. Only the active
+  mode's theme updates the rendered appearance.
+- [NEW] Added `themeModeChanges` and `themeDataChanges` streams for realtime
+  theme updates.
+
+#### Migration Steps (ArcaneThemeService)
+
+1. Replace legacy `ThemeMode` reads from `Arcane.theme.systemTheme.value` with
+  `Arcane.theme.currentModeOf(context)` when configuring app `themeMode`.
+
+Before:
+
+```dart
+MaterialApp(
+  theme: Arcane.theme.light,
+  darkTheme: Arcane.theme.dark,
+  themeMode: Arcane.theme.systemTheme.value,
+)
+```
+
+After:
+
+```dart
+MaterialApp(
+  theme: Arcane.theme.light,
+  darkTheme: Arcane.theme.dark,
+  themeMode: Arcane.theme.currentModeOf(context),
+)
+```
+
+### Arcane Logger
+
+- [NEW] Added `logStream` for realtime log subscriptions.
+- [NEW] Added explicit `dispose` cleanup for logger stream resources.
+- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
+  initialization state.
+- [NEW] Added optional lifecycle capability via `LoggingInitializable` and
+  `LoggingInitialization`.
+- [NEW] Added optional `feature` tag support via `@LoggingFeature(...)`
+  annotation.
+- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
+  implement `LoggingInitializable`; other interfaces are skipped.
+- [NEW] Added a `skipAutodetection` parameter to `Arcane.log` (defaults to
+  `false`) that, when enabled, skips detection of the `module`, `method`, and
+  file/line number where logs originated from.
+- [NEW] Added the `LogInterceptor` class which can (optionally) be added to
+  `ArcaneLogger` to pre-process log messages before they are sent to the
+  registered `ArcaneLoggingInterface`(s).
+- [CHANGE] Updated `Arcane.log` metadata type from `Map<String, String>?` to
+  `Map<String, Object?>?` to support structured metadata values.
+
+#### Migration Steps (LoggingInterface)
+
+1. Remove `initialized` and `init` from interfaces that do not require startup
+  work.
+2. If an interface requires startup/lifecycle management, add
+  `LoggingInitialization` (or implement `LoggingInitializable`) and move
+  setup logic into `init()`.
+3. Update `log(...)` implementations to guard behavior with `initialized` only
+  for interfaces that opted into initialization.
+4. Run tests to verify interface registration and logging behavior still match
+  expectations.
+
+Before:
+
+```dart
+class DebugConsole implements LoggingInterface {
+  @override
+  bool get initialized => true;
+
+  @override
+  Future<LoggingInterface?> init() async => this;
+
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {}
+}
+```
+
+After:
+
+```dart
+class DebugConsole extends LoggingInterface {
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {}
+}
+```
+
+- For SDK-backed loggers, opt into initialization with the mixin.
+
+```dart
+class ExternalLogger extends LoggingInterface with LoggingInitialization {
+  @override
+  Future<void> init() async {
+    if (initialized) return;
+    // Start SDK.
+    await super.init();
+  }
+
+  @override
+  void log(String message, {Map<String, Object?>? metadata, Level? level}) {
+    if (!initialized) return;
+    // Send to SDK.
+  }
+}
+```
+
+- If desired, adopt `feature` for destination-aware filtering in interceptors.
+
+#### Migration Steps (Arcane.log metadata)
+
+1. Update `Arcane.log(...)` call sites that stringify metadata values only to
+   satisfy the previous `Map<String, String>` type.
+2. Prefer passing native values (for example `int`, `bool`, `List`, or nested
+   `Map`) directly in `metadata` when useful.
+3. If your logging destination expects only string metadata, convert
+   `Object?` values to strings at your logging boundary.
+
+Before:
+
+```dart
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "attempt": attempt.toString(),
+    "rememberMe": rememberMe.toString(),
+  },
+);
+```
+
+After:
+
+```dart
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "attempt": attempt,
+    "rememberMe": rememberMe,
+  },
+);
+```
+
+### Dependencies
+
+- [CHANGE] Relaxed `result_monad` constraint from `^2.3.2` to `any`.
+- [CHANGE] Removed direct `flutter_bloc` dependency.
+- [CHANGE] Updated `collection` from `^1.18.0` to `^1.19.0`.
+- [CHANGE] Relaxed `arcane_helper_utils` constraint from `^1.4.7` to `any`.
+
 ## 1.2.7
 
 - Updated dependencies to latest

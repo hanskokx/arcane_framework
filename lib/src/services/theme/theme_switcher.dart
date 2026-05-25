@@ -1,7 +1,9 @@
 import "dart:async";
 
-import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/material.dart";
+
+import "arcane_theme.dart";
+import "theme_service.dart";
 
 class ArcaneThemeSwitcher extends StatefulWidget {
   final Widget child;
@@ -17,19 +19,21 @@ class ArcaneThemeSwitcher extends StatefulWidget {
 
 class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
     with WidgetsBindingObserver {
+  bool _initialized = false;
   late final StreamSubscription<ThemeMode> _themeModeSubscription;
   late final StreamSubscription<ThemeData> _themeSubscription;
 
   @override
   void initState() {
     super.initState();
+
     // Register as an observer to detect system theme changes
     WidgetsBinding.instance.addObserver(this);
 
-    _themeModeSubscription = ArcaneReactiveTheme.I.themeModeChanges.listen((_) {
+    _themeModeSubscription = ArcaneThemeService.I.themeModeChanges.listen((_) {
       setState(() {});
     });
-    _themeSubscription = ArcaneReactiveTheme.I.themeDataChanges.listen((_) {
+    _themeSubscription = ArcaneThemeService.I.themeDataChanges.listen((_) {
       setState(() {});
     });
   }
@@ -38,17 +42,29 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
   void dispose() {
     _themeModeSubscription.cancel();
     _themeSubscription.cancel();
+
     // Clean up the observer when the widget is disposed
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      // ArcaneApp defaults to following the platform theme until the user
+      // explicitly picks a manual light/dark mode.
+      ArcaneThemeService.I.followSystemTheme(context);
+      _initialized = true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ArcaneTheme(
-      themeMode: ArcaneReactiveTheme.I.currentThemeMode,
-      followSystem: ArcaneReactiveTheme.I.isFollowingSystemTheme,
-      theme: ArcaneReactiveTheme.I.currentTheme,
+      themeMode: ArcaneThemeService.I.currentThemeMode,
+      followSystem: ArcaneThemeService.I.isFollowingSystemTheme,
+      theme: ArcaneThemeService.I.currentTheme,
       child: widget.child,
     );
   }
@@ -59,9 +75,9 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
     // and use it to check the system theme
     if (mounted) {
       // Use the current context from the key to check system theme
-      if (ArcaneReactiveTheme.I.isFollowingSystemTheme) {
+      if (ArcaneThemeService.I.isFollowingSystemTheme) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          ArcaneReactiveTheme.I.followSystemTheme(context);
+          ArcaneThemeService.I.followSystemTheme(context);
         });
       }
     }

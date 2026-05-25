@@ -2,21 +2,19 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
-  group("ArcaneFeatureFlags", () {
-    late ArcaneFeatureFlags featureFlags;
+  group("ArcaneFeatureFlagService", () {
+    late ArcaneFeatureFlagService featureFlags;
 
     setUp(() {
-      featureFlags = ArcaneFeatureFlags.I;
+      featureFlags = ArcaneFeatureFlagService.I;
+      Arcane.features.reset();
     });
 
     test("singleton instance is consistent", () {
-      expect(identical(ArcaneFeatureFlags.I, featureFlags), true);
+      expect(identical(ArcaneFeatureFlagService.I, featureFlags), true);
     });
 
     group("feature management", () {
-      setUp(() {
-        Arcane.features.reset();
-      });
       test("enableFeature adds feature to enabled list", () {
         featureFlags.enableFeature(MockFeature.test);
         expect(featureFlags.enabledFeatures, contains(MockFeature.test));
@@ -47,7 +45,7 @@ void main() {
     group("notifications", () {
       test("enableFeature notifies listeners", () {
         var notified = false;
-        featureFlags.addListener(() => notified = true);
+        featureFlags.notifier.addListener(() => notified = true);
         featureFlags.enableFeature(MockFeature.test);
         expect(notified, true);
       });
@@ -55,9 +53,51 @@ void main() {
       test("disableFeature notifies listeners", () {
         featureFlags.enableFeature(MockFeature.test);
         var notified = false;
-        featureFlags.addListener(() => notified = true);
+        featureFlags.notifier.addListener(() => notified = true);
         featureFlags.disableFeature(MockFeature.test);
         expect(notified, true);
+      });
+
+      test("enabledFeaturesChanges emits updates", () async {
+        List<Enum>? emitted;
+        final subscription =
+            featureFlags.enabledFeaturesChanges.listen((features) {
+          emitted = features;
+        });
+
+        featureFlags.enableFeature(MockFeature.test);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(emitted, contains(MockFeature.test));
+
+        await subscription.cancel();
+      });
+
+      test("enabledFeaturesChanges works after listener cancellation",
+          () async {
+        List<Enum>? firstEmission;
+        final firstSubscription =
+            featureFlags.enabledFeaturesChanges.listen((features) {
+          firstEmission = features;
+        });
+
+        featureFlags.enableFeature(MockFeature.test);
+        await Future<void>.delayed(Duration.zero);
+        expect(firstEmission, contains(MockFeature.test));
+
+        await firstSubscription.cancel();
+
+        List<Enum>? secondEmission;
+        final secondSubscription =
+            featureFlags.enabledFeaturesChanges.listen((features) {
+          secondEmission = features;
+        });
+
+        featureFlags.disableFeature(MockFeature.test);
+        await Future<void>.delayed(Duration.zero);
+        expect(secondEmission, isNot(contains(MockFeature.test)));
+
+        await secondSubscription.cancel();
       });
     });
   });

@@ -7,10 +7,10 @@ class ArcaneTheme extends InheritedWidget {
 
   const ArcaneTheme({
     required super.child,
+    super.key,
     this.themeMode = ThemeMode.light,
     this.followSystem = false,
     this.theme,
-    super.key,
   });
 
   static ArcaneTheme? of(BuildContext context) {

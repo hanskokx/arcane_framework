@@ -25,12 +25,26 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// A `ValueNotifier` that emits the current `AuthenticationStatus`.
   ValueNotifier<AuthenticationStatus> get notifier => _notifier;
 
-  /// Returns the current `AuthenticationStatus`.
+  StreamController<AuthenticationStatus>? _statusStreamController;
+
+  StreamController<AuthenticationStatus> get _statusController {
+    _statusStreamController ??=
+        StreamController<AuthenticationStatus>.broadcast();
+    return _statusStreamController!;
+  }
+
+  /// Stream of authentication status updates.
+  Stream<AuthenticationStatus> get statusChanges => I._statusController.stream;
+
+  /// Returns the current `AuthenticationStatus` as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [notifier] (for `ValueListenableBuilder`) or
+  /// [statusChanges] (for streams) when you need reactive updates.
   ///
   /// Available values:
   /// - `authenticated`: The user has successfully authenticated and is logged in.
   /// - `unauthenticated`: The user has not yet logged in.
-  /// - `debug`: Debug mode has been enabled, enabling development features.
   AuthenticationStatus get status => _notifier.value;
 
   static ArcaneAuthInterface? _authInterface;
@@ -39,26 +53,34 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// been registered.
   ArcaneAuthInterface? get authInterface => _authInterface;
 
-  /// A shortcut to `status != AuthenticationStatus.unauthenticated`.
-  bool get isAuthenticated => status != AuthenticationStatus.unauthenticated;
+  /// Returns `true` when the current status is authenticated.
+  bool get isAuthenticated => status == AuthenticationStatus.authenticated;
 
   final ValueNotifier<bool> _isSignedIn = ValueNotifier<bool>(false);
 
   /// A `ValueNotifier` that emits `true` if the user is currently signed in.
   ValueNotifier<bool> get isSignedIn => _isSignedIn;
 
+  StreamController<bool>? _signedInStreamController;
+
+  StreamController<bool> get _signedInController {
+    _signedInStreamController ??= StreamController<bool>.broadcast();
+    return _signedInStreamController!;
+  }
+
+  /// Stream of signed-in boolean updates.
+  Stream<bool> get signedInChanges => I._signedInController.stream;
+
   /// Returns a JWT access token if the registered `ArcaneAuthInterface`
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
-  Future<String?> get accessToken =>
+  Future<String?> get accessToken async =>
       authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
-  Future<String?> get refreshToken =>
+  Future<String?> get refreshToken async =>
       authInterface?.refreshToken ?? Future.value("");
-
-  AuthenticationStatus? _previousModeWhenSettingDebug;
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
@@ -66,8 +88,8 @@ class ArcaneAuthenticationService extends ArcaneService {
     _authInterface = null;
     _notifier.value = AuthenticationStatus.unauthenticated;
     _isSignedIn.value = isAuthenticated;
-    _previousModeWhenSettingDebug = null;
-    notifyListeners();
+    _statusController.add(_notifier.value);
+    _signedInController.add(_isSignedIn.value);
   }
 
   /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
@@ -80,66 +102,36 @@ class ArcaneAuthenticationService extends ArcaneService {
     await authInterface.init();
   }
 
-  /// Sets `status` to `AuthenticationStatus.debug`. If `onDebugModeSet` has
-  /// been specified, the method will be triggered after the new status has been
-  /// set.
+  /// Enables the debug environment.
+  ///
+  /// This method does not mutate authentication status.
   Future<void> setDebug(
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
   }) async {
-    try {
-      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+    final Environment previousEnvironment = Arcane.environment.current;
 
-      final Environment previousEnvironment = arcaneEnvironment.environment;
+    if (previousEnvironment == Environment.debug) return;
 
-      if (previousEnvironment == Environment.debug) return;
+    Arcane.environment.enableDebugMode();
 
-      _previousModeWhenSettingDebug = status;
-
-      arcaneEnvironment.enableDebugMode();
-
-      final Environment currentEnvironment = arcaneEnvironment.environment;
-
-      if (previousEnvironment == currentEnvironment) {
-        throw Exception("Unable to switch to debug mode.");
-      }
-
-      _setStatus(AuthenticationStatus.debug);
-      if (onDebugModeSet != null) await onDebugModeSet();
-    } catch (e) {
-      rethrow;
-    }
+    if (onDebugModeSet != null) await onDebugModeSet();
   }
 
-  /// Sets `status` to `AuthenticationStatus.normal`. If `onDebugModeUnset` has
-  /// been specified, the method will be triggered after the new status has been
-  /// set.
+  /// Enables the normal environment.
+  ///
+  /// This method does not mutate authentication status.
   Future<void> setNormal(
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
-    try {
-      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+    final Environment previousEnvironment = Arcane.environment.current;
 
-      final Environment previousEnvironment = arcaneEnvironment.environment;
+    if (previousEnvironment == Environment.normal) return;
 
-      if (previousEnvironment == Environment.normal) return;
+    Arcane.environment.disableDebugMode();
 
-      arcaneEnvironment.disableDebugMode();
-
-      final Environment currentEnvironment = arcaneEnvironment.environment;
-
-      if (previousEnvironment == currentEnvironment) {
-        throw Exception("Unable to switch to normal mode.");
-      }
-
-      _setStatus(
-        _previousModeWhenSettingDebug ?? AuthenticationStatus.unauthenticated,
-      );
-      if (onDebugModeUnset != null) await onDebugModeUnset();
-    } catch (_) {
-      throw Exception("No ArcaneEnvironment found in BuildContext");
-    }
+    if (onDebugModeUnset != null) await onDebugModeUnset();
   }
 
   /// Sets `status` to `AuthenticationStatus.authenticated`.
@@ -156,8 +148,18 @@ class ArcaneAuthenticationService extends ArcaneService {
     if (_notifier.value != newStatus) {
       _notifier.value = newStatus;
       _isSignedIn.value = isAuthenticated;
+      _statusController.add(_notifier.value);
+      _signedInController.add(_isSignedIn.value);
     }
-    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_statusStreamController?.close());
+    unawaited(_signedInStreamController?.close());
+    _statusStreamController = null;
+    _signedInStreamController = null;
+    super.dispose();
   }
 
   /// Logs the current user out. Upon successful logout, `status` will be set to
@@ -166,19 +168,20 @@ class ArcaneAuthenticationService extends ArcaneService {
     Future<void> Function()? onLoggedOut,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    if (!isAuthenticated) Result.error("User is not authenticated.");
+    if (!isAuthenticated) {
+      return const Result.error("User is not authenticated.");
+    }
 
-    final Result<void, String> loggedOut = await authInterface!.logout();
+    final Result<void, String> loggedOut = await authInterface!.logout(
+      onLoggedOut: onLoggedOut,
+    );
 
     if (loggedOut.isSuccess) {
       setUnauthenticated();
-      if (onLoggedOut != null) await onLoggedOut();
     }
-
-    _previousModeWhenSettingDebug = null;
 
     return loggedOut;
   }
@@ -189,16 +192,16 @@ class ArcaneAuthenticationService extends ArcaneService {
     Future<void> Function()? onLoggedIn,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     final Result<void, String> result = await authInterface!.login(
       input: input,
+      onLoggedIn: onLoggedIn,
     );
 
     if (result.isSuccess) {
       setAuthenticated();
-      if (onLoggedIn != null) await onLoggedIn();
     }
 
     return result;
@@ -211,11 +214,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     T? input,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -227,7 +230,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -242,11 +245,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     required String confirmationCode,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -259,7 +262,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -271,11 +274,11 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// registration.
   Future<Result<String, String>> resendVerificationCode(String email) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthAccountRegistration) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support account registration.",
       );
     }
@@ -286,7 +289,7 @@ class ArcaneAuthenticationService extends ArcaneService {
         auth.resendVerificationCode(input: email);
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }
@@ -306,11 +309,11 @@ class ArcaneAuthenticationService extends ArcaneService {
     String? confirmationCode,
   }) async {
     if (_authInterface == null) {
-      return Result.error("No ArcaneAuthInterface has been registered");
+      return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
     if (authInterface is! ArcaneAuthPasswordManagement) {
-      return Result.error(
+      return const Result.error(
         "The provided ArcaneAuthInterface does not support password management.",
       );
     }
@@ -324,7 +327,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     );
 
     if (result == null) {
-      return Result.error(
+      return const Result.error(
         "Registered ArcaneAuthInterface returned a null value.",
       );
     }

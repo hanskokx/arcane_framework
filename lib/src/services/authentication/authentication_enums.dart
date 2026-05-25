@@ -24,10 +24,9 @@ enum SignUpStep {
 
 /// An enum representing the authentication status of a user.
 ///
-/// This enum has three possible states:
+/// This enum has two possible states:
 /// - `authenticated`: The user is authenticated.
 /// - `unauthenticated`: The user is not authenticated.
-/// - `debug`: The application is in debug mode for testing.
 ///
 /// Example:
 /// ```dart
@@ -41,30 +40,11 @@ enum AuthenticationStatus {
   authenticated,
 
   /// The user is not authenticated.
-  unauthenticated,
-
-  /// The application is in debug mode, typically for testing or development purposes.
-  debug;
-
-  /// Returns `true` if the current status is `debug`.
-  bool get isDebug => this == debug;
+  unauthenticated;
 
   /// Returns `true` if the current status is `authenticated`.
   bool get isAuthenticated => this == authenticated;
 
   /// Returns `true` if the current status is `unauthenticated`.
   bool get isUnauthenticated => this == unauthenticated;
-}
-
-/// An enum representing the different application environments.
-///
-/// This enum has two possible values:
-/// - `debug`: The application is in debug mode, typically for development and testing.
-/// - `normal`: The application is running in a normal mode, for production or standard use.
-enum Environment {
-  /// The debug environment for development and testing purposes.
-  debug,
-
-  /// The normal environment for production use.
-  normal,
 }

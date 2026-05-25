@@ -1,31 +1,45 @@
+import "dart:async";
+
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/foundation.dart";
 
 part "feature_flags_extensions.dart";
 
+@Deprecated(
+  "Deprecated in 2.0.0. "
+  "ArcaneFeatureFlags has been renamed to ArcaneFeatureFlagService for clarity. "
+  "Please use ArcaneFeatureFlagService instead.",
+)
+typedef ArcaneFeatureFlags = ArcaneFeatureFlagService;
+
 /// A singleton class that manages feature flags in the Arcane architecture.
 ///
-/// `ArcaneFeatureFlags` allows features to be dynamically enabled or disabled
+/// `ArcaneFeatureFlagService` allows features to be dynamically enabled or disabled
 /// at runtime. This can be useful for controlling access to experimental or
 /// conditional functionality without requiring an application restart.
 ///
 /// Example usage:
 /// ```dart
-/// ArcaneFeatureFlags.I.enableFeature(MyFeature.example);
-/// if (ArcaneFeatureFlags.I.isEnabled(MyFeature.example)) {
+/// ArcaneFeatureFlagService.I.enableFeature(MyFeature.example);
+/// if (ArcaneFeatureFlagService.I.isEnabled(MyFeature.example)) {
 ///   // Execute feature-specific logic
 /// }
 /// ```
-class ArcaneFeatureFlags extends ArcaneService {
-  ArcaneFeatureFlags._internal();
+class ArcaneFeatureFlagService extends ArcaneService {
+  ArcaneFeatureFlagService._internal();
 
-  /// The singleton instance of `ArcaneFeatureFlags`.
-  static final ArcaneFeatureFlags _instance = ArcaneFeatureFlags._internal();
+  /// The singleton instance of `ArcaneFeatureFlagService`.
+  static final ArcaneFeatureFlagService _instance =
+      ArcaneFeatureFlagService._internal();
 
-  /// Provides access to the singleton instance of `ArcaneFeatureFlags`.
-  static ArcaneFeatureFlags get I => _instance;
+  /// Provides access to the singleton instance of `ArcaneFeatureFlagService`.
+  static ArcaneFeatureFlagService get I => _instance;
 
-  /// A list of enabled features.
+  /// A list of enabled features as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [notifier] (for `ValueListenableBuilder`) or
+  /// [enabledFeaturesChanges] (for streams) when you need reactive updates.
   ///
   /// Each feature is represented as an `Enum`. The list holds the features that are
   /// currently enabled.
@@ -36,6 +50,18 @@ class ArcaneFeatureFlags extends ArcaneService {
 
   /// A `ValueNotifier` that notifies listeners when the list of enabled features changes.
   ValueNotifier<List<Enum>> get notifier => _notifier;
+
+  StreamController<List<Enum>>? _enabledFeaturesStreamController;
+
+  StreamController<List<Enum>> get _enabledFeaturesController {
+    _enabledFeaturesStreamController ??=
+        StreamController<List<Enum>>.broadcast();
+    return _enabledFeaturesStreamController!;
+  }
+
+  /// Stream of enabled feature list updates.
+  Stream<List<Enum>> get enabledFeaturesChanges =>
+      I._enabledFeaturesController.stream;
 
   /// Indicates whether the feature flags have been initialized.
   bool _initialized = false;
@@ -63,27 +89,26 @@ class ArcaneFeatureFlags extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneFeatureFlags.I.enableFeature(MyFeature.newFeature);
+  /// ArcaneFeatureFlagService.I.enableFeature(MyFeature.newFeature);
   /// ```
-  ArcaneFeatureFlags enableFeature(Enum feature) {
+  ArcaneFeatureFlagService enableFeature(Enum feature) {
     if (!I._initialized) _init();
 
     if (_enabledFeatures.contains(feature)) return I;
 
-    _enabledFeatures.add(feature);
-    _notifier.value.add(feature);
+    _notifier.value = [..._enabledFeatures, feature];
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature enabled: ${feature.name}",
-        level: Level.debug,
+        "Feature enabled: $feature",
+        level: Level.info,
         metadata: {
-          feature.name: "✅",
+          feature.toString(): "✅",
         },
       );
     }
 
-    notifyListeners();
     return I;
   }
 
@@ -94,26 +119,25 @@ class ArcaneFeatureFlags extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneFeatureFlags.I.disableFeature(MyFeature.oldFeature);
+  /// ArcaneFeatureFlagService.I.disableFeature(MyFeature.oldFeature);
   /// ```
-  ArcaneFeatureFlags disableFeature(Enum feature) {
+  ArcaneFeatureFlagService disableFeature(Enum feature) {
     if (!I._initialized) _init();
     if (!_enabledFeatures.contains(feature)) return I;
 
-    _enabledFeatures.remove(feature);
-    _notifier.value.remove(feature);
+    _notifier.value = [..._enabledFeatures]..removeWhere((i) => i == feature);
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature disabled: ${feature.name}",
-        level: Level.debug,
+        "Feature disabled: $feature",
+        level: Level.info,
         metadata: {
-          feature.name: "❌",
+          feature.toString(): "❌",
         },
       );
     }
 
-    notifyListeners();
     return I;
   }
 
@@ -123,11 +147,9 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// It is called automatically when enabling or disabling features if they haven't
   /// already been initialized.
   void _init() {
-    _enabledFeatures.clear();
-    _notifier.value.clear();
-
+    if (I._initialized) return;
+    reset();
     I._initialized = true;
-    notifyListeners();
   }
 
   /// Resets the feature flags to their initial state.
@@ -135,10 +157,24 @@ class ArcaneFeatureFlags extends ArcaneService {
   /// This method clears all enabled features, resets notification values,
   /// marks the flags as uninitialized, and notifies listeners of the changes.
   void reset() {
-    _enabledFeatures.clear();
-    _notifier.value.clear();
-
+    notifier
+      ..removeListener(_listener)
+      ..addListener(_listener);
+    _notifier.value = [];
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
     I._initialized = false;
-    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_enabledFeaturesStreamController?.close());
+    _enabledFeaturesStreamController = null;
+    super.dispose();
+  }
+
+  void _listener() {
+    _enabledFeatures
+      ..clear()
+      ..addAll(notifier.value);
   }
 }
