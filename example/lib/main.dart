@@ -71,8 +71,8 @@ Future<void> main() async {
   runApp(
     // The `ArcaneApp` widget is optional but provides Arcane's built-in
     // service, feature flag, environment, and theme integration widgets.
-    const ArcaneApp(
-      child: MainApp(),
+    ArcaneApp(
+      builder: (context, _) => const MainApp(),
     ),
   );
 }
@@ -83,13 +83,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Use the light and dark theme objects registered in Arcane. If either style is
-      // updated in Arcane, the changes will reflect here. This allows for on-the-fly
-      // customizations without requiring compile-time themes to be pre-defined.
       theme: Arcane.theme.light,
       darkTheme: Arcane.theme.dark,
-      // By fetching the current ThemeMode from Arcane, the app will automatically rebuild
-      // when the theme is switched, either manually or automatically.
       themeMode: Arcane.theme.currentModeOf(context),
       home: Scaffold(
         appBar: AppBar(
@@ -313,7 +308,6 @@ class ArcaneAuthExample extends StatelessWidget {
 }
 
 // * Theme
-// Arcane enables easy, dynamic theme switching. Themes can be switched
 // at any time between light mode and dark mode, or set to follow the
 // system theme. In addition, themes can be swapped out on-the-fly,
 // enabling dynamic customizations and remote theme fetching.
@@ -349,15 +343,17 @@ class ArcaneThemeExample extends StatelessWidget {
                     return const Icon(Icons.light_mode);
                   }),
                   onChanged: (_) {
-                    final ThemeMode oldTheme = Arcane.theme.currentThemeMode;
-                    Arcane.theme.switchTheme();
+                    // Always disable system mode and flip to the opposite of the effective mode
+                    Arcane.theme.switchTheme(
+                      themeMode:
+                          context.isDarkMode ? ThemeMode.light : ThemeMode.dark,
+                    );
                     Arcane.log(
                       "Switching theme",
                       metadata: {
                         "followingSystemTheme":
                             "${Arcane.theme.isFollowingSystemTheme}",
                         "newMode": Arcane.theme.currentThemeMode.name,
-                        "oldMode": oldTheme.name,
                       },
                     );
                   },
@@ -368,33 +364,24 @@ class ArcaneThemeExample extends StatelessWidget {
                     Checkbox(
                       value: Arcane.theme.isFollowingSystemTheme,
                       onChanged: (value) {
-                        final ThemeMode oldTheme =
-                            Arcane.theme.currentThemeMode;
                         if (value == true) {
                           Arcane.theme.followSystemTheme(context);
-                          Arcane.log(
-                            "Switching theme",
-                            metadata: {
-                              "followingSystemTheme":
-                                  "${Arcane.theme.isFollowingSystemTheme}",
-                              "newMode": Arcane.theme.currentThemeMode.name,
-                              "oldMode": oldTheme.name,
-                            },
-                          );
                         } else {
-                          Arcane.theme.switchTheme(
-                            themeMode: Arcane.theme.systemThemeMode,
-                          );
-                          Arcane.log(
-                            "Switching theme",
-                            metadata: {
-                              "followingSystemTheme":
-                                  "${Arcane.theme.isFollowingSystemTheme}",
-                              "newMode": Arcane.theme.currentThemeMode.name,
-                              "oldMode": oldTheme.name,
-                            },
-                          );
+                          // When unchecking, set mode to the effective mode (not system)
+                          final ThemeMode effective =
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? ThemeMode.dark
+                                  : ThemeMode.light;
+                          Arcane.theme.switchTheme(themeMode: effective);
                         }
+                        Arcane.log(
+                          "Switching theme",
+                          metadata: {
+                            "followingSystemTheme":
+                                "${Arcane.theme.isFollowingSystemTheme}",
+                            "newMode": Arcane.theme.currentThemeMode.name,
+                          },
+                        );
                       },
                     ),
                     const Text("Follow system"),

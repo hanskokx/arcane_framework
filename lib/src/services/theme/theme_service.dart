@@ -198,9 +198,11 @@ class ArcaneThemeService extends ArcaneService {
   /// ```
   ArcaneThemeService setDarkTheme(ThemeData theme) {
     _darkTheme.value = theme;
-    _themeController.add(theme);
-    _currentTheme = theme;
-
+    // Only update the rendered theme if dark is the active mode.
+    if (_effectiveThemeMode == ThemeMode.dark) {
+      _themeController.add(theme);
+      _currentTheme = theme;
+    }
     return I;
   }
 
@@ -215,9 +217,11 @@ class ArcaneThemeService extends ArcaneService {
   /// ```
   ArcaneThemeService setLightTheme(ThemeData theme) {
     _lightTheme.value = theme;
-    _themeController.add(theme);
-    _currentTheme = theme;
-
+    // Only update the rendered theme if light is the active mode.
+    if (_effectiveThemeMode == ThemeMode.light) {
+      _themeController.add(theme);
+      _currentTheme = theme;
+    }
     return I;
   }
 

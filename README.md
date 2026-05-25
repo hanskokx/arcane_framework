@@ -14,6 +14,7 @@ and service management.
 - [Arcane Framework](#arcane-framework)
   - [Features](#features)
   - [Installation](#installation)
+    - [ArcaneApp Builder Migration (v1.x -\> v2.x)](#arcaneapp-builder-migration-v1x---v2x)
   - [Usage](#usage)
     - [Services](#services)
       - [Defining an example `ArcaneService`](#defining-an-example-arcaneservice)
@@ -63,11 +64,49 @@ To use Arcane Framework in your Dart or Flutter project, follow these steps:
     void main() {
       runApp(
         ArcaneApp(
-          child: MainApp(),
+          builder: (context, _) => MainApp(),
         ),
       );
     }
     ```
+
+   `ArcaneApp.child` remains available for backward compatibility, but is
+   deprecated in favor of `ArcaneApp.builder`.
+
+### ArcaneApp Builder Migration (v1.x -> v2.x)
+
+Arcane now prefers `ArcaneApp.builder` over `ArcaneApp.child`.
+
+Why this is better:
+
+- Your app root is built with Arcane providers already in scope.
+- You can access Arcane-backed context values immediately at app-root build
+  time.
+- You no longer need an extra `Builder` wrapper just to capture provider-aware
+  context.
+
+When to use each API:
+
+| Situation                                                              | Recommended API                | Why                                                                      |
+| ---------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| New app code                                                           | `ArcaneApp.builder`            | Preferred, future-facing API.                                            |
+| Root widget needs Arcane-aware `BuildContext` during construction      | `ArcaneApp.builder`            | Context is captured inside Arcane's provider tree.                       |
+| Existing app already uses `child` and you want minimal churn right now | `ArcaneApp.child` (deprecated) | Still supported for compatibility while you migrate.                     |
+| You only need to pass through a static root widget                     | `ArcaneApp.builder`            | Keeps usage consistent with migration target and avoids later refactors. |
+
+Migration example:
+
+```dart
+// Before (deprecated)
+ArcaneApp(
+  child: MainApp(),
+)
+
+// After (preferred)
+ArcaneApp(
+  builder: (context, _) => MainApp(),
+)
+```
 
 ## Usage
 
@@ -145,7 +184,7 @@ ArcaneApp(
   services: [
     FavoriteColorService.I,
   ],
-  child: MainApp(),
+  builder: (context, _) => MainApp(),
 ),
 ```
 
@@ -156,7 +195,7 @@ already includes `ArcaneServiceProvider`) to be in your widget tree.
 ```dart
 // The service is not included at compile-time
 ArcaneApp(
-  child: MainApp(),
+  builder: (context, _) => MainApp(),
 ),
 
 // Add the service at runtime
@@ -279,7 +318,7 @@ void main() {
 
     runApp(
       ArcaneApp(
-        child: MainApp(),
+        builder: (context, _) => MainApp(),
       ),
     );
   }
@@ -829,7 +868,7 @@ void main() {
 
   runApp(
     ArcaneApp(
-      child: MainApp(),
+      builder: (context, _) => MainApp(),
     ),
   );
 }
@@ -856,7 +895,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return ArcaneApp(
-      child: MaterialApp(
+      builder: (context, _) => MaterialApp(
         theme: Arcane.theme.light,
         darkTheme: Arcane.theme.dark,
         themeMode: Arcane.theme.currentModeOf(context),
@@ -876,7 +915,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ArcaneApp(
-      child: MaterialApp(
+      builder: (context, _) => MaterialApp(
         theme: Arcane.theme.light,
         darkTheme: Arcane.theme.dark,
         themeMode: Arcane.theme.currentModeOf(context),

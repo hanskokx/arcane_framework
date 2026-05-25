@@ -18,24 +18,19 @@ class FavoriteColorService extends ArcaneService {
 
     if (newValue == null) return;
 
-    // Apply the seed to whichever theme is currently being rendered.
-    final bool isUsingDarkTheme =
-        Arcane.theme.currentTheme.brightness == Brightness.dark;
-    if (isUsingDarkTheme) {
-      Arcane.theme.setDarkTheme(
-        ThemeData(
-          brightness: Brightness.dark,
-          colorSchemeSeed: newValue,
-        ),
-      );
-    } else {
-      Arcane.theme.setLightTheme(
-        ThemeData(
-          brightness: Brightness.light,
-          colorSchemeSeed: newValue,
-        ),
-      );
-    }
+    // Apply the seed to both themes so switching mode keeps the same color
+    // family.
+    Arcane.theme.setLightTheme(
+      ThemeData(
+        brightness: Brightness.light,
+        colorSchemeSeed: newValue,
+      ),
+    );
+
+    Arcane.theme.dark = ThemeData(
+      brightness: Brightness.dark,
+      colorSchemeSeed: newValue,
+    );
   }
 
   void syncFromCurrentTheme(Iterable<MaterialColor> palette) {

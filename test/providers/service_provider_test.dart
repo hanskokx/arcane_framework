@@ -68,6 +68,46 @@ void main() {
       );
     });
 
+    testWidgets("ArcaneApp builder receives provider-aware context",
+        (tester) async {
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: testServices,
+          builder: (context, child) {
+            final provider = ArcaneServiceProvider.of(context);
+            expect(provider.registeredServices, containsAll(testServices));
+            return child ?? const SizedBox();
+          },
+          child: const SizedBox(),
+        ),
+      );
+    });
+
+    testWidgets("ArcaneApp supports builder-only usage", (tester) async {
+      var builderCalled = false;
+
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: testServices,
+          builder: (context, _) {
+            builderCalled = true;
+            final provider = ArcaneServiceProvider.of(context);
+            expect(provider.registeredServices, containsAll(testServices));
+            return const SizedBox();
+          },
+        ),
+      );
+
+      expect(builderCalled, isTrue);
+    });
+
+    test("ArcaneApp asserts when both child and builder are missing", () {
+      expect(
+        () => ArcaneApp(),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
     testWidgets("static serviceOfType<T> method returns correct service",
         (tester) async {
       await tester.pumpWidget(

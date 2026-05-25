@@ -13,29 +13,73 @@ import "services/theme/theme_switcher.dart";
 /// settings throughout the widget tree using the `ArcaneServiceProvider` and
 /// `ArcaneEnvironmentProvider`.
 ///
-/// This widget wraps the provided [child] widget with the necessary providers
-/// to make the Arcane services available to all descendant widgets.
+/// This widget wraps your app root with Arcane's built-in providers so
+/// descendant widgets can access services, environment, feature flags, and
+/// theme updates.
+///
+/// Preferred API: [builder]
+///
+/// Use [builder] when your app root needs a provider-aware `BuildContext`
+/// during construction. This is the recommended and future-facing API.
+///
+/// Legacy API: [child]
+///
+/// [child] is deprecated but still supported for compatibility while migrating
+/// existing apps.
+///
+/// Migration:
+/// ```dart
+/// // Before (deprecated)
+/// ArcaneApp(child: MyApp())
+///
+/// // After (preferred)
+/// ArcaneApp(builder: (context, _) => MyApp())
+/// ```
 ///
 /// Example usage:
 /// ```dart
 /// ArcaneApp(
 ///   services: [MyArcaneService()],
-///   child: MyApp(),
+///   builder: (context, _) => MyApp(),
 /// );
 /// ```
 class ArcaneApp extends StatefulWidget {
   /// A list of Arcane services that will be made available to the application.
   final List<ArcaneService> services;
 
-  /// The root widget of the application.
-  final Widget child;
+  /// Optional builder invoked inside Arcane's provider tree.
+  ///
+  /// This mirrors Flutter's `TransitionBuilder` pattern and allows consumers
+  /// to capture a provider-aware context without adding their own wrapper
+  /// widgets around [child].
+  final TransitionBuilder? builder;
 
-  /// Creates an `ArcaneApp` with the specified [child] widget and optional [services].
+  /// The root widget of the application.
+  ///
+  /// Deprecated: prefer [builder] to construct your root widget with a
+  /// provider-aware BuildContext from inside `ArcaneApp`.
+  @Deprecated(
+    "Deprecated in 2.0.0. "
+    "Prefer ArcaneApp.builder so your app root is built with Arcane-provided context.",
+  )
+  final Widget? child;
+
+  /// Creates an `ArcaneApp` with optional [child], [builder], and [services].
+  ///
+  /// Either [child] or [builder] must be provided.
   const ArcaneApp({
-    required this.child,
+    @Deprecated(
+      "Deprecated in 2.0.0. "
+      "Prefer ArcaneApp.builder so your app root is built with Arcane-provided context.",
+    )
+    this.child,
     this.services = const [],
+    this.builder,
     super.key,
-  });
+  }) : assert(
+          child != null || builder != null,
+          "ArcaneApp requires either a child or a builder.",
+        );
 
   @override
   State<ArcaneApp> createState() => _ArcaneAppState();
@@ -77,12 +121,18 @@ class _ArcaneAppState extends State<ArcaneApp> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget appChild = widget.builder != null
+        ? Builder(
+            builder: (context) => widget.builder!(context, widget.child),
+          )
+        : widget.child!;
+
     return ArcaneServiceProvider(
       serviceNotifier: _serviceNotifier,
       child: ArcaneFeatureFlagsProvider(
         child: ArcaneEnvironmentProvider(
           child: ArcaneThemeSwitcher(
-            child: widget.child,
+            child: appChild,
           ),
         ),
       ),

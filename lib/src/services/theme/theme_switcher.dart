@@ -52,7 +52,9 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) {
-      ArcaneThemeService.I.setInitialTheme(context);
+      // ArcaneApp defaults to following the platform theme until the user
+      // explicitly picks a manual light/dark mode.
+      ArcaneThemeService.I.followSystemTheme(context);
       _initialized = true;
     }
   }

@@ -7,6 +7,12 @@
 - [CHANGE] `Arcane.features`, `Arcane.auth`, `Arcane.theme`, and
   `Arcane.environment` now prefer the live `ArcaneApp` registry instance when
   available, then fall back to built-in singletons.
+- [NEW] Added optional `ArcaneApp.builder` callback (TransitionBuilder style)
+  for capturing provider-aware build contexts from within `ArcaneApp`.
+- [DEPRECATED] `ArcaneApp.child` is now deprecated in favor of
+  `ArcaneApp.builder` (legacy child usage remains supported during migration).
+- [UPDATE] README and examples now show `ArcaneApp.builder` as the preferred
+  integration path, with migration guidance from `child`.
 
 ### Environment Service
 
@@ -58,6 +64,9 @@
   `ThemeData` using the effective brightness.
 - [FIX] `ArcaneThemeSwitcher` now initializes theme state once via
   `setInitialTheme(context)`.
+- [FIX] `ArcaneThemeSwitcher` now defaults to `followSystemTheme(context)` when
+  mounted under `ArcaneApp`, so system-follow is enabled by default and system
+  brightness changes are handled framework-side (no app-level observer needed).
 - [FIX] `switchTheme()` now toggles from the effective theme when current mode
   is `ThemeMode.system` (system dark -> light, system light -> dark).
 - [CHANGE] `context.isDarkMode` now reflects effective app theme brightness
@@ -69,7 +78,9 @@
   `setLightTheme`).
 - [FIX] Reactive theme stream controllers now close only during service dispose,
   preventing stream shutdown when a single subscriber cancels.
-- [UPDATE] README now documents `ArcaneThemeService` naming.
+- [FIX] Setting a theme (e.g., dark) while in the opposite mode (e.g., light) no
+  longer changes the current brightness or rendered theme. Only the active
+  mode's theme updates the rendered appearance.
 
 ### Arcane Logger
 
