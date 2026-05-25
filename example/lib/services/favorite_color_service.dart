@@ -2,12 +2,7 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter/material.dart";
 
 class FavoriteColorService extends ArcaneService {
-  static final FavoriteColorService _instance =
-      FavoriteColorService._internal();
-
-  static FavoriteColorService get I => _instance;
-
-  FavoriteColorService._internal();
+  FavoriteColorService();
 
   MaterialColor? get myFavoriteColor => _notifier.value;
 
@@ -17,9 +12,62 @@ class FavoriteColorService extends ArcaneService {
   ValueNotifier<MaterialColor?> get notifier => _notifier;
 
   void setMyFavoriteColor(MaterialColor? newValue) {
-    if (_notifier.value != newValue) {
-      _notifier.value = newValue;
+    if (_notifier.value == newValue) return;
+
+    _notifier.value = newValue;
+
+    if (newValue == null) return;
+
+    // Apply the seed to whichever theme is currently being rendered.
+    final bool isUsingDarkTheme =
+        Arcane.theme.currentTheme.brightness == Brightness.dark;
+    if (isUsingDarkTheme) {
+      Arcane.theme.setDarkTheme(
+        ThemeData(
+          brightness: Brightness.dark,
+          colorSchemeSeed: newValue,
+        ),
+      );
+    } else {
+      Arcane.theme.setLightTheme(
+        ThemeData(
+          brightness: Brightness.light,
+          colorSchemeSeed: newValue,
+        ),
+      );
     }
+  }
+
+  void syncFromCurrentTheme(Iterable<MaterialColor> palette) {
+    final Iterator<MaterialColor> iterator = palette.iterator;
+    if (!iterator.moveNext()) {
+      _notifier.value = null;
+      return;
+    }
+
+    final Color target = Arcane.theme.currentTheme.colorScheme.primary;
+    MaterialColor closest = iterator.current;
+    double closestDistance = _colorDistanceSquared(closest, target);
+
+    while (iterator.moveNext()) {
+      final MaterialColor candidate = iterator.current;
+      final double distance = _colorDistanceSquared(candidate, target);
+      if (distance < closestDistance) {
+        closest = candidate;
+        closestDistance = distance;
+      }
+    }
+
+    if (_notifier.value != closest) {
+      _notifier.value = closest;
+    }
+  }
+
+  double _colorDistanceSquared(Color a, Color b) {
+    final double dr = a.r - b.r;
+    final double dg = a.g - b.g;
+    final double db = a.b - b.b;
+    return (dr * dr) + (dg * dg) + (db * db);
   }
 }
 

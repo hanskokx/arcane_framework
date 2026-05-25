@@ -376,70 +376,6 @@ class ArcaneThemeExample extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(
-              height: 20,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                spacing: 8,
-                children: [
-                  const Text("Color"),
-                  Expanded(
-                    child: StreamBuilder(
-                      stream: Arcane.theme.themeDataChanges,
-                      builder: (context, themeData) => ListView.separated(
-                        itemCount: colors.length,
-                        scrollDirection: Axis.horizontal,
-                        separatorBuilder: (_, __) => const SizedBox(width: 4),
-                        itemBuilder: (context, index) {
-                          return InkWell(
-                            onTap: () {
-                              if (context.themeMode == ThemeMode.dark) {
-                                Arcane.theme.setDarkTheme(
-                                  ThemeData(
-                                    brightness: Brightness.dark,
-                                    colorSchemeSeed: colors[index],
-                                  ),
-                                );
-                              } else if (context.themeMode == ThemeMode.light) {
-                                Arcane.theme.setLightTheme(
-                                  ThemeData(
-                                    brightness: Brightness.light,
-                                    colorSchemeSeed: colors[index],
-                                  ),
-                                );
-                              }
-
-                              Arcane.log(
-                                "Setting ${Arcane.theme.currentThemeMode.name} theme color to ${colors[index].name}",
-                              );
-                            },
-                            child: StreamBuilder<ThemeMode>(
-                              stream: Arcane.theme.themeModeChanges,
-                              builder: (context, themeMode) {
-                                return Container(
-                                  key:
-                                      Key("${colors[index]}-${themeMode.data}"),
-                                  decoration: BoxDecoration(
-                                    color: colors[index],
-                                    border: themeData.data?.colorScheme.primary
-                                                .name ==
-                                            colors[index].name
-                                        ? Border.all(width: 2)
-                                        : null,
-                                  ),
-                                  width: 20,
-                                  height: 20,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Text(
               "The current theme mode is ${Arcane.theme.currentModeOf(context).name} and "
               "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
@@ -559,9 +495,14 @@ class ArcaneEnvironmentExample extends StatelessWidget {
               },
               child: const Text("Cycle environment"),
             ),
-            Text(
-              "Environment: ${Arcane.environment.environment.name}",
-              textAlign: TextAlign.center,
+            ValueListenableBuilder<Environment>(
+              valueListenable: Arcane.environment.notifier,
+              builder: (context, environment, _) {
+                return Text(
+                  "Environment: ${environment.name}",
+                  textAlign: TextAlign.center,
+                );
+              },
             ),
           ],
         ),
@@ -581,105 +522,122 @@ class ArcaneServicesExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FavoriteColorService? service =
-        ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
-    final ValueNotifier<MaterialColor?> notifier =
-        service?.notifier ?? ValueNotifier(null);
-    return ValueListenableBuilder(
-      valueListenable: notifier,
-      builder: (context, color, _) {
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  "Services",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Text(
-                  color != null ? "Favorite color: ${color.name}" : "",
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (service == null) {
-                      ArcaneServiceProvider.of(context).addService(
-                        FavoriteColorService.I,
-                      );
+    final ArcaneServiceProvider serviceProvider = ArcaneServiceProvider.of(
+      context,
+    );
 
-                      Arcane.log(
-                        "Service registered.",
-                        metadata: {"service": "FavoriteColorService"},
-                      );
-                    } else {
-                      ArcaneServiceProvider.of(context)
-                          .removeService<FavoriteColorService>();
+    return ValueListenableBuilder<List<ArcaneService>>(
+      valueListenable: serviceProvider.notifier!,
+      builder: (context, _, __) {
+        final FavoriteColorService? service =
+            ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
 
-                      Arcane.log(
-                        "Service removed.",
-                        metadata: {"service": "FavoriteColorService"},
-                      );
-                    }
-                  },
-                  child: Text(
-                    '${service == null ? 'Register' : 'Remove'} service',
+        Widget buildCard(MaterialColor? color) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Services",
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
-                SizedBox(
-                  height: 20,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    spacing: 8,
-                    children: [
-                      const Text("Color"),
-                      Expanded(
-                        child: ListView.separated(
-                          itemCount: colors.length,
-                          scrollDirection: Axis.horizontal,
-                          separatorBuilder: (_, __) => const SizedBox(width: 4),
-                          itemBuilder: (context, index) {
-                            return InkWell(
-                              onTap: () {
-                                if (service == null) {
-                                  Arcane.log(
-                                    "FavoriteColorService is not registered",
-                                  );
-                                  return;
-                                }
+                  Text(
+                    color != null ? "Favorite color: ${color.name}" : "",
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (service == null) {
+                        final FavoriteColorService nextService =
+                            FavoriteColorService()
+                              ..syncFromCurrentTheme(colors);
 
-                                service.setMyFavoriteColor(colors[index]);
-                                Arcane.log(
-                                  "Set a color in FavoriteColorService",
-                                  metadata: {
-                                    "color": colors[index].name ?? "Unknown",
-                                  },
-                                );
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: colors[index],
-                                  border: color?.name == colors[index].name
-                                      ? Border.all(width: 2)
-                                      : null,
+                        serviceProvider.addService(
+                          nextService,
+                        );
+
+                        Arcane.log(
+                          "Service registered.",
+                          metadata: {"service": "FavoriteColorService"},
+                        );
+                      } else {
+                        serviceProvider.removeService<FavoriteColorService>();
+
+                        Arcane.log(
+                          "Service removed.",
+                          metadata: {"service": "FavoriteColorService"},
+                        );
+                      }
+                    },
+                    child: Text(
+                      '${service == null ? 'Register' : 'Remove'} service',
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      spacing: 8,
+                      children: [
+                        const Text("Color"),
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: colors.length,
+                            scrollDirection: Axis.horizontal,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 4),
+                            itemBuilder: (context, index) {
+                              return Opacity(
+                                opacity: service == null ? 0.4 : 1,
+                                child: InkWell(
+                                  onTap: service == null
+                                      ? null
+                                      : () {
+                                          service.setMyFavoriteColor(
+                                            colors[index],
+                                          );
+                                          Arcane.log(
+                                            "Set a color in FavoriteColorService",
+                                            metadata: {
+                                              "color": colors[index].name ??
+                                                  "Unknown",
+                                            },
+                                          );
+                                        },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: colors[index],
+                                      border: color == colors[index]
+                                          ? Border.all(width: 2)
+                                          : null,
+                                    ),
+                                    width: 20,
+                                    height: 20,
+                                  ),
                                 ),
-                                width: 20,
-                                height: 20,
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  "Service is ${service != null ? "" : "not "}registered",
-                ),
-              ],
+                  Text(
+                    "Service is ${service != null ? "" : "not "}registered",
+                  ),
+                ],
+              ),
             ),
-          ),
+          );
+        }
+
+        if (service == null) return buildCard(null);
+
+        return ValueListenableBuilder<MaterialColor?>(
+          valueListenable: service.notifier,
+          builder: (context, color, _) => buildCard(color),
         );
       },
     );
