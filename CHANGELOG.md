@@ -146,6 +146,31 @@ Future<Result<void, String>> logout({
 - [NEW] Added `themeModeChanges` and `themeDataChanges` streams for realtime
   theme updates.
 
+#### Migration Steps (ArcaneThemeService)
+
+1. Replace legacy `ThemeMode` reads from `Arcane.theme.systemTheme.value` with
+  `Arcane.theme.currentModeOf(context)` when configuring app `themeMode`.
+
+Before:
+
+```dart
+MaterialApp(
+  theme: Arcane.theme.light,
+  darkTheme: Arcane.theme.dark,
+  themeMode: Arcane.theme.systemTheme.value,
+)
+```
+
+After:
+
+```dart
+MaterialApp(
+  theme: Arcane.theme.light,
+  darkTheme: Arcane.theme.dark,
+  themeMode: Arcane.theme.currentModeOf(context),
+)
+```
+
 ### Arcane Logger
 
 - [NEW] Added `logStream` for realtime log subscriptions.
