@@ -5,11 +5,7 @@ part of "logging_service.dart";
 /// Concrete implementations of this class should override the [log] method to provide
 /// platform-specific logging behavior.
 abstract class LoggingInterface {
-  const LoggingInterface([this.feature]);
-
-  /// An optional tag that can be used to identify the destination this
-  /// interface represents (for example, "my-feature" or "auth").
-  final String? feature;
+  const LoggingInterface();
 
   /// This method is called by the `ArcaneLogger` when a log message is
   /// received. See `ArcaneLogger.log` for further details on how logging
@@ -33,7 +29,7 @@ abstract interface class LoggingInitializable {
 }
 
 /// Default initialization behavior for interfaces that opt into lifecycle.
-mixin LoggingInitializationMixin implements LoggingInitializable {
+mixin LoggingInitialization implements LoggingInitializable {
   bool _initialized = false;
 
   @override
@@ -43,4 +39,15 @@ mixin LoggingInitializationMixin implements LoggingInitializable {
   Future<void> init() async {
     _initialized = true;
   }
+}
+
+/// Annotation used to tag a logging destination with a feature name.
+///
+/// Example:
+/// `@LoggingFeature("analytics")`
+final class LoggingFeature {
+  const LoggingFeature(this.value);
+
+  /// The feature name associated with this logging destination.
+  final String value;
 }

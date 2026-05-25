@@ -153,8 +153,9 @@ Future<Result<void, String>> logout({
 - [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
   initialization state.
 - [NEW] Added optional lifecycle capability via `LoggingInitializable` and
-  `LoggingInitializationMixin`.
-- [NEW] Added optional `feature` tag to `LoggingInterface` via constructor.
+  `LoggingInitialization`.
+- [NEW] Added optional `feature` tag support via `@LoggingFeature(...)`
+  annotation.
 - [CHANGE] `initializeInterfaces()` now initializes only interfaces that
   implement `LoggingInitializable`; other interfaces are skipped.
 - [NEW] Added a `skipAutodetection` parameter to `Arcane.log` (defaults to
@@ -169,7 +170,7 @@ Future<Result<void, String>> logout({
 1. Remove `initialized` and `init` from interfaces that do not require startup
   work.
 2. If an interface requires startup/lifecycle management, add
-  `LoggingInitializationMixin` (or implement `LoggingInitializable`) and move
+  `LoggingInitialization` (or implement `LoggingInitializable`) and move
   setup logic into `init()`.
 3. Update `log(...)` implementations to guard behavior with `initialized` only
   for interfaces that opted into initialization.
@@ -203,7 +204,7 @@ class DebugConsole extends LoggingInterface {
 - For SDK-backed loggers, opt into initialization with the mixin.
 
 ```dart
-class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
+class ExternalLogger extends LoggingInterface with LoggingInitialization {
   @override
   Future<void> init() async {
     if (initialized) return;

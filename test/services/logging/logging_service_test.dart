@@ -1,9 +1,8 @@
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
 
-class TestLoggingInterface extends LoggingInterface
-    with LoggingInitializationMixin {
-  TestLoggingInterface(this.name, [super.feature]);
+class TestLoggingInterface extends LoggingInterface with LoggingInitialization {
+  TestLoggingInterface(this.name);
 
   final String name;
   int initCallCount = 0;
@@ -36,7 +35,7 @@ class TestLoggingInterface extends LoggingInterface
 }
 
 class TestPassiveLoggingInterface extends LoggingInterface {
-  TestPassiveLoggingInterface(this.name, [super.feature]);
+  TestPassiveLoggingInterface(this.name);
 
   final String name;
   final List<LogEvent> events = [];

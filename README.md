@@ -452,10 +452,10 @@ class DebugConsole extends LoggingInterface {
 ```
 
 If your destination needs setup (SDK start, permission checks, etc.), opt into
-the initialization lifecycle with `LoggingInitializationMixin`:
+the initialization lifecycle with `LoggingInitialization`:
 
 ```dart
-class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
+class ExternalLogger extends LoggingInterface with LoggingInitialization {
   @override
   Future<void> init() async {
     if (initialized) return;
@@ -476,6 +476,58 @@ class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
     // Forward to the SDK.
   }
 }
+```
+
+If you want to tag a destination, annotate the interface with
+`@LoggingFeature(...)`:
+
+```dart
+@LoggingFeature("Analytics")
+class AnalyticsLogger extends LoggingInterface {
+
+  @override
+  void log(
+    String message, {
+    Map<String, Object?>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+    Object? extra,
+  }) {
+    // Forward to analytics pipeline.
+  }
+}
+
+Arcane.logger.registerInterceptor(
+  LogInterceptor((event, context) {
+    if (context.interface is AnalyticsLogger && event.level == Level.debug) {
+      return null;
+    }
+
+    return event;
+  }),
+);
+```
+
+You can use this tag as source-level documentation and keep destination routing
+explicit in interceptors.
+
+```dart
+@LoggingFeature("auth")
+class AuthLogger extends LoggingInterface {
+  @override
+  void log(
+    String message, {
+    Map<String, Object?>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+    Object? extra,
+  }) {
+    // Forward to auth destination.
+  }
+}
+
+await Arcane.logger.registerInterface(AnalyticsLogger());
+await Arcane.logger.registerInterface(AuthLogger());
 ```
 
 Next, register your logging interface with the Arcane logger service. You can
@@ -510,7 +562,7 @@ Arcane.logger.registerInterceptor(
 );
 
 // Optional: initialize only interfaces that implement LoggingInitializable
-// (for example, SDK-backed loggers that mix in LoggingInitializationMixin).
+// (for example, SDK-backed loggers that mix in LoggingInitialization).
 await Arcane.logger.initializeInterfaces();
 ```
 
@@ -636,7 +688,7 @@ instances, so mutations made for one destination do not leak into another.
 
 **Important**: Initialization is now optional per interface. Call
 `initializeInterfaces()` when you have interfaces that opt into
-`LoggingInitializable` (for example via `LoggingInitializationMixin`). Simple
+`LoggingInitializable` (for example via `LoggingInitialization`). Simple
 destinations like a debug console can skip initialization entirely.
 
 ### Authentication
