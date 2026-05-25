@@ -103,6 +103,11 @@ class ArcaneThemeService extends ArcaneService {
   /// widget rebuilds. Use [darkTheme] when you need reactive updates.
   ThemeData get dark => _darkTheme.value;
 
+  /// Sets a custom dark `ThemeData`.
+  ///
+  /// This is a convenience setter that delegates to [setDarkTheme].
+  set dark(ThemeData theme) => setDarkTheme(theme);
+
   /// ValueNotifier for the dark theme that can be observed for changes.
   ValueNotifier<ThemeData> get darkTheme => I._darkTheme;
   final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
@@ -112,6 +117,11 @@ class ArcaneThemeService extends ArcaneService {
   /// Reading this getter does not subscribe to changes and does not trigger
   /// widget rebuilds. Use [lightTheme] when you need reactive updates.
   ThemeData get light => _lightTheme.value;
+
+  /// Sets a custom light `ThemeData`.
+  ///
+  /// This is a convenience setter that delegates to [setLightTheme].
+  set light(ThemeData theme) => setLightTheme(theme);
 
   /// ValueNotifier for the light theme that can be observed for changes.
   ValueNotifier<ThemeData> get lightTheme => I._lightTheme;

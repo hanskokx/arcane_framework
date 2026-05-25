@@ -903,8 +903,14 @@ if (context.isDarkMode) {
 // Set a custom dark theme
 Arcane.theme.setDarkTheme(customDarkTheme);
 
+// Equivalent assignment-style setter
+Arcane.theme.dark = customDarkTheme;
+
 // Set a custom light theme
 Arcane.theme.setLightTheme(customLightTheme);
+
+// Equivalent assignment-style setter
+Arcane.theme.light = customLightTheme;
 ```
 
 You can subscribe to theme streams to react to theme updates outside of widget

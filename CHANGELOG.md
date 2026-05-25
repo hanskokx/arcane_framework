@@ -64,6 +64,9 @@
   (`Theme.of(context).brightness`) instead of raw platform brightness.
 - [FIX] `followSystemTheme()` now reads platform brightness directly to avoid
   coupling system-follow behavior to app theme overrides.
+- [NEW] Added assignment-style theme setters: `Arcane.theme.dark = ...` and
+  `Arcane.theme.light = ...` (in addition to `setDarkTheme` /
+  `setLightTheme`).
 - [FIX] Reactive theme stream controllers now close only during service dispose,
   preventing stream shutdown when a single subscriber cancels.
 - [UPDATE] README now documents `ArcaneThemeService` naming.
