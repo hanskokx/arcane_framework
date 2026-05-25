@@ -10,8 +10,8 @@ import "services/theme/theme_switcher.dart";
 ///
 /// `ArcaneApp` serves as the entry point for an application using the Arcane
 /// framework. It provides access to the application's services and environment
-/// settings throughout the widget tree using the `ArcaneServiceProvider` and
-/// `ArcaneEnvironmentProvider`.
+/// settings throughout the widget tree using the `ArcaneServiceProvider`,
+/// `ArcaneEnvironmentProvider`, and `ArcaneFeatureFlagsProvider`.
 ///
 /// This widget wraps your app root with Arcane's built-in providers so
 /// descendant widgets can access services, environment, feature flags, and
@@ -64,9 +64,43 @@ class ArcaneApp extends StatefulWidget {
   )
   final Widget? child;
 
-  /// Creates an `ArcaneApp` with optional [child], [builder], and [services].
+  /// A root widget for an Arcane-powered application.
   ///
-  /// Either [child] or [builder] must be provided.
+  /// `ArcaneApp` serves as the entry point for an application using the Arcane
+  /// framework. It provides access to the application's services and environment
+  /// settings throughout the widget tree using the `ArcaneServiceProvider`,
+  /// `ArcaneEnvironmentProvider`, and `ArcaneFeatureFlagsProvider`.
+  ///
+  /// This widget wraps your app root with Arcane's built-in providers so
+  /// descendant widgets can access services, environment, feature flags, and
+  /// theme updates.
+  ///
+  /// Preferred API: [builder]
+  ///
+  /// Use [builder] when your app root needs a provider-aware `BuildContext`
+  /// during construction. This is the recommended and future-facing API.
+  ///
+  /// Legacy API: [child]
+  ///
+  /// [child] is deprecated but still supported for compatibility while migrating
+  /// existing apps.
+  ///
+  /// Migration:
+  /// ```dart
+  /// // Before (deprecated)
+  /// ArcaneApp(child: MyApp())
+  ///
+  /// // After (preferred)
+  /// ArcaneApp(builder: (context, _) => MyApp())
+  /// ```
+  ///
+  /// Example usage:
+  /// ```dart
+  /// ArcaneApp(
+  ///   services: [MyArcaneService()],
+  ///   builder: (context, _) => MyApp(),
+  /// );
+  /// ```
   const ArcaneApp({
     @Deprecated(
       "Deprecated in 2.0.0. "
