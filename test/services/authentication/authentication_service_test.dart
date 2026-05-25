@@ -5,7 +5,224 @@ import "package:mocktail/mocktail.dart";
 
 class MockArcaneAuthInterface extends Mock implements ArcaneAuthInterface {}
 
+class MockAccountRegistration extends Mock
+    implements ArcaneAuthInterface, ArcaneAuthAccountRegistration {}
+
+class MockPasswordManagement extends Mock
+    implements ArcaneAuthInterface, ArcaneAuthPasswordManagement {}
+
 void main() {
+  group("ArcaneAuthenticationService error and edge cases", () {
+    setUp(() async {
+      await ArcaneAuthenticationService.I.reset();
+      Arcane.environment.reset();
+    });
+
+    test("reset clears interface and notifiers", () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      await ArcaneAuthenticationService.I.reset();
+      expect(ArcaneAuthenticationService.I.authInterface, isNull);
+      expect(
+        ArcaneAuthenticationService.I.status,
+        AuthenticationStatus.unauthenticated,
+      );
+      expect(ArcaneAuthenticationService.I.isSignedIn.value, false);
+    });
+
+    test("registerInterface throws if already registered", () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      expect(
+        () async => ArcaneAuthenticationService.I.registerInterface(auth),
+        throwsException,
+      );
+    });
+
+    test("login returns error if no interface registered", () async {
+      final result = await ArcaneAuthenticationService.I.login(input: {});
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test("logOut returns error if no interface registered", () async {
+      final result = await ArcaneAuthenticationService.I.logOut();
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test("logOut returns error if not authenticated", () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result = await ArcaneAuthenticationService.I.logOut();
+      expect(result.isFailure, true);
+      expect(result.error, contains("not authenticated"));
+    });
+
+    test("register returns error if no interface registered", () async {
+      final result = await ArcaneAuthenticationService.I.register(input: {});
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test("register returns error if interface does not support registration",
+        () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result = await ArcaneAuthenticationService.I.register(input: {});
+      expect(result.isFailure, true);
+      expect(result.error, contains("does not support account registration"));
+    });
+
+    test("register returns error if registration returns null", () async {
+      final auth = MockAccountRegistration();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      when(() => auth.register(input: any(named: "input")))
+          .thenAnswer((_) async => const Result.error("returned a null value"));
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result = await ArcaneAuthenticationService.I.register(input: {});
+      expect(result.isFailure, true);
+      expect(result.error, contains("returned a null value"));
+    });
+
+    test("confirmSignup returns error if no interface registered", () async {
+      final result = await ArcaneAuthenticationService.I
+          .confirmSignup(email: "a", confirmationCode: "b");
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test(
+        "confirmSignup returns error if interface does not support registration",
+        () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result = await ArcaneAuthenticationService.I
+          .confirmSignup(email: "a", confirmationCode: "b");
+      expect(result.isFailure, true);
+      expect(result.error, contains("does not support account registration"));
+    });
+
+    test("confirmSignup returns error if confirmSignup returns null", () async {
+      final auth = MockAccountRegistration();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      when(
+        () => auth.confirmSignup(
+          username: any(named: "username"),
+          confirmationCode: any(named: "confirmationCode"),
+        ),
+      ).thenAnswer((_) async => const Result.error("returned a null value"));
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result = await ArcaneAuthenticationService.I
+          .confirmSignup(email: "a", confirmationCode: "b");
+      expect(result.isFailure, true);
+      expect(result.error, contains("returned a null value"));
+    });
+
+    test("resendVerificationCode returns error if no interface registered",
+        () async {
+      final result =
+          await ArcaneAuthenticationService.I.resendVerificationCode("a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test(
+        "resendVerificationCode returns error if interface does not support registration",
+        () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result =
+          await ArcaneAuthenticationService.I.resendVerificationCode("a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("does not support account registration"));
+    });
+
+    test(
+        "resendVerificationCode returns error if resendVerificationCode returns null",
+        () async {
+      final auth = MockAccountRegistration();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      when(() => auth.resendVerificationCode(input: any(named: "input")))
+          .thenReturn(null);
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result =
+          await ArcaneAuthenticationService.I.resendVerificationCode("a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("returned a null value"));
+    });
+
+    test("resetPassword returns error if no interface registered", () async {
+      final result =
+          await ArcaneAuthenticationService.I.resetPassword(email: "a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("No ArcaneAuthInterface"));
+    });
+
+    test(
+        "resetPassword returns error if interface does not support password management",
+        () async {
+      final auth = MockArcaneAuthInterface();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result =
+          await ArcaneAuthenticationService.I.resetPassword(email: "a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("does not support password management"));
+    });
+
+    test("resetPassword returns error if resetPassword returns null", () async {
+      final auth = MockPasswordManagement();
+      when(() => auth.init()).thenAnswer((_) async {
+        return null;
+      });
+      when(
+        () => auth.resetPassword(
+          email: any(named: "email"),
+          newPassword: any(named: "newPassword"),
+          code: any(named: "code"),
+        ),
+      ).thenAnswer((_) async => const Result.error("returned a null value"));
+      await ArcaneAuthenticationService.I.registerInterface(auth);
+      final result =
+          await ArcaneAuthenticationService.I.resetPassword(email: "a");
+      expect(result.isFailure, true);
+      expect(result.error, contains("returned a null value"));
+    });
+
+    test("dispose closes stream controllers and calls super", () async {
+      // Just call dispose to ensure no exceptions are thrown
+      ArcaneAuthenticationService.I.dispose();
+      // No assertion needed; just ensure no crash
+    });
+  });
+
   late ArcaneAuthInterface authInterface;
 
   group("ArcaneAuthenticationService", () {

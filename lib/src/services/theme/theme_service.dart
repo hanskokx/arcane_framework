@@ -87,6 +87,9 @@ class ArcaneThemeService extends ArcaneService {
   /// Stream of `ThemeData` changes that can be listened to for reactive UI updates.
   Stream<ThemeData> get themeDataChanges => I._themeController.stream;
 
+  /// Tracks whether a custom light/dark theme has been explicitly provided by the user.
+  bool _themeOverriddenByUser = false;
+
   StreamController<ThemeData>? _themeStreamController;
 
   StreamController<ThemeData> get _themeController {
@@ -197,6 +200,7 @@ class ArcaneThemeService extends ArcaneService {
   /// ArcaneThemeService.I.setDarkTheme(customDarkTheme);
   /// ```
   ArcaneThemeService setDarkTheme(ThemeData theme) {
+    _themeOverriddenByUser = true;
     _darkTheme.value = theme;
     // Only update the rendered theme if dark is the active mode.
     if (_effectiveThemeMode == ThemeMode.dark) {
@@ -216,6 +220,7 @@ class ArcaneThemeService extends ArcaneService {
   /// ArcaneThemeService.I.setLightTheme(customLightTheme);
   /// ```
   ArcaneThemeService setLightTheme(ThemeData theme) {
+    _themeOverriddenByUser = true;
     _lightTheme.value = theme;
     // Only update the rendered theme if light is the active mode.
     if (_effectiveThemeMode == ThemeMode.light) {
@@ -227,9 +232,8 @@ class ArcaneThemeService extends ArcaneService {
 
   /// Should be called on first build to ensure the initial theme matches the platform brightness.
   void setInitialTheme(BuildContext context) {
-    // Only update if the theme is still the default (not user-provided)
-    if (_currentTheme != ThemeData.light() &&
-        _currentTheme != ThemeData.dark()) {
+    // Only update when no custom theme was explicitly provided by the user.
+    if (_themeOverriddenByUser) {
       return;
     }
     switch (_currentThemeMode) {
@@ -252,6 +256,7 @@ class ArcaneThemeService extends ArcaneService {
   void reset() {
     _darkTheme.value = ThemeData.dark();
     _lightTheme.value = ThemeData.light();
+    _themeOverriddenByUser = false;
     _followingSystemTheme = false;
     _updateTheme(ThemeMode.light);
     _themeController.add(_lightTheme.value);
