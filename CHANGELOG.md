@@ -284,10 +284,9 @@ Arcane.log(
 
 ### Dependencies
 
-- [CHANGE] Relaxed `result_monad` constraint from `^2.3.2` to `any`.
+- [CHANGE] Updated `result_monad` from `^2.3.2` to `^4.0.0`.
 - [CHANGE] Removed direct `flutter_bloc` dependency.
 - [CHANGE] Updated `collection` from `^1.18.0` to `^1.19.0`.
-- [CHANGE] Relaxed `arcane_helper_utils` constraint from `^1.4.7` to `any`.
 
 ## 1.2.7
 
