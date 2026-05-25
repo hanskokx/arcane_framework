@@ -11,10 +11,10 @@
 /// - **Service Management**: Centralized access to critical services like
 ///   logging, feature flags, and theming.
 /// - **Feature Flags**: Dynamically enable or disable features using
-///   `ArcaneFeatureFlags`.
+///   `ArcaneFeatureFlagService`.
 /// - **Logging**: Flexible logging with different severity levels
 ///   (`debug`, `info`, `error`, etc.).
-/// - **Theming**: Easy light/dark mode switching with `ArcaneReactiveTheme`.
+/// - **Theming**: Easy light/dark mode switching with `ArcaneThemeService`.
 /// - **Authentication**: Manage user login, sign up, and token-based
 ///   authentication.
 ///
@@ -39,10 +39,17 @@ library;
 
 export "package:arcane_framework/src/arcane.dart";
 export "package:arcane_framework/src/arcane_app.dart";
-export "package:arcane_framework/src/providers/environment_provider.dart";
-export "package:arcane_framework/src/providers/service_provider.dart";
+export "package:arcane_framework/src/service/arcane_service.dart";
 export "package:arcane_framework/src/services/authentication/authentication_service.dart";
+export "package:arcane_framework/src/services/environment/environment_interface.dart";
+export "package:arcane_framework/src/services/environment/environment_provider.dart";
+export "package:arcane_framework/src/services/environment/environment_service.dart";
+export "package:arcane_framework/src/services/feature_flags/feature_flags_context_extensions.dart";
+export "package:arcane_framework/src/services/feature_flags/feature_flags_provider.dart";
 export "package:arcane_framework/src/services/feature_flags/feature_flags_service.dart";
 export "package:arcane_framework/src/services/logging/logging_service.dart";
-export "package:arcane_framework/src/services/reactive_theme/reactive_theme_service.dart";
+export "package:arcane_framework/src/services/theme/arcane_theme.dart";
+export "package:arcane_framework/src/services/theme/theme_extensions.dart";
+export "package:arcane_framework/src/services/theme/theme_service.dart";
+export "package:arcane_framework/src/services/theme/theme_switcher.dart";
 export "package:result_monad/result_monad.dart";

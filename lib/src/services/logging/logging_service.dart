@@ -2,6 +2,8 @@ import "dart:async";
 
 import "package:arcane_helper_utils/arcane_helper_utils.dart";
 
+part "log_event.dart";
+part "log_interceptor.dart";
 part "logging_enums.dart";
 part "logging_interface.dart";
 
@@ -19,15 +21,36 @@ class ArcaneLogger {
   /// Provides access to the singleton instance of `ArcaneLogger`.
   static ArcaneLogger get I => _instance;
 
-  final List<LoggingInterface> _interfaces = [];
+  final List<_LoggingInterfaceRegistration> _interfaceRegistrations = [];
+
+  final List<LogInterceptor> _interceptors = [];
 
   /// A list of registered logging interfaces.
-  List<LoggingInterface> get interfaces => I._interfaces;
+  List<LoggingInterface> get interfaces => [
+        for (final _LoggingInterfaceRegistration registration
+            in I._interfaceRegistrations)
+          registration.interface,
+      ];
+
+  /// A list of globally registered interceptors.
+  List<LogInterceptor> get interceptors => [
+        ...I._interceptors,
+      ];
 
   final Map<String, String> _additionalMetadata = {};
 
   /// Additional metadata that is included in all logs.
   Map<String, String> get additionalMetadata => I._additionalMetadata;
+
+  StreamController<String>? _logStreamController;
+
+  StreamController<String> get _logController {
+    _logStreamController ??= StreamController<String>.broadcast();
+    return _logStreamController!;
+  }
+
+  /// Stream of log messages being received and sent to the registered interfaces.
+  Stream<String> get logStream => I._logController.stream;
 
   bool _initialized = false;
 
@@ -76,7 +99,7 @@ class ArcaneLogger {
   ///   The stack trace associated with the log event. Useful for error and
   ///   warning logs to trace the execution path leading to the log event.
   ///
-  /// - `metadata` ([Map<String, String>?], _optional_):
+  /// - `metadata` ([Map<String, Object?>?], _optional_):
   ///   Additional key-value pairs providing extra context for the log. Commonly
   ///   used for custom information that can aid in diagnosing issues or
   ///   understanding the log in context. If not provided, an empty map is used.
@@ -114,95 +137,302 @@ class ArcaneLogger {
   /// ```
   ///
   void log(
+    /// The message to be logged
     String message, {
+    /// The Dart class from which the `log` call was invoked. This is useful
+    /// in determining which part of the code called the log event. If the
+    /// [module] is not specified and [skipAutodetection] is set to [false],
+    /// [ArcaneLogger] will attempt to derive this value automatically. However,
+    /// this may fail in some cases and could potentially adversely impact
+    /// performance.
     String? module,
+
+    /// The method from which the `log` call was invoked. This is useful
+    /// in determining which part of the code called the log event. If the
+    /// [method] is not specified and [skipAutodetection] is set to [false],
+    /// [ArcaneLogger] will attempt to derive this value automatically. However,
+    /// this may fail in some cases and could potentially adversely impact
+    /// performance.
     String? method,
+
+    /// This value defines the severity of the log message. The default value is
+    /// [Level.debug].
     Level level = Level.debug,
+
+    /// A [StackTrace] can be passed into the `log` call for further processing
+    /// by the registered [LoggingInterface]s.
     StackTrace? stackTrace,
-    Map<String, String>? metadata,
+
+    /// The provided [metadata] will be merged with any previously registered
+    /// persistent metadata. If the [module] and/or [method] are provided, these
+    /// values will be merged with the [metadata] as well, otherwise if one or
+    /// none of these values are provided and [skipAutodetection] is set to
+    /// [false] (default), the module, method, and/or [filenameAndLineNumber]
+    /// will be automatically determined and added to the [metadata] if the
+    /// values are not already present.
+    Map<String, Object?>? metadata,
+
+    /// The [extra] parameter can be used to pass _any_ object into the
+    /// registered [LoggingInterface]s.
     Object? extra,
+
+    /// If set to [true], this parameter will skip automatically trying to
+    /// determine the current log message's [module], [method], and
+    /// [filenameAndLineNumber].
+    ///
+    /// If set to [true] and the [filenameAndLineNumber] are desired, they
+    /// should be calculated by the [LoggingInterface] and added as as
+    /// [metadata].
+    ///
+    /// If this value is [false] (default), the [module] and [method] will only
+    /// be added to the [metadata] if they are not otherwise provided. However,
+    /// the [filenameAndLineNumber] will automatically be added _unless_ it is
+    /// already in the [metadata] provided.
+    ///
+    /// When set to [true], the automatic generation of these values _may_
+    /// impact performance.
+    bool skipAutodetection = false,
   }) {
-    if (!I._initialized) {
-      throw Exception("ArcaneLogger has not yet been initialized.");
+    final Map<String, Object?> logMetadata = {
+      ...?metadata,
+    };
+    logMetadata.putIfAbsent(
+      "timestamp",
+      () => DateTime.now().toIso8601String(),
+    );
+
+    String? filenameAndLineNumber;
+    if (!skipAutodetection) {
+      String? parts;
+      try {
+        parts = StackTrace.current
+            .toString()
+            .split("\n")[2]
+            .split(RegExp("#2"))[1]
+            .trim();
+      } catch (_) {}
+
+      module ??= parts?.split(".").firstOrNull?.replaceFirst("new ", "");
+
+      method ??= ((parts?.split(".").length ?? 0) <= 1)
+          ? null
+          : parts
+              ?.split(".")[1]
+              .split(" ")
+              .firstOrNull
+              ?.replaceAll("<anonymous", "");
+
+      final List<String> fileAndLineParts = [
+        ...?parts?.split("(package:").lastOrNull?.split(":"),
+      ];
+
+      if (fileAndLineParts.length < 2) {
+        filenameAndLineNumber = fileAndLineParts.firstOrNull;
+      } else {
+        filenameAndLineNumber = "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
+      }
     }
 
-    metadata ??= <String, String>{};
+    // Module management
+    if (module.isNotEmptyOrNull) {
+      logMetadata.putIfAbsent("module", () => module!);
+    }
 
-    final String now = DateTime.now().toIso8601String();
-    metadata.putIfAbsent("timestamp", () => now);
+    // Method managmeent
+    if (method.isNotEmptyOrNull) {
+      logMetadata.putIfAbsent("method", () => method!);
+    }
 
-    try {
-      final List<String> parts = StackTrace.current
-          .toString()
-          .split("\n")[2]
-          .split(RegExp("#2"))[1]
-          .trimLeft()
-          .split(".");
-
-      module ??= parts.first.replaceFirst("new ", "");
-      method ??= parts[1].split(" ").first.replaceAll("<anonymous", "");
-
-      final List<String> fileAndLineParts = StackTrace.current
-          .toString()
-          .split("\n")[2]
-          .split(RegExp("#2"))[1]
-          .trim()
-          .split("(package:")
-          .last
-          .split(":");
-
-      final String fileAndLine =
-          "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
-
-      metadata.putIfAbsent("module", () => module!);
-      if (method.isNotNullOrEmpty)
-        metadata.putIfAbsent("method", () => method!);
-      metadata.putIfAbsent("filenameAndLineNumber", () => fileAndLine);
-    } catch (_) {}
-
-    metadata.addAll(additionalMetadata);
-
-    // Send logs to registered interface(s)
-    for (final LoggingInterface i in I._interfaces) {
-      i.log(
-        message,
-        level: level,
-        metadata: metadata,
-        stackTrace: stackTrace,
-        extra: extra,
+    // Filename and line number management
+    if (filenameAndLineNumber.isNotNullOrEmpty) {
+      logMetadata.putIfAbsent(
+        "filenameAndLineNumber",
+        () => filenameAndLineNumber!,
       );
     }
+
+    logMetadata.addAll(additionalMetadata);
+
+    module ??= logMetadata.containsKey("module")
+        ? logMetadata["module"] as String?
+        : null;
+    method ??= logMetadata.containsKey("method")
+        ? logMetadata["method"] as String?
+        : null;
+
+    final LogEvent event = LogEvent(
+      message: message,
+      metadata: logMetadata,
+      level: level,
+      stackTrace: stackTrace,
+      extra: extra,
+    );
+
+    // Send logs to registered interface(s)
+    for (final _LoggingInterfaceRegistration registration
+        in I._interfaceRegistrations) {
+      if (initialized) {
+        final LogEvent? interfaceEvent = _runInterceptors(
+          event.copyWith(
+            metadata: event.metadata == null
+                ? null
+                : Map<String, Object?>.from(event.metadata!),
+          ),
+          interceptors: [
+            ...I._interceptors,
+            ...registration.interceptors,
+          ],
+          context: LogInterceptorContext(interface: registration.interface),
+        );
+
+        if (interfaceEvent == null) continue;
+
+        registration.interface.log(
+          interfaceEvent.message,
+          level: interfaceEvent.level,
+          metadata: interfaceEvent.metadata,
+          stackTrace: interfaceEvent.stackTrace,
+          extra: interfaceEvent.extra,
+        );
+      }
+    }
+
+    _logController.add(
+      "${event.message} ${{
+        "level": event.level,
+        "metadata": event.metadata,
+        "extra": event.extra,
+      }}",
+    );
   }
 
-  /// Registers a [LoggingInterface] with the [ArcaneLogger]. Due to iOS app
-  /// tracking permissions, permission to track must first be checked for
-  /// and (optionally) granted before the interface is automatically initialized.
+  /// Registers a [LoggingInterface] with the [ArcaneLogger].
   ///
-  /// Once your [LoggingInterface] has been registered and initialized, logs
-  /// will automatically be sent to the interface.
+  /// Once your [LoggingInterface] has been registered, logs are eligible to be
+  /// sent to the interface immediately.
+  Future<ArcaneLogger> registerInterface(
+    LoggingInterface loggingInterface, {
+    List<LogInterceptor>? interceptors,
+  }) async {
+    if (!initialized) await _init();
+
+    I._interfaceRegistrations.add(
+      _LoggingInterfaceRegistration(
+        interface: loggingInterface,
+        interceptors: interceptors,
+      ),
+    );
+
+    return I;
+  }
+
+  /// Registers a global [LogInterceptor] to run before interface fan-out.
+  ArcaneLogger registerInterceptor(LogInterceptor interceptor) {
+    I._interceptors.add(interceptor);
+    return I;
+  }
+
+  /// Registers a `List` of global [LogInterceptor]s.
+  ArcaneLogger registerInterceptors(List<LogInterceptor> interceptors) {
+    I._interceptors.addAll(interceptors);
+    return I;
+  }
+
+  /// Unregisters a previously registered global [LogInterceptor].
+  ArcaneLogger unregisterInterceptor(LogInterceptor interceptor) {
+    I._interceptors.remove(interceptor);
+    return I;
+  }
+
+  /// Removes all previously registered global interceptors.
+  ArcaneLogger clearInterceptors() {
+    I._interceptors.clear();
+    return I;
+  }
+
+  /// Registers a `List` of [LoggingInterface] with the [ArcaneLogger].
+  ///
+  /// Once registered, logs are eligible to be sent to these interfaces
+  /// immediately.
   Future<ArcaneLogger> registerInterfaces(
-    List<LoggingInterface> interfaces,
-  ) async {
+    List<LoggingInterface> interfaces, {
+    Map<LoggingInterface, List<LogInterceptor>>? interceptors,
+  }) async {
     if (!initialized) await _init();
 
     for (final LoggingInterface i in interfaces) {
-      I._interfaces.add(i);
+      I._interfaceRegistrations.add(
+        _LoggingInterfaceRegistration(
+          interface: i,
+          interceptors: interceptors?[i],
+        ),
+      );
     }
 
     return I;
   }
 
-  /// Initializes all registered [LoggingInterface]s by calling their
-  /// [LoggingInterface.init] methods.
-  Future<ArcaneLogger> initializeInterfaces() async {
-    assert(
-      I._interfaces.isNotEmpty,
-      "No logging interfaces have been registered.",
+  /// Unregisters a [LoggingInterface] from the [ArcaneLogger], if it was
+  /// previously registered.
+  Future<ArcaneLogger> unregisterInterface(
+    LoggingInterface interface,
+  ) async {
+    if (!initialized) await _init();
+
+    I._interfaceRegistrations.removeWhere(
+      (_LoggingInterfaceRegistration registration) =>
+          identical(registration.interface, interface),
     );
 
-    if (!I._initialized) await _init();
-    for (final LoggingInterface i in I._interfaces) {
-      if (!i.initialized) await i.init();
+    return I;
+  }
+
+  /// Unregisters a `List` of [LoggingInterface] from the [ArcaneLogger], if
+  /// they were previously registered.
+  Future<ArcaneLogger> unregisterInterfaces(
+    List<LoggingInterface> interfaces,
+  ) async {
+    if (!initialized) await _init();
+
+    for (final LoggingInterface i in interfaces) {
+      I._interfaceRegistrations.removeWhere(
+        (_LoggingInterfaceRegistration registration) =>
+            identical(registration.interface, i),
+      );
+    }
+
+    return I;
+  }
+
+  /// Unregisters all previously registered [LoggingInterface] from the
+  /// [ArcaneLogger], if any were previously registered.
+  Future<ArcaneLogger> unregisterAllInterfaces() async {
+    if (!initialized) await _init();
+    I._interfaceRegistrations.clear();
+    return I;
+  }
+
+  /// Initializes registered interfaces that opt into [LoggingInitializable].
+  ///
+  /// Interfaces that do not implement [LoggingInitializable] are skipped.
+  Future<ArcaneLogger> initializeInterfaces() async {
+    if (I._interfaceRegistrations.isEmptyOrNull) {
+      throw Exception("No logging interfaces have been registered.");
+    }
+
+    if (!initialized) await _init();
+
+    for (final _LoggingInterfaceRegistration registration
+        in I._interfaceRegistrations) {
+      final LoggingInterface loggingInterface = registration.interface;
+      final LoggingInitializable? initializable =
+          loggingInterface is LoggingInitializable
+              ? loggingInterface as LoggingInitializable
+              : null;
+
+      if (initializable != null && !initializable.initialized) {
+        await initializable.init();
+      }
     }
 
     return I;
@@ -245,4 +475,50 @@ class ArcaneLogger {
 
   /// Clears all persistent metadata.
   void clearPersistentMetadata() => _additionalMetadata.clear();
+
+  /// Resets the Arcane logging service by clearing all persistent metadata,
+  /// clearing all registered [LoggingInterface]s and marking the logging
+  /// service as no longer being initialized.
+  void reset() {
+    dispose();
+    I._interfaceRegistrations.clear();
+    I._interceptors.clear();
+    I._initialized = false;
+    I._additionalMetadata.clear();
+  }
+
+  /// Closes logger streams and allows lazy recreation on subsequent access.
+  void dispose() {
+    unawaited(_logStreamController?.close());
+    _logStreamController = null;
+  }
+
+  LogEvent? _runInterceptors(
+    LogEvent event, {
+    required List<LogInterceptor> interceptors,
+    required LogInterceptorContext context,
+  }) {
+    LogEvent? currentEvent = event;
+
+    for (final LogInterceptor interceptor in List<LogInterceptor>.from(
+      interceptors,
+    )) {
+      if (currentEvent == null) return null;
+      currentEvent = interceptor(currentEvent, context: context);
+    }
+
+    return currentEvent;
+  }
+}
+
+final class _LoggingInterfaceRegistration {
+  _LoggingInterfaceRegistration({
+    required this.interface,
+    List<LogInterceptor>? interceptors,
+  }) : interceptors = [
+          ...?interceptors,
+        ];
+
+  final LoggingInterface interface;
+  final List<LogInterceptor> interceptors;
 }
