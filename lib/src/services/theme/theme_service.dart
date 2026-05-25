@@ -230,7 +230,11 @@ class ArcaneThemeService extends ArcaneService {
     return I;
   }
 
-  /// Should be called on first build to ensure the initial theme matches the platform brightness.
+  /// Syncs the initial theme with the platform/effective mode snapshot.
+  ///
+  /// This is invoked automatically by `ArcaneThemeSwitcher` during the first
+  /// dependency pass when using `ArcaneApp`, so most apps do not need to call
+  /// this directly.
   void setInitialTheme(BuildContext context) {
     // Only update when no custom theme was explicitly provided by the user.
     if (_themeOverriddenByUser) {

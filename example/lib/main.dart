@@ -71,6 +71,8 @@ Future<void> main() async {
   runApp(
     // The `ArcaneApp` widget is optional but provides Arcane's built-in
     // service, feature flag, environment, and theme integration widgets.
+    // It also performs initial platform theme synchronization automatically
+    // via ArcaneThemeSwitcher.
     ArcaneApp(
       builder: (context, _) => const MainApp(),
     ),

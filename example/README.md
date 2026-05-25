@@ -7,7 +7,7 @@ Flutter UI:
 - Authentication with sign-in and sign-out actions
 - Feature flag toggling with live UI updates
 - Environment switching
-- Theme switching and system theme following
+- Theme switching and system theme following (with automatic initial sync when using `ArcaneApp`)
 - Custom app services via `ArcaneService`
 
 ## Run the example
