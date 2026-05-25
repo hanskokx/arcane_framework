@@ -23,6 +23,7 @@ and service management.
     - [Feature Flags](#feature-flags)
     - [Logging](#logging)
     - [Authentication](#authentication)
+    - [Application Environments](#application-environments)
     - [Dynamic Theming](#dynamic-theming)
   - [Contributing](#contributing)
 
