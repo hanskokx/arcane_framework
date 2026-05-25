@@ -10,6 +10,7 @@
 .svn/
 migrate_working_dir/
 coverage/
+example/.metadata
 
 # IntelliJ related
 *.iml
