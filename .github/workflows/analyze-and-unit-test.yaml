@@ -2,9 +2,6 @@ name: Tests
 on:
   workflow_dispatch:
   pull_request:
-env:
-  PURO_FLUTTER_VERSION: ""
-  FLUTTER_VERSION: ""
 jobs:
   test:
     name: Analyze and test
@@ -12,25 +9,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Get Flutter version from .puro.json
-        id: puro_version
-        run: |
-          if [[ -f ".puro.json" ]]; then
-            flutter_version=$(jq -r '.env' .puro.json)
-            echo "PURO_FLUTTER_VERSION=$flutter_version" >> $GITHUB_ENV
-          else
-            echo "Warning: .puro.json not found, using default Flutter stable channel."
-            echo "PURO_FLUTTER_VERSION=stable" >> $GITHUB_ENV
-          fi
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
-          flutter-version: ${{ env.PURO_FLUTTER_VERSION == 'stable' && '' || env.FLUTTER_VERSION }}
       - name: Install dependencies
         run: flutter pub get
-      - name: Run build_runner
-        run: dart run build_runner build -d
       - name: Analyze
         run: flutter analyze
       - name: Test
