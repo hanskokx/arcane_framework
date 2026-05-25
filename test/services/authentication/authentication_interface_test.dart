@@ -4,8 +4,10 @@ import "package:result_monad/result_monad.dart";
 
 class MockAuth implements ArcaneAuthInterface {
   @override
-  Future<Result<void, String>> login<T>(
-      {T? input, Future<void> Function()? onLoggedIn}) async {
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  }) async {
     if (onLoggedIn != null) await onLoggedIn();
     return const Result.ok(null);
   }
@@ -23,8 +25,9 @@ class MockAuth implements ArcaneAuthInterface {
   Future<void> init() async {}
 
   @override
-  Future<Result<void, String>> logout(
-      {Future<void> Function()? onLoggedOut}) async {
+  Future<Result<void, String>> logout({
+    Future<void> Function()? onLoggedOut,
+  }) async {
     if (onLoggedOut != null) await onLoggedOut();
     return const Result.ok(null);
   }
@@ -37,9 +40,11 @@ void main() {
     expect(await auth.accessToken, "token");
     expect(await auth.refreshToken, "refresh");
     var called = false;
-    await auth.logout(onLoggedOut: () async {
-      called = true;
-    });
+    await auth.logout(
+      onLoggedOut: () async {
+        called = true;
+      },
+    );
     expect(called, isTrue);
   });
 }

@@ -1,5 +1,5 @@
-import "package:flutter_test/flutter_test.dart";
 import "package:arcane_framework/src/services/authentication/authentication_service.dart";
+import "package:flutter_test/flutter_test.dart";
 
 void main() {
   group("SignUpStep", () {
