@@ -58,6 +58,12 @@
   `ThemeData` using the effective brightness.
 - [FIX] `ArcaneThemeSwitcher` now initializes theme state once via
   `setInitialTheme(context)`.
+- [FIX] `switchTheme()` now toggles from the effective theme when current mode
+  is `ThemeMode.system` (system dark -> light, system light -> dark).
+- [CHANGE] `context.isDarkMode` now reflects effective app theme brightness
+  (`Theme.of(context).brightness`) instead of raw platform brightness.
+- [FIX] `followSystemTheme()` now reads platform brightness directly to avoid
+  coupling system-follow behavior to app theme overrides.
 - [FIX] Reactive theme stream controllers now close only during service dispose,
   preventing stream shutdown when a single subscriber cancels.
 - [UPDATE] README now documents `ArcaneThemeService` naming.

@@ -139,8 +139,9 @@ class ArcaneThemeService extends ArcaneService {
     if (themeMode != null) {
       _updateTheme(themeMode);
     } else {
+      final ThemeMode effectiveMode = _effectiveThemeMode;
       _updateTheme(
-        currentThemeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
+        effectiveMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
       );
     }
 
@@ -163,7 +164,9 @@ class ArcaneThemeService extends ArcaneService {
     _followingSystemTheme = true;
 
     _currentSystemThemeMode =
-        context.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark
+            ? ThemeMode.dark
+            : ThemeMode.light;
     _systemController.add(_currentSystemThemeMode);
     _updateTheme(_currentSystemThemeMode);
 
@@ -258,5 +261,15 @@ class ArcaneThemeService extends ArcaneService {
   void _updateTheme(ThemeMode themeMode) {
     _currentThemeMode = themeMode;
     _themeModeController.add(themeMode);
+  }
+
+  ThemeMode get _effectiveThemeMode {
+    if (_currentThemeMode != ThemeMode.system) {
+      return _currentThemeMode;
+    }
+
+    return _currentTheme.brightness == Brightness.dark
+        ? ThemeMode.dark
+        : ThemeMode.light;
   }
 }

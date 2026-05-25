@@ -3,22 +3,24 @@ import "package:flutter/material.dart";
 import "arcane_theme.dart";
 import "theme_service.dart";
 
-/// An extension on `BuildContext` to check the current system dark mode setting.
+/// An extension on `BuildContext` to check the current effective dark mode.
 ///
-/// This extension provides a convenient way to check whether the device is in dark mode.
+/// This extension provides a convenient way to check whether the active
+/// `ThemeData` is dark in the current context.
 extension DarkMode on BuildContext {
-  /// Returns `true` if the system is currently set to dark mode.
+  /// Returns `true` if the current effective theme is dark.
   ///
-  /// This uses `MediaQuery.of(this).platformBrightness` to check the system's brightness setting.
+  /// This uses `Theme.of(this).brightness`, so it reflects the app's active
+  /// rendered theme rather than raw platform brightness.
   ///
   /// Example:
   /// ```dart
   /// if (context.isDarkMode) {
-  ///   // The system is in dark mode.
+  ///   // The active app theme is dark.
   /// }
   /// ```
   bool get isDarkMode {
-    final brightness = MediaQuery.platformBrightnessOf(this);
+    final brightness = Theme.of(this).brightness;
     return brightness == Brightness.dark;
   }
 }

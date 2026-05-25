@@ -28,6 +28,42 @@ void main() {
         expect(theme.currentThemeMode, equals(ThemeMode.light));
       });
 
+      testWidgets(
+          "switchTheme toggles from effective system mode, not always to dark",
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MediaQuery(
+            data: MediaQueryData(platformBrightness: Brightness.dark),
+            child: ArcaneApp(
+              child: SizedBox(),
+            ),
+          ),
+        );
+
+        final BuildContext darkContext = tester.element(find.byType(SizedBox));
+        theme.switchTheme(themeMode: ThemeMode.system);
+        theme.setInitialTheme(darkContext);
+        theme.switchTheme();
+
+        expect(theme.currentThemeMode, equals(ThemeMode.light));
+
+        await tester.pumpWidget(
+          const MediaQuery(
+            data: MediaQueryData(platformBrightness: Brightness.light),
+            child: ArcaneApp(
+              child: SizedBox(),
+            ),
+          ),
+        );
+
+        final BuildContext lightContext = tester.element(find.byType(SizedBox));
+        theme.switchTheme(themeMode: ThemeMode.system);
+        theme.setInitialTheme(lightContext);
+        theme.switchTheme();
+
+        expect(theme.currentThemeMode, equals(ThemeMode.dark));
+      });
+
       test("switching theme notifies theme mode stream", () async {
         ThemeMode? emittedMode;
         final subscription = theme.themeModeChanges.listen((mode) {
