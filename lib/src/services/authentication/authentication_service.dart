@@ -82,8 +82,6 @@ class ArcaneAuthenticationService extends ArcaneService {
   Future<String?> get refreshToken async =>
       authInterface?.refreshToken ?? Future.value("");
 
-  AuthenticationStatus? _previousModeWhenSettingDebug;
-
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
   Future<void> reset() async {
@@ -184,8 +182,6 @@ class ArcaneAuthenticationService extends ArcaneService {
     if (loggedOut.isSuccess) {
       setUnauthenticated();
     }
-
-    _previousModeWhenSettingDebug = null;
 
     return loggedOut;
   }

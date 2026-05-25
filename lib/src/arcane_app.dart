@@ -44,7 +44,7 @@ import "services/theme/theme_switcher.dart";
 ///   builder: (context, _) => MyApp(),
 /// );
 /// ```
-class ArcaneApp extends StatelessWidget {
+class ArcaneApp extends StatefulWidget {
   /// A list of Arcane services that will be made available to the application.
   final List<ArcaneService> services;
 

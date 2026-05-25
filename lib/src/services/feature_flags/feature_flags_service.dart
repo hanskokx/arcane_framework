@@ -183,10 +183,24 @@ class ArcaneFeatureFlagService extends ArcaneService {
   /// This method clears all enabled features, resets notification values,
   /// marks the flags as uninitialized, and notifies listeners of the changes.
   void reset() {
-    _enabledFeatures.clear();
-    _notifier.value.clear();
-
+    notifier
+      ..removeListener(_listener)
+      ..addListener(_listener);
+    _notifier.value = [];
+    _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
     I._initialized = false;
-    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_enabledFeaturesStreamController?.close());
+    _enabledFeaturesStreamController = null;
+    super.dispose();
+  }
+
+  void _listener() {
+    _enabledFeatures
+      ..clear()
+      ..addAll(notifier.value);
   }
 }
