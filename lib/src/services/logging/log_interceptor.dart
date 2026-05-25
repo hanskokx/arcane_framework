@@ -39,7 +39,7 @@ final class LogInterceptorContext {
 ///
 /// Example usage:
 /// ```dart
-/// final interceptor = LogInterceptor((event, {context}) {
+/// final interceptor = LogInterceptor((event, context) {
 ///   // Filter out debug-level logs
 ///   if (event.level == LogLevel.debug) return null;
 ///   return event;

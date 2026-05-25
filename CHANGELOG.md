@@ -189,6 +189,8 @@ MaterialApp(
 - [NEW] Added the `LogInterceptor` class which can (optionally) be added to
   `ArcaneLogger` to pre-process log messages before they are sent to the
   registered `ArcaneLoggingInterface`(s).
+- [CHANGE] Updated `Arcane.log` metadata type from `Map<String, String>?` to
+  `Map<String, Object?>?` to support structured metadata values.
 
 #### Migration Steps (LoggingInterface)
 
@@ -246,6 +248,39 @@ class ExternalLogger extends LoggingInterface with LoggingInitialization {
 ```
 
 - If desired, adopt `feature` for destination-aware filtering in interceptors.
+
+#### Migration Steps (Arcane.log metadata)
+
+1. Update `Arcane.log(...)` call sites that stringify metadata values only to
+   satisfy the previous `Map<String, String>` type.
+2. Prefer passing native values (for example `int`, `bool`, `List`, or nested
+   `Map`) directly in `metadata` when useful.
+3. If your logging destination expects only string metadata, convert
+   `Object?` values to strings at your logging boundary.
+
+Before:
+
+```dart
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "attempt": attempt.toString(),
+    "rememberMe": rememberMe.toString(),
+  },
+);
+```
+
+After:
+
+```dart
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "attempt": attempt,
+    "rememberMe": rememberMe,
+  },
+);
+```
 
 ### Dependencies
 

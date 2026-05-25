@@ -75,12 +75,12 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// provides one. This token is often used in the headers of HTTP requests
   /// to the backend API.
   Future<String?> get accessToken async =>
-      await authInterface?.accessToken ?? Future.value("");
+      authInterface?.accessToken ?? Future.value("");
 
   /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
   /// provides one.
   Future<String?> get refreshToken async =>
-      await authInterface?.refreshToken ?? Future.value("");
+      authInterface?.refreshToken ?? Future.value("");
 
   /// Removes any registered `ArcaneAuthInterface` and resets all values to
   /// default.
@@ -171,7 +171,9 @@ class ArcaneAuthenticationService extends ArcaneService {
       return const Result.error("No ArcaneAuthInterface has been registered");
     }
 
-    if (!isAuthenticated) const Result.error("User is not authenticated.");
+    if (!isAuthenticated) {
+      return const Result.error("User is not authenticated.");
+    }
 
     final Result<void, String> loggedOut = await authInterface!.logout(
       onLoggedOut: onLoggedOut,

@@ -15,6 +15,7 @@ and service management.
   - [Features](#features)
   - [Installation](#installation)
     - [ArcaneApp Builder Migration (v1.x -\> v2.x)](#arcaneapp-builder-migration-v1x---v2x)
+    - [Arcane.log Metadata Migration (v1.x -\> v2.x)](#arcanelog-metadata-migration-v1x---v2x)
   - [Usage](#usage)
     - [Services](#services)
       - [Defining an example `ArcaneService`](#defining-an-example-arcaneservice)
@@ -108,6 +109,39 @@ ArcaneApp(
 )
 ```
 
+### Arcane.log Metadata Migration (v1.x -> v2.x)
+
+`Arcane.log(...)` now accepts `metadata` as `Map<String, Object?>?`.
+This allows metadata values to be non-strings (for example `int`, `bool`,
+lists, or nested maps).
+
+Migration example:
+
+```dart
+// Before
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "userId": userId.toString(),
+    "attempt": attempt.toString(),
+    "rememberMe": rememberMe.toString(),
+  },
+);
+
+// After
+Arcane.log(
+  "Login attempt",
+  metadata: {
+    "userId": userId,
+    "attempt": attempt,
+    "rememberMe": rememberMe,
+  },
+);
+```
+
+If your logger destination serializes metadata, ensure it can handle
+`Object?` values (or convert values to strings at that boundary).
+
 ## Usage
 
 The following sections provide more information about how to use the package's
@@ -130,8 +164,8 @@ services:
 - `ArcaneService`: The base class from which to extend your own services. This
   what Arcane uses to locate services.
 - `ArcaneServiceProvider`: A widget used to provide access to registered
-  `ArcaneService` instances. **Note**: This widget is already part of the*
-  `ArcaneApp`*widget, however if you are not using the `ArcaneApp` widget you
+  `ArcaneService` instances. **Note**: This widget is already part of the
+  _`ArcaneApp`_ widget, however if you are not using the `ArcaneApp` widget you
   can instead use this widget directly.
 - The `service<T>` and `requiredService<T>` extensions on `BuildContext`:
   nullable and non-nullable getters used to locate a given `ArcaneService` via
@@ -254,7 +288,7 @@ service.notifier.addListener(() {
 });
 ```
 
-We can also simply user a `ValueListenableBuilder`:
+We can also simply use a `ValueListenableBuilder`:
 
 ```dart
 ValueListenableBuilder(
@@ -592,7 +626,11 @@ Arcane.log(
   level: Level.debug,
   module: "ModuleName",
   method: "MethodName",
-  metadata: {"key": "value", "attempt": "1"},
+  metadata: {
+    "key": "value",
+    "attempt": 1,
+    "retryable": true,
+  },
   stackTrace: StackTrace.current,
 );
 

@@ -87,7 +87,9 @@ abstract class Arcane {
   /// - [level]: The log level (e.g., `Level.debug`, `Level.error`), defaults to
   ///    `Level.debug`.
   /// - [stackTrace]: Optional stack trace information.
-  /// - [metadata]: Optional additional metadata in key-value pairs.
+  /// - [metadata]: Optional additional metadata in key-value pairs
+  ///   (`Map<String, Object?>`), which supports structured values such as
+  ///   numbers, booleans, nested maps, and lists.
   /// - [extra]: Optional data passed to the logger.
   /// - [skipAutodetection]: Bypass automatically determining the module, method,
   ///   and file/line number of log messages.
@@ -97,7 +99,7 @@ abstract class Arcane {
     String? method,
     Level level = Level.debug,
     StackTrace? stackTrace,
-    Map<String, String>? metadata,
+    Map<String, Object?>? metadata,
     Object? extra,
     bool skipAutodetection = false,
   }) {
