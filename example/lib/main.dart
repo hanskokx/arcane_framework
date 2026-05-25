@@ -315,7 +315,7 @@ class ArcaneThemeExample extends StatelessWidget {
             Column(
               children: [
                 Switch(
-                  value: Arcane.theme.currentThemeMode == ThemeMode.dark,
+                  value: Arcane.theme.currentModeOf(context) == ThemeMode.dark,
                   thumbIcon: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
                       return const Icon(Icons.dark_mode);
