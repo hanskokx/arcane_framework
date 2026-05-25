@@ -129,17 +129,18 @@ class ArcaneServiceProvider
 
   /// Removes all services of the specified type from the registry.
   /// Returns true if any services were removed, false otherwise.
-  void removeService<T extends ArcaneService>() {
-    final int existingIndex = registeredServices.indexWhere(
-      (s) => s.runtimeType == T,
-    );
+  bool removeService<T extends ArcaneService>() {
+    final List<ArcaneService> newList =
+        List<ArcaneService>.from(registeredServices);
+    final int originalLength = newList.length;
 
-    if (existingIndex >= 0) {
-      final List<ArcaneService> newList =
-          List<ArcaneService>.from(registeredServices);
+    newList.removeWhere((service) => service.runtimeType == T);
 
-      newList.removeAt(existingIndex);
-      notifier?.value = newList;
+    if (newList.length == originalLength) {
+      return false;
     }
+
+    notifier?.value = newList;
+    return true;
   }
 }

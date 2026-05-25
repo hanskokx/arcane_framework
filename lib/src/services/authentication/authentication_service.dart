@@ -106,7 +106,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   ///
   /// This method does not mutate authentication status.
   Future<void> setDebug(
-    BuildContext context, {
+    BuildContext _, {
     Future<void> Function()? onDebugModeSet,
   }) async {
     final Environment previousEnvironment = Arcane.environment.current;
@@ -122,7 +122,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   ///
   /// This method does not mutate authentication status.
   Future<void> setNormal(
-    BuildContext context, {
+    BuildContext _, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
     final Environment previousEnvironment = Arcane.environment.current;

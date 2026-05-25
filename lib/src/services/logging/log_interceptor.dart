@@ -41,7 +41,7 @@ final class LogInterceptorContext {
 /// ```dart
 /// final interceptor = LogInterceptor((event, context) {
 ///   // Filter out debug-level logs
-///   if (event.level == LogLevel.debug) return null;
+///   if (event.level == Level.debug) return null;
 ///   return event;
 /// });
 /// ```

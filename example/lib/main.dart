@@ -162,7 +162,7 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
   @override
   void dispose() {
     // Don't forget to properly dispose of the subscriber
-    _logStreamSubscriber.cancel();
+    unawaited(_logStreamSubscriber.cancel());
     super.dispose();
   }
 

@@ -40,8 +40,8 @@ class _ArcaneThemeSwitcherState extends State<ArcaneThemeSwitcher>
 
   @override
   void dispose() {
-    _themeModeSubscription.cancel();
-    _themeSubscription.cancel();
+    unawaited(_themeModeSubscription.cancel());
+    unawaited(_themeSubscription.cancel());
 
     // Clean up the observer when the widget is disposed
     WidgetsBinding.instance.removeObserver(this);

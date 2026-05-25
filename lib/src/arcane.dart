@@ -30,12 +30,12 @@ abstract class Arcane {
   }
 
   // The built-in singleton services (used as fallback if no ArcaneApp is present).
-  static List<ArcaneService> get builtInServices => [
+  static List<ArcaneService> get builtInServices => List.unmodifiable([
         ArcaneFeatureFlagService.I,
         ArcaneAuthenticationService.I,
         ArcaneThemeService.I,
         ArcaneEnvironmentService.I,
-      ];
+      ]);
 
   /// Provides access to the singleton instance of the logger service.
   ///
@@ -68,7 +68,8 @@ abstract class Arcane {
   ///
   /// This list includes the feature flags, authentication, theme, and environment services.
   /// If ArcaneApp is present, this reflects the live registry; otherwise, falls back to built-in singletons.
-  static List<ArcaneService> get services => registry?.value ?? builtInServices;
+  static List<ArcaneService> get services =>
+      List.unmodifiable(registry?.value ?? builtInServices);
 
   /// Logs a message using the integrated logger.
   ///

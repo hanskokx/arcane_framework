@@ -1,4 +1,5 @@
 import "package:arcane_framework/src/service/arcane_service.dart";
+import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 
 import "arcane.dart";
@@ -120,6 +121,9 @@ class ArcaneApp extends StatefulWidget {
 }
 
 class _ArcaneAppState extends State<ArcaneApp> {
+  static const ListEquality<ArcaneService> _serviceListEquality =
+      ListEquality<ArcaneService>(IdentityEquality<ArcaneService>());
+
   late final ValueNotifier<List<ArcaneService>> _serviceNotifier;
 
   List<ArcaneService> _computeMergedServices() {
@@ -144,6 +148,16 @@ class _ArcaneAppState extends State<ArcaneApp> {
     _serviceNotifier =
         ValueNotifier<List<ArcaneService>>(_computeMergedServices());
     Arcane.setRegistry(_serviceNotifier);
+  }
+
+  @override
+  void didUpdateWidget(covariant ArcaneApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final List<ArcaneService> mergedServices = _computeMergedServices();
+    if (!_serviceListEquality.equals(_serviceNotifier.value, mergedServices)) {
+      _serviceNotifier.value = mergedServices;
+    }
   }
 
   @override

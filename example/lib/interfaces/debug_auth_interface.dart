@@ -29,6 +29,8 @@ class DebugAuthInterface
 
     _isSignedIn = false;
 
+    await onLoggedOut?.call();
+
     return const Result.ok(null);
   }
 
@@ -49,6 +51,8 @@ class DebugAuthInterface
     Arcane.log("Logging in as $email using password $password");
 
     _isSignedIn = true;
+
+    await onLoggedIn?.call();
 
     return const Result.ok(null);
   }

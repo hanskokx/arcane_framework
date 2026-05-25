@@ -2,9 +2,9 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     ArcaneFeatureFlagService.I.reset();
-    ArcaneAuthenticationService.I.reset();
+    await ArcaneAuthenticationService.I.reset();
     ArcaneReactiveTheme.I.reset();
     ArcaneEnvironmentService.I.reset();
   });

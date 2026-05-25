@@ -35,7 +35,7 @@ class ArcaneThemeService extends ArcaneService {
   bool get isFollowingSystemTheme => _followingSystemTheme;
   bool _followingSystemTheme = false;
 
-  /// Returns the `ThemeData` corresponding to the current system theme
+  /// Returns the `ThemeMode` corresponding to the current system theme
   ThemeMode get systemThemeMode => _currentSystemThemeMode;
 
   /// Tracks the current system theme mode
