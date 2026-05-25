@@ -8,6 +8,9 @@ import "environment_interface.dart";
 /// The `ArcaneEnvironment` widget holds the current environment and allows
 /// descendant widgets to access and mutate it.
 class ArcaneEnvironment extends InheritedWidget {
+  /// Returns the current environment (alias for [environment]) for API consistency.
+  Environment get current => environment;
+
   /// The current application environment.
   final Environment environment;
 
@@ -80,7 +83,7 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   void _handleEnvironmentChange() {
     if (!mounted) return;
 
-    final nextEnvironment = Arcane.environment.environment;
+    final nextEnvironment = Arcane.environment.current;
     if (nextEnvironment == _environment) return;
 
     setState(() {
@@ -91,11 +94,11 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   @override
   void initState() {
     super.initState();
-    _environment = Arcane.environment.environment;
+    _environment = Arcane.environment.current;
 
     if (_environment != widget.environment) {
       Arcane.environment.setEnvironment(widget.environment);
-      _environment = Arcane.environment.environment;
+      _environment = Arcane.environment.current;
     }
 
     Arcane.environment.notifier.addListener(_handleEnvironmentChange);

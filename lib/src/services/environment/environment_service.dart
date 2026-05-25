@@ -17,7 +17,7 @@ class ArcaneEnvironmentService extends ArcaneService {
   final ValueNotifier<Environment> _notifier =
       ValueNotifier<Environment>(Environment.normal);
 
-  /// A notifier that emits updates when [environment] changes.
+  /// A notifier that emits updates when [current] changes.
   ValueNotifier<Environment> get notifier => _notifier;
 
   StreamController<Environment>? _environmentStreamController;
@@ -35,7 +35,7 @@ class ArcaneEnvironmentService extends ArcaneService {
   /// Reading this getter does not subscribe to changes and does not trigger
   /// widget rebuilds. Use [notifier] (for `ValueListenableBuilder`) or
   /// [environmentChanges] (for streams) when you need reactive updates.
-  Environment get environment => _notifier.value;
+  Environment get current => _notifier.value;
 
   /// Sets the environment when the incoming value is different.
   void setEnvironment(Environment environment) {

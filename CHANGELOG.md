@@ -33,6 +33,24 @@
   `enableDebugMode()`, `disableDebugMode()` and `setEnvironment()`.
 - [NEW] Added `environmentChanges` stream for realtime environment updates.
 
+#### Migration Steps (ArcaneEnvironment)
+
+1. The `state` getter has been removed from `ArcaneEnvironment`. If you previously accessed environment state via `Arcane.environment.state`, update your code to use the new API:
+
+   - **Before:**
+
+     ```dart
+     final env = Arcane.environment.state;
+     ```
+
+   - **After:**
+
+     ```dart
+     final env = Arcane.environment.current;
+     ```
+
+2. If you were using `Cubit`-style APIs, migrate to the new `InheritedWidget`/`ValueNotifier`-based approach. See the README for updated usage examples.
+
 ### Authentication Service
 
 - [BREAKING] `ArcaneAuthInterface.logout` now accepts optional

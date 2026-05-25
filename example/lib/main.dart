@@ -491,7 +491,7 @@ class ArcaneEnvironmentExample extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final ArcaneEnvironmentService environment = Arcane.environment;
-                final Environment previousEnvironment = environment.environment;
+                final Environment previousEnvironment = environment.current;
                 final Environment nextEnvironment = _nextEnvironment(
                   previousEnvironment,
                 );

@@ -109,7 +109,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
   }) async {
-    final Environment previousEnvironment = Arcane.environment.environment;
+    final Environment previousEnvironment = Arcane.environment.current;
 
     if (previousEnvironment == Environment.debug) return;
 
@@ -125,7 +125,7 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
-    final Environment previousEnvironment = Arcane.environment.environment;
+    final Environment previousEnvironment = Arcane.environment.current;
 
     if (previousEnvironment == Environment.normal) return;
 

@@ -127,10 +127,10 @@ void main() {
         );
 
         await ArcaneAuthenticationService.I.setDebug(capturedContext);
-        expect(Arcane.environment.environment, Environment.debug);
+        expect(Arcane.environment.current, Environment.debug);
 
         await ArcaneAuthenticationService.I.setNormal(capturedContext);
-        expect(Arcane.environment.environment, Environment.normal);
+        expect(Arcane.environment.current, Environment.normal);
       },
     );
 
