@@ -43,11 +43,6 @@ Future<void> main() async {
     ],
   );
 
-  // Add some persistent metadata to be used in every future log message
-  Arcane.logger.addPersistentMetadata({
-    "demo": "This message will be included in all log messages.",
-  });
-
   // Register the authentication interface
   await Arcane.auth.registerInterface(debugAuthInterface);
 
@@ -141,6 +136,10 @@ class ArcaneLoggingExample extends StatefulWidget {
 }
 
 class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
+  static const String _demoMetadataKey = "demo";
+  static const String _demoMetadataValue =
+      "This message will be included in all log messages.";
+
   // Set up a subscriber that we can use to listen to logs in realtime.
   // Note: this is completely optional and does _not_ impact whether logs are
   // sent to any registered logging interfaces.
@@ -148,6 +147,7 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
 
   // Used to collect the logs from the stream.
   final List<String> latestLogs = [];
+  bool _persistentMetadataEnabled = false;
 
   @override
   void initState() {
@@ -189,6 +189,32 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
                     Text(
                       "Logging",
                       style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    Row(
+                      spacing: 8,
+                      children: [
+                        const Text("Include persistent demo metadata"),
+                        Switch(
+                          value: _persistentMetadataEnabled,
+                          onChanged: Feature.logging.disabled
+                              ? null
+                              : (enabled) {
+                                  setState(() {
+                                    _persistentMetadataEnabled = enabled;
+                                  });
+
+                                  if (enabled) {
+                                    Arcane.logger.addPersistentMetadata({
+                                      _demoMetadataKey: _demoMetadataValue,
+                                    });
+                                  } else {
+                                    Arcane.logger.removePersistentMetadata(
+                                      _demoMetadataKey,
+                                    );
+                                  }
+                                },
+                        ),
+                      ],
                     ),
                     if (latestLogs.isEmpty)
                       Text(
