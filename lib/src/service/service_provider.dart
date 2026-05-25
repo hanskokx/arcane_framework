@@ -25,13 +25,16 @@ class ArcaneServiceProvider
 
   /// Creates an `ArcaneServiceProvider` that provides [serviceInstances] to the widget tree.
   ///
-  /// The [child] widget will be the root of the widget subtree that has access to the services.
+  /// If [serviceNotifier] is provided, it will be used as the backing notifier for the provider.
+  /// Otherwise, a new notifier will be created from [serviceInstances].
   ArcaneServiceProvider({
     required super.child,
     List<ArcaneService> serviceInstances = const [],
+    ValueNotifier<List<ArcaneService>>? serviceNotifier,
     super.key,
   }) : super(
-          notifier: ValueNotifier<List<ArcaneService>>(serviceInstances),
+          notifier: serviceNotifier ??
+              ValueNotifier<List<ArcaneService>>(serviceInstances),
         );
 
   /// Retrieves the nearest `ArcaneServiceProvider` in the widget tree.

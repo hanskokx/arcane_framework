@@ -20,7 +20,47 @@ void main() {
           child: Builder(
             builder: (context) {
               final provider = ArcaneServiceProvider.of(context);
-              expect(provider.registeredServices, equals(testServices));
+              expect(provider.registeredServices, containsAll(testServices));
+              expect(
+                provider.registeredServices
+                    .whereType<ArcaneFeatureFlagService>(),
+                isNotEmpty,
+              );
+              expect(
+                provider.registeredServices
+                    .whereType<ArcaneAuthenticationService>(),
+                isNotEmpty,
+              );
+              expect(
+                provider.registeredServices.whereType<ArcaneThemeService>(),
+                isNotEmpty,
+              );
+              expect(
+                provider.registeredServices
+                    .whereType<ArcaneEnvironmentService>(),
+                isNotEmpty,
+              );
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("does not duplicate built-ins when explicitly provided",
+        (tester) async {
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: [Arcane.environment],
+          child: Builder(
+            builder: (context) {
+              final provider = ArcaneServiceProvider.of(context);
+              final environmentServices = provider.registeredServices
+                  .whereType<ArcaneEnvironmentService>()
+                  .toList();
+
+              expect(environmentServices.length, 1);
+              expect(environmentServices.single, same(Arcane.environment));
               return const SizedBox();
             },
           ),
@@ -88,6 +128,24 @@ void main() {
               final service = context.service<MockArcaneService>();
               expect(service, isNotNull);
               expect(service, isA<MockArcaneService>());
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("service<T> prefers provider services over built-in fallbacks",
+        (tester) async {
+      final providerService = MockArcaneService();
+
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: [providerService],
+          child: Builder(
+            builder: (context) {
+              final service = context.service<ArcaneService>();
+              expect(service, same(providerService));
               return const SizedBox();
             },
           ),

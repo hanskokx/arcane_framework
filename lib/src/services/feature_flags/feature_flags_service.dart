@@ -5,29 +5,41 @@ import "package:flutter/foundation.dart";
 
 part "feature_flags_extensions.dart";
 
+@Deprecated(
+  "Deprecated in 2.0.0. "
+  "ArcaneFeatureFlags has been renamed to ArcaneFeatureFlagService for clarity. "
+  "Please use ArcaneFeatureFlagService instead.",
+)
+typedef ArcaneFeatureFlags = ArcaneFeatureFlagService;
+
 /// A singleton class that manages feature flags in the Arcane architecture.
 ///
-/// `ArcaneFeatureFlags` allows features to be dynamically enabled or disabled
+/// `ArcaneFeatureFlagService` allows features to be dynamically enabled or disabled
 /// at runtime. This can be useful for controlling access to experimental or
 /// conditional functionality without requiring an application restart.
 ///
 /// Example usage:
 /// ```dart
-/// ArcaneFeatureFlags.I.enableFeature(MyFeature.example);
-/// if (ArcaneFeatureFlags.I.isEnabled(MyFeature.example)) {
+/// ArcaneFeatureFlagService.I.enableFeature(MyFeature.example);
+/// if (ArcaneFeatureFlagService.I.isEnabled(MyFeature.example)) {
 ///   // Execute feature-specific logic
 /// }
 /// ```
-class ArcaneFeatureFlags extends ArcaneService {
-  ArcaneFeatureFlags._internal();
+class ArcaneFeatureFlagService extends ArcaneService {
+  ArcaneFeatureFlagService._internal();
 
-  /// The singleton instance of `ArcaneFeatureFlags`.
-  static final ArcaneFeatureFlags _instance = ArcaneFeatureFlags._internal();
+  /// The singleton instance of `ArcaneFeatureFlagService`.
+  static final ArcaneFeatureFlagService _instance =
+      ArcaneFeatureFlagService._internal();
 
-  /// Provides access to the singleton instance of `ArcaneFeatureFlags`.
-  static ArcaneFeatureFlags get I => _instance;
+  /// Provides access to the singleton instance of `ArcaneFeatureFlagService`.
+  static ArcaneFeatureFlagService get I => _instance;
 
-  /// A list of enabled features.
+  /// A list of enabled features as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [notifier] (for `ValueListenableBuilder`) or
+  /// [enabledFeaturesChanges] (for streams) when you need reactive updates.
   ///
   /// Each feature is represented as an `Enum`. The list holds the features that are
   /// currently enabled.
@@ -77,9 +89,9 @@ class ArcaneFeatureFlags extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneFeatureFlags.I.enableFeature(MyFeature.newFeature);
+  /// ArcaneFeatureFlagService.I.enableFeature(MyFeature.newFeature);
   /// ```
-  ArcaneFeatureFlags enableFeature(Enum feature) {
+  ArcaneFeatureFlagService enableFeature(Enum feature) {
     if (!I._initialized) _init();
 
     if (_enabledFeatures.contains(feature)) return I;
@@ -89,10 +101,10 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature enabled: ${feature.name}",
-        level: Level.debug,
+        "Feature enabled: $feature",
+        level: Level.info,
         metadata: {
-          feature.name: "✅",
+          feature.toString(): "✅",
         },
       );
     }
@@ -107,9 +119,9 @@ class ArcaneFeatureFlags extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneFeatureFlags.I.disableFeature(MyFeature.oldFeature);
+  /// ArcaneFeatureFlagService.I.disableFeature(MyFeature.oldFeature);
   /// ```
-  ArcaneFeatureFlags disableFeature(Enum feature) {
+  ArcaneFeatureFlagService disableFeature(Enum feature) {
     if (!I._initialized) _init();
     if (!_enabledFeatures.contains(feature)) return I;
 
@@ -118,10 +130,10 @@ class ArcaneFeatureFlags extends ArcaneService {
 
     if (Arcane.logger.initialized) {
       Arcane.logger.log(
-        "Feature disabled: ${feature.name}",
-        level: Level.debug,
+        "Feature disabled: $feature",
+        level: Level.info,
         metadata: {
-          feature.name: "❌",
+          feature.toString(): "❌",
         },
       );
     }

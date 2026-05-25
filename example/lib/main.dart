@@ -62,8 +62,8 @@ Future<void> main() async {
   );
 
   runApp(
-    // The `ArcaneApp` widget is optional but provides the `ArcaneEnvironmentProvider`,
-    // `ArcaneServiceProvider`, and `ArcaneThemeSwitcher` widgets.
+    // The `ArcaneApp` widget is optional but provides Arcane's built-in
+    // service, feature flag, environment, and theme integration widgets.
     const ArcaneApp(
       child: MainApp(),
     ),
@@ -444,9 +444,9 @@ class ArcaneThemeExample extends StatelessWidget {
 // Arcane's feature flag system is extremely simple and flexible to use.
 // By registering _any_ enum (or even multiple enums!), features can be
 // toggled on and off at any point. The feature flag system even offers
-// a notifier, so you can listen to changes as they happen. Fetch your
-// remote config and use it to dynamically enable and disable features
-// with ease!
+// a notifier, stream, and app-level scope so you can react to changes as
+// they happen. Fetch your remote config and use it to dynamically enable
+// and disable features with ease!
 class ArcaneFeatureFlagsExample extends StatelessWidget {
   const ArcaneFeatureFlagsExample({
     super.key,
@@ -454,47 +454,44 @@ class ArcaneFeatureFlagsExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: Arcane.features.notifier,
-      builder: (context, enabledFeatures, _) {
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  "Feature Flags",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: Feature.values.length,
-                    itemBuilder: (context, i) {
-                      final Feature feature = Feature.values[i];
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(feature.name),
-                          Switch(
-                            value: feature.enabled,
-                            onChanged: (_) {
-                              feature.enabled
-                                  ? feature.disable()
-                                  : feature.enable();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
+    final ArcaneFeatureFlagProvider flags = context.featureFlags;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              "Feature Flags",
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-          ),
-        );
-      },
+            Expanded(
+              child: ListView.builder(
+                itemCount: Feature.values.length,
+                itemBuilder: (context, i) {
+                  final Feature feature = Feature.values[i];
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(feature.name),
+                      Switch(
+                        value: flags.isEnabled(feature),
+                        onChanged: (_) {
+                          flags.isEnabled(feature)
+                              ? flags.disableFeature(feature)
+                              : flags.enableFeature(feature);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -532,9 +529,7 @@ class ArcaneEnvironmentExample extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final ArcaneEnvironment environment = ArcaneEnvironment.of(
-                  context,
-                );
+                final ArcaneEnvironmentService environment = Arcane.environment;
                 final Environment previousEnvironment = environment.environment;
                 final Environment nextEnvironment = _nextEnvironment(
                   previousEnvironment,
@@ -553,7 +548,7 @@ class ArcaneEnvironmentExample extends StatelessWidget {
               child: const Text("Cycle environment"),
             ),
             Text(
-              "Environment: ${ArcaneEnvironment.of(context).environment.name}",
+              "Environment: ${Arcane.environment.environment.name}",
               textAlign: TextAlign.center,
             ),
           ],

@@ -1,43 +1,71 @@
 ## Unreleased
 
-### Authentication Service (ArcaneAuth) Updates
+### Arcane Framework
+
+- [NEW] `ArcaneApp` now owns and publishes a live service registry for
+  provider-aware static lookups.
+- [CHANGE] `Arcane.features`, `Arcane.auth`, `Arcane.theme`, and
+  `Arcane.environment` now prefer the live `ArcaneApp` registry instance when
+  available, then fall back to built-in singletons.
+
+### Environment Service
+
+- [NEW] Added `ArcaneEnvironmentService` as a singleton `ArcaneService` instance.
+- [CHANGE] Changed `ArcaneEnvironment` is no longer a `Cubit` and is now an
+  `InheritedWidget`.
+- [NEW] Added `Arcane.environment` shortcut for direct environment access.
+- [NEW] Added environment service to `Arcane.services` built-in list.
+- [CHANGE] `ArcaneEnvironmentProvider` is now a `StatefulWidget`.
+- [NEW] `ArcaneEnvironmentProvider` now provides methods for
+  `enableDebugMode()`, `disableDebugMode()` and `setEnvironment()`.
+
+### Authentication Service
 
 - [NEW] Added `statusChanges` stream to observe `AuthenticationStatus` updates.
 - [NEW] Added `signedInChanges` stream to observe sign-in state changes.
 - [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
 
-### Feature Flags Service (ArcaneFeatureFlags) Updates
+### Feature Flag Service
 
+- [CHANGE] Renamed service class `ArcaneFeatureFlags` to
+  `ArcaneFeatureFlagService`.
+- [NEW] Added backward compatibility typedef:
+  `typedef ArcaneFeatureFlags = ArcaneFeatureFlagService`.
 - [NEW] Added `enabledFeaturesChanges` stream to observe enabled feature
   updates in realtime.
 - [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+- [NEW] Added `ArcaneFeatureFlagProvider` (`InheritedWidget`) and
+  `ArcaneFeatureFlagsProvider` (`StatefulWidget`) for first-class feature-flag
+  integration in the widget tree.
+- [NEW] Added `BuildContext` convenience accessors for feature flags, including
+  `context.featureFlags`, `context.maybeFeatureFlags`,
+  `context.isFeatureEnabled(...)`, and `context.isFeatureDisabled(...)`.
+- [NEW] `ArcaneApp` now includes `ArcaneFeatureFlagsProvider` by default,
+  enabling rebuilds for widgets that depend on
+  `ArcaneFeatureFlagProvider.of(context)`.
+- [UPDATE] README now documents `ArcaneFeatureFlagProvider` and `ArcaneApp`
+  provider composition.
+- [UPDATE] Example app now demonstrates feature toggling via
+  `ArcaneFeatureFlagProvider` to highlight scope-based rebuilds.
 
-### Logging Service (ArcaneLogger) Updates
+### Theme Service
 
-- [FIX] `logStream` no longer closes when an individual listener cancels
-  (prevents stale stream state during widget lifecycle changes and hot reload
-  flows).
-- [NEW] Added explicit `dispose` cleanup for logger stream resources.
-
-### Theme (ArcaneTheme) Updates
-
+- [CHANGE] Renamed `ArcaneReactiveTheme` to `ArcaneThemeService` for clearer
+  naming.
+- [NEW] Added backward compatibility typedef:
+  `typedef ArcaneReactiveTheme = ArcaneThemeService`.
+- [FIX] Theme initialization now respects `ThemeMode.system` and initializes
+  `ThemeData` using the effective brightness.
+- [FIX] `ArcaneThemeSwitcher` now initializes theme state once via
+  `setInitialTheme(context)`.
 - [FIX] Reactive theme stream controllers now close only during service dispose,
   preventing stream shutdown when a single subscriber cancels.
+- [UPDATE] README now documents `ArcaneThemeService` naming.
 
-### Test Coverage Updates
+### Arcane Logger
 
-- [NEW] Added regression tests for stream listener cancellation and
-  re-subscription in logging, theme, feature flags, and authentication.
-
-### Documentation and Example Updates
-
-- [UPDATE] README now documents stream APIs for authentication, feature flags,
-  logging, and reactive theme, including subscription lifecycle patterns.
-- [UPDATE] Example README now includes run instructions and references for
-  stream lifecycle usage in the demo app.
-
-### Logging Service (Upcoming Contract Changes)
-
+- [NEW] Added `logStream` for realtime log subscriptions.
+- [NEW] Added explicit `dispose` cleanup for logger stream resources.
 - [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
   initialization state.
 - [NEW] Added optional lifecycle capability via `LoggingInitializable` and
@@ -46,10 +74,17 @@
 - [CHANGE] `initializeInterfaces()` now initializes only interfaces that
   implement `LoggingInitializable`; other interfaces are skipped.
 
-#### Migration (LoggingInterface Contract)
+#### Migration Steps (LoggingInterface)
 
-- For simple loggers (debug console style), remove `initialized`/`init`
-   boilerplate.
+1. Remove `initialized` and `init` from interfaces that do not require startup
+  work.
+2. If an interface requires startup/lifecycle management, add
+  `LoggingInitializationMixin` (or implement `LoggingInitializable`) and move
+  setup logic into `init()`.
+3. Update `log(...)` implementations to guard behavior with `initialized` only
+  for interfaces that opted into initialization.
+4. Run tests to verify interface registration and logging behavior still match
+  expectations.
 
 Before:
 
@@ -95,91 +130,6 @@ class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
 ```
 
 - If desired, adopt `feature` for destination-aware filtering in interceptors.
-
-## 2.0.0
-
-### Arcane
-
-- [FIX] The `Arcane` class is now `abstract`
-
-### ArcaneEnvironment
-
-- [CHANGE] The dependency on `flutter_bloc` has been removed.
-- [CHANGE] The feature has been completely rewritten as an inherited widget, rather than using a `Cubit`.
-- [NEW] The `ArcaneEnvironment` widget now includes the `maybeOf(context)` and `of(context)` service locators.
-- [NEW] An `ArcaneEnvironmentProvider` widget has been added. This is used by `ArcaneApp` but can also be used independently when not using the `ArcaneApp` widget.
-- [BREAKING] The locator for `ArcaneEnvironment` has been changed from `context.read<ArcaneEnvironment>()` to `ArcaneEnvironment.of(context)`
-- [BREAKING] Reading the current environment has been changed from `context.read<ArcaneEnvironment>().state` to `ArcaneEnvironment.of(context).environment`;
-
-### ArcaneServiceProvider
-
-- [NEW] Added a new `ArcaneServiceProvider.maybeOf(context)` getter which returns a nullable `ArcaneServiceProvider` instance.
-- [NEW] `ArcaneServiceProvider` now includes a `serviceOfType<T>(context)` getter to retrieve a nullable registered service instance.
-- [NEW] An `addService` method was added to `ArcaneServiceProvider`.
-- [NEW] A `removeService` method was added to `ArcaneServiceProvider`.
-- [NEW] A `setServices` method was added to `ArcaneServiceProvider`. Invoking this method with a list of `ArcaneService` instances will replace all existing services in the `ArcaneServiceProvider`.
-- [DEPRECATED] `context.serviceOfType<T>` has been deprecated in favor of `context.service<T>`.
-- [NEW] `context.requiredService<T>` has been added to provide a mechanism for ensuring a particular service has been registered.
-- [NEW] Added `ArcaneService.ofType<T>(context)` and `ArcaneService.requiredOfType<T>(context)` locators, returning a nullable and non-nullable instance of a given service, respectively.
-- [BREAKING] Renamed `serviceInstances` to `registeredServices`.
-
-### Authentication Service (ArcaneAuth)
-
-- [FIX] Switching between `Environment.normal` and `Environment.debug` now correctly notifies subscribers
-- [BREAKING] Switching between environments now remembers the previous authentication status (e.g., switching to debug mode and then back to normal mode will now remember whether you were authenticated or unauthenticated in normal mode when you switched to debug mode.)
-
-### Feature Flags Service (ArcaneFeatureFlags)
-
-- [NEW] A `reset` method has been added, which will remove all enabled features and de-initialize the service.
-
-### Logging Service (ArcaneLogger)
-
-- [NEW] A `logStream` has been added. This will stream all log messages that are sent to `ArcaneLogger`. These messages are not processed by any registered `LoggingInterface`.
-- [BREAKING] Invoking the `log` method no longer throws an exception if `ArcaneLogger` has not been initialized. Log messages will always be sent to the `logStream` and will only be sent to the registered `LoggingInterface`s if the `init` method has ben invoked.
-- [FIX] Automatic file and line number detection has been improved, both in terms of performance and in reliability.
-- [NEW] In addition to the existing `registerInterfaces` method, a new `registerInterface` method has been added.
-- [NEW] The following methods have been added: `unregisterInterface`, `unregisterInterfaces`, and `unregisterAllInterfaces`.
-- [NEW] Added a `reset` method that clears all registered interfaces, clears all persistent metadata, and de-initializes `ArcaneLogger`
-- [BREAKING] Added a `skipAutodetection` option (defaults to `false`) when invoking the `log` method. When set to `true`, automatic file and line number detection, as well as automatic module and method detection will not be performed (the module and method can still be added as properties). Skipping autodetection may help to increase performance, as a `StackTrace` is no longer generated and parsed. This property will need to be added to existing `LoggingInterface` implementations.
-
-### Theme (ArcaneTheme)
-
-- [NEW] Added `themeMode` extension to `BuildContext` to get the current `ThemeMode` (e.g., light/dark)
-- [BREAKING] Completely rewrote `ArcaneReactiveTheme`
-- [NEW] Added the `ArcaneThemeSwitcher` widget
-
-#### ArcaneReactiveTheme
-
-- [NEW] The `isFollowingSystemTheme` getter has been added.
-- [NEW] The `themeModeChanges` getter will stream events when the `ThemeMode` changes (e.g., light/dark)
-- [NEW] The `themeDataChanges` getter will stream events when the current `ThemeData` changes
-- [NEW] The `systemThemeMode` getter will return the OS-level brightness (e.g., light/dark)
-- [BREAKING] The `currentMode` getter was renamed to `currentThemeMode`
-- [NEW] The `currentTheme` getter was added to retrieve the current `ThemeData`.
-- [BREAKING] The `systemTheme` getter was replaced by the `systemThemeMode` getter
-- [NEW] A `currentModeOf(context)` getter was added. Using this value will trigger a rebuild when the mode changes.
-- [CHANGE] The `switchTheme` method now (optionally) takes in a `ThemeMode` parameter. If it is omitted, the new mode will be automatically determined.
-- [FIX] The `followSystemTheme` method will now correctly trigger widget rebuilds under the correct circumstances.
-- [FIX] Invoking the `setDarkTheme` and `setLightTheme` methods will trigger widget rebuilds under the correct circumstances.
-- [BREAKING] In order to enable following the system brightness changes, the `Arcane.theme.followSystemTheme(context)`/`ArcaneReactiveTheme.I.followSystemTheme(context)` method will need to be invoked once.
-- [NEW] When manually switching from following the system theme to a specific theme (e.g., `switchTheme()`), the system theme will no longer be followed. To follow the system theme once again, the `followSystemTheme(context)` method should be invoked.
-
-#### ArcaneThemeSwitcher
-
-- [NEW] This new widget will, when added to the widget tree, trigger rebuilds when the theme mode or theme style is updated via `ArcaneTheme`/`ArcaneReactiveTheme`.
-- [NEW] This widget has been added to `ArcaneApp`.
-
-### Testing
-
-- [NEW] Tests have been written for much of the framework.
-
-### Example
-
-- [FIX] The example has been completely reworked. It now includes examples of all features that Arcane has to offer.
-
-### Misc
-
-- [FIX] Dartdoc comments have been added throughout the framework where they were previously missing.
 
 ## 1.2.5
 

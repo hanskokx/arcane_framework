@@ -37,6 +37,12 @@ Key patterns shown in the app include:
 - Subscribing to `Arcane.logger.logStream` in `initState`
 - Canceling subscriptions in `dispose`
 - Rebuilding UI from stream and notifier changes
+- Rebuilding UI from `ArcaneFeatureFlagProvider.of(context)` dependencies
+- Using `context.featureFlags` convenience access in widgets
+
+`ArcaneApp` composes built-in providers/switchers for Arcane services,
+feature flags, environment, and theme updates, and this example demonstrates
+all of them working together.
 
 Use this app as a reference for combining Arcane streams and `ValueNotifier`
 listeners in the same codebase.

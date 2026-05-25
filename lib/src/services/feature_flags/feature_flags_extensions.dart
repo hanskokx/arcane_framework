@@ -3,7 +3,7 @@ part of "feature_flags_service.dart";
 /// An extension on `Enum` to manage feature toggles.
 ///
 /// This extension provides a convenient way to enable, disable, and check the status
-/// of feature flags associated with enum values. It interacts with the `ArcaneFeatureFlags`
+/// of feature flags associated with enum values. It interacts with the `ArcaneFeatureFlagService`
 /// system to manage these feature flags at runtime.
 extension FeatureToggles on Enum {
   /// Returns `true` if the feature represented by this enum is currently enabled.
@@ -31,7 +31,7 @@ extension FeatureToggles on Enum {
   /// Enables the feature represented by this enum.
   ///
   /// If the feature is already enabled, this method has no effect. It interacts with
-  /// the `ArcaneFeatureFlags` system to enable the feature.
+  /// the `ArcaneFeatureFlagService` system to enable the feature.
   ///
   /// Example:
   /// ```dart
@@ -42,7 +42,7 @@ extension FeatureToggles on Enum {
   /// Disables the feature represented by this enum.
   ///
   /// If the feature is already disabled, this method has no effect. It interacts with
-  /// the `ArcaneFeatureFlags` system to disable the feature.
+  /// the `ArcaneFeatureFlagService` system to disable the feature.
   ///
   /// Example:
   /// ```dart

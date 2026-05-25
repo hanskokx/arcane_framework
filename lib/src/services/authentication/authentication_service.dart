@@ -36,7 +36,11 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// Stream of authentication status updates.
   Stream<AuthenticationStatus> get statusChanges => I._statusController.stream;
 
-  /// Returns the current `AuthenticationStatus`.
+  /// Returns the current `AuthenticationStatus` as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [notifier] (for `ValueListenableBuilder`) or
+  /// [statusChanges] (for streams) when you need reactive updates.
   ///
   /// Available values:
   /// - `authenticated`: The user has successfully authenticated and is logged in.
@@ -105,19 +109,13 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeSet,
   }) async {
-    try {
-      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+    final Environment previousEnvironment = Arcane.environment.environment;
 
-      final Environment previousEnvironment = arcaneEnvironment.environment;
+    if (previousEnvironment == Environment.debug) return;
 
-      if (previousEnvironment == Environment.debug) return;
+    Arcane.environment.enableDebugMode();
 
-      arcaneEnvironment.enableDebugMode();
-
-      if (onDebugModeSet != null) await onDebugModeSet();
-    } catch (e) {
-      rethrow;
-    }
+    if (onDebugModeSet != null) await onDebugModeSet();
   }
 
   /// Enables the normal environment.
@@ -127,19 +125,13 @@ class ArcaneAuthenticationService extends ArcaneService {
     BuildContext context, {
     Future<void> Function()? onDebugModeUnset,
   }) async {
-    try {
-      final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+    final Environment previousEnvironment = Arcane.environment.environment;
 
-      final Environment previousEnvironment = arcaneEnvironment.environment;
+    if (previousEnvironment == Environment.normal) return;
 
-      if (previousEnvironment == Environment.normal) return;
+    Arcane.environment.disableDebugMode();
 
-      arcaneEnvironment.disableDebugMode();
-
-      if (onDebugModeUnset != null) await onDebugModeUnset();
-    } catch (_) {
-      throw Exception("No ArcaneEnvironment found in BuildContext");
-    }
+    if (onDebugModeUnset != null) await onDebugModeUnset();
   }
 
   /// Sets `status` to `AuthenticationStatus.authenticated`.

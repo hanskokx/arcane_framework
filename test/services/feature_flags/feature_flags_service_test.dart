@@ -2,16 +2,16 @@ import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {
-  group("ArcaneFeatureFlags", () {
-    late ArcaneFeatureFlags featureFlags;
+  group("ArcaneFeatureFlagService", () {
+    late ArcaneFeatureFlagService featureFlags;
 
     setUp(() {
-      featureFlags = ArcaneFeatureFlags.I;
+      featureFlags = ArcaneFeatureFlagService.I;
       Arcane.features.reset();
     });
 
     test("singleton instance is consistent", () {
-      expect(identical(ArcaneFeatureFlags.I, featureFlags), true);
+      expect(identical(ArcaneFeatureFlagService.I, featureFlags), true);
     });
 
     group("feature management", () {

@@ -31,13 +31,14 @@ and service management.
 - **Service Management**: Centralized access to multiple services (logging,
   authentication, theming, etc.).
 - **Feature Flags**: Dynamically enable or disable features using
-  `ArcaneFeatureFlags`.
+  `ArcaneFeatureFlagService`.
 - **Logging**: Easily log messages with metadata, stack traces, and different
   log levels via `ArcaneLogger`.
 - **Authentication**: Built-in support for handling user authentication
   workflows.
 - **Dynamic Theming**: Switch between light and dark themes with
-  `ArcaneReactiveTheme`.
+  `ArcaneThemeService` (with `ArcaneReactiveTheme` kept as a deprecated
+  compatibility typedef).
 - **Realtime Streams**: In addition to `ValueNotifier`s, core services expose
   broadcast streams for reactive consumers.
 
@@ -51,8 +52,9 @@ To use Arcane Framework in your Dart or Flutter project, follow these steps:
     flutter pub add arcane_framework
     ```
 
- 2. (optional) Wrap your `MaterialApp` or `CupertinoApp` with the `ArcaneApp`
-    Widget:
+ 2. (optional) Wrap your `MaterialApp` or `CupertinoApp` with `ArcaneApp`.
+   `ArcaneApp` wires up Arcane's built-in app-level providers for services,
+   feature flags, environment, and theme updates:
 
     ```dart
     import 'package:arcane_framework/arcane_framework.dart';
@@ -93,9 +95,11 @@ services:
   can instead use this widget directly.
 - The `service<T>` and `requiredService<T>` extensions on `BuildContext`:
   nullable and non-nullable getters used to locate a given `ArcaneService` via
-  `BuildContext`. **Note**: Use of these extensions requires that an
-  `ArcaneServiceProvider` widget is in your widget tree, either by adding it
-  directly or by using the `ArcaneApp` widget.
+  `BuildContext`. **Note**: For app-defined services, these lookups require an
+  `ArcaneServiceProvider` in the widget tree. For Arcane built-in singleton
+  services (such as `Arcane.auth`, `Arcane.features`, `Arcane.theme`, and
+  `Arcane.environment`), lookups fall back to built-ins even when no provider
+  is available.
 
 #### Defining an example `ArcaneService`
 
@@ -164,6 +168,10 @@ Unregistering an already registered `ArcaneService` is as simple as:
 ArcaneServiceProvider.of(context).removeService<FavoriteColorService>()
 ```
 
+When both a provider-registered service and an Arcane built-in singleton match
+the same requested type, provider-registered services take precedence for
+`context.service<T>()` and `context.requiredService<T>()`.
+
 #### Locating an `ArcaneService`
 
 There are numerous ways to locate a registered `ArcaneService`. Feel free to use
@@ -230,7 +238,7 @@ utilized. One is limited only by their imagination!
 
 ### Feature Flags
 
-You can easily manage feature flags using the `ArcaneFeatureFlags` built-in
+You can easily manage feature flags using the `ArcaneFeatureFlagService` built-in
 service. Feature flags are useful for enabling or disabling different parts of
 your application under different circumstances. For example, you may want to
 enable a new feature only once it has finished development and testing, while
@@ -268,7 +276,11 @@ void main() {
       if (feature.enabledAtStartup) Arcane.features.enableFeature(feature);
     }
 
-    runApp(const ArcaneApp());
+    runApp(
+      ArcaneApp(
+        child: MainApp(),
+      ),
+    );
   }
 ```
 
@@ -302,6 +314,9 @@ flag service:
 final List<Enum> enabledFeatures = Arcane.features.enabledFeatures;
 ```
 
+`enabledFeatures` is a snapshot read. Reading it does not subscribe to updates
+and does not trigger widget rebuilds.
+
 It is also possible to add a listener to watch for changes in the enabled
 features.
 
@@ -329,6 +344,27 @@ void initState() {
 void dispose() {
   subscription.cancel();
   super.dispose();
+}
+```
+
+When using `ArcaneApp`, you can also depend on feature flags via
+`context.featureFlags`. This resolves to the nearest
+`ArcaneFeatureFlagProvider` and widgets that read it rebuild automatically when
+feature flags change.
+
+```dart
+class FeatureGate extends StatelessWidget {
+  const FeatureGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final flags = context.featureFlags;
+    if (flags.isDisabled(Feature.awesomeFeature)) {
+      return const SizedBox.shrink();
+    }
+
+    return const Text("Awesome feature enabled");
+  }
 }
 ```
 
@@ -752,11 +788,11 @@ class EnvironmentSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ArcaneEnvironment arcaneEnvironment = ArcaneEnvironment.of(context);
+    final ArcaneEnvironmentService environment = Arcane.environment;
 
     return ElevatedButton(
       onPressed: () {
-        arcaneEnvironment.setEnvironment(staging);
+        environment.setEnvironment(staging);
       },
       child: const Text("Use staging"),
     );
@@ -766,6 +802,10 @@ class EnvironmentSwitcher extends StatelessWidget {
 
 `enableDebugMode()` and `disableDebugMode()` are still available convenience
 helpers that map to the built-in debug and normal environments.
+
+`ArcaneEnvironment` and `ArcaneEnvironmentProvider` are still available for
+backward compatibility, but are deprecated in favor of
+`Arcane.environment`/`ArcaneEnvironmentService`.
 
 Authentication status is intentionally separate from environment. Switching
 environments does not change `AuthenticationStatus`.

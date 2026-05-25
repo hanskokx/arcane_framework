@@ -14,6 +14,7 @@ void main() {
 
       // Initialize the service
       await ArcaneAuthenticationService.I.reset();
+      Arcane.environment.reset();
 
       when(() => authInterface.init()).thenAnswer((_) async {});
 
@@ -108,6 +109,30 @@ void main() {
         equals(Environment.debug),
       );
     });
+
+    testWidgets(
+      "setDebug and setNormal use Arcane.environment without provider ancestry",
+      (WidgetTester tester) async {
+        late BuildContext capturedContext;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) {
+                capturedContext = context;
+                return Container();
+              },
+            ),
+          ),
+        );
+
+        await ArcaneAuthenticationService.I.setDebug(capturedContext);
+        expect(Arcane.environment.environment, Environment.debug);
+
+        await ArcaneAuthenticationService.I.setNormal(capturedContext);
+        expect(Arcane.environment.environment, Environment.normal);
+      },
+    );
 
     testWidgets("setNormal disables debug mode", (WidgetTester tester) async {
       late BuildContext capturedContext;

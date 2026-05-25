@@ -1,4 +1,7 @@
-part of "reactive_theme_service.dart";
+import "package:flutter/material.dart";
+
+import "arcane_theme.dart";
+import "theme_service.dart";
 
 /// An extension on `BuildContext` to check the current system dark mode setting.
 ///
@@ -17,5 +20,13 @@ extension DarkMode on BuildContext {
   bool get isDarkMode {
     final brightness = MediaQuery.platformBrightnessOf(this);
     return brightness == Brightness.dark;
+  }
+}
+
+extension ArcaneThemeContext on BuildContext {
+  /// Get the current theme mode from the nearest ArcaneThemeInherited widget
+  ThemeMode get themeMode {
+    return ArcaneTheme.of(this)?.themeMode ??
+        ArcaneReactiveTheme.I.currentThemeMode;
   }
 }

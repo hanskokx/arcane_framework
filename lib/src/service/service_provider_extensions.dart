@@ -20,12 +20,12 @@ extension ServiceProviderExtension on BuildContext {
   /// final myService = context.service<MyService>();
   /// ```
   T? service<T extends ArcaneService>() {
-    // First check built-in services
-    final builtInService = Arcane.services.whereType<T>().firstOrNull;
-    if (builtInService != null) return builtInService;
+    // First check provider-registered services so app-specific overrides win.
+    final providerService = ArcaneServiceProvider.serviceOfType<T>(this);
+    if (providerService != null) return providerService;
 
-    // Then check provider
-    return ArcaneServiceProvider.serviceOfType<T>(this);
+    // Fall back to built-in services.
+    return Arcane.services.whereType<T>().firstOrNull;
   }
 
   /// Finds and returns the `ArcaneService` instance of type `T` that has been registered
@@ -46,6 +46,6 @@ extension ServiceProviderExtension on BuildContext {
   /// Legacy method to maintain backward compatibility.
   ///
   /// Prefer using `service<T>()` instead.
-  @Deprecated("Use service<T>() instead")
+  @Deprecated("Deprecated in 2.0.0. Use service<T>() instead")
   T? serviceOfType<T extends ArcaneService>() => service<T>();
 }

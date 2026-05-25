@@ -1,5 +1,7 @@
-import "package:arcane_framework/arcane_framework.dart";
+import "package:arcane_framework/src/arcane.dart";
 import "package:flutter/widgets.dart";
+
+import "environment_interface.dart";
 
 /// An `InheritedWidget` that provides access to the application environment.
 ///
@@ -75,10 +77,34 @@ class ArcaneEnvironmentProvider extends StatefulWidget {
 class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   late Environment _environment;
 
+  void _handleEnvironmentChange() {
+    if (!mounted) return;
+
+    final nextEnvironment = Arcane.environment.environment;
+    if (nextEnvironment == _environment) return;
+
+    setState(() {
+      _environment = nextEnvironment;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _environment = widget.environment;
+    _environment = Arcane.environment.environment;
+
+    if (_environment != widget.environment) {
+      Arcane.environment.setEnvironment(widget.environment);
+      _environment = Arcane.environment.environment;
+    }
+
+    Arcane.environment.notifier.addListener(_handleEnvironmentChange);
+  }
+
+  @override
+  void dispose() {
+    Arcane.environment.notifier.removeListener(_handleEnvironmentChange);
+    super.dispose();
   }
 
   /// Enables debug mode by setting the environment to `Environment.debug`.
@@ -94,10 +120,7 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   }
 
   void setEnvironment(Environment environment) {
-    if (_environment == environment) return;
-    setState(() {
-      _environment = environment;
-    });
+    Arcane.environment.setEnvironment(environment);
   }
 
   @override

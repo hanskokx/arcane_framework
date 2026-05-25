@@ -1,22 +1,29 @@
 import "dart:async";
 
-import "package:arcane_framework/arcane_framework.dart";
+import "package:arcane_framework/src/service/arcane_service.dart";
 import "package:flutter/material.dart";
 
-part "reactive_theme_extensions.dart";
+import "theme_extensions.dart";
+
+@Deprecated(
+  "Deprecated in 2.0.0. "
+  "ArcaneReactiveTheme has been renamed to ArcaneThemeService for clarity. "
+  "Please use ArcaneThemeService instead.",
+)
+typedef ArcaneReactiveTheme = ArcaneThemeService;
 
 /// A singleton service that manages theme switching and customization for the application.
 ///
-/// `ArcaneReactiveTheme` allows switching between light and dark themes and provides
+/// `ArcaneThemeService` allows switching between light and dark themes and provides
 /// methods to customize the themes. The current theme mode can be accessed, and the
 /// theme can be switched at runtime.
 ///
 /// System theme changes are detected by the `ArcaneApp` widget, which ensures
 /// theme updates happen automatically when the device theme changes.
-class ArcaneReactiveTheme extends ArcaneService {
-  ArcaneReactiveTheme._internal();
-  static final ArcaneReactiveTheme _instance = ArcaneReactiveTheme._internal();
-  static ArcaneReactiveTheme get I => _instance;
+class ArcaneThemeService extends ArcaneService {
+  ArcaneThemeService._internal();
+  static final ArcaneThemeService _instance = ArcaneThemeService._internal();
+  static ArcaneThemeService get I => _instance;
 
   // ************************************************************************ //
   // * MARK: System theme
@@ -44,13 +51,18 @@ class ArcaneReactiveTheme extends ArcaneService {
   // ************************************************************************ //
   // * MARK: ThemeMode
   // ************************************************************************ //
-  /// Returns the current `ThemeMode` being used by `ArcaneReactiveTheme`.
+  /// Returns the current `ThemeMode` being used by `ArcaneThemeService`.
   /// Will automatically update when the theme changes.
   ThemeMode currentModeOf(BuildContext context) => context.themeMode;
 
-  /// The currently active theme mode (light or dark).
+  /// The currently active theme mode (light, dark, or system) as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [themeModeChanges] when you need reactive updates.
+  ///
+  /// If `ThemeMode.system`, the effective theme is determined by the platform brightness.
   ThemeMode get currentThemeMode => _currentThemeMode;
-  ThemeMode _currentThemeMode = ThemeMode.light;
+  ThemeMode _currentThemeMode = ThemeMode.system;
 
   /// Stream of `ThemeMode` changes that can be listened to for reactive UI updates.
   Stream<ThemeMode> get themeModeChanges => I._themeModeController.stream;
@@ -65,7 +77,10 @@ class ArcaneReactiveTheme extends ArcaneService {
   // ************************************************************************ //
   // * MARK: ThemeData
   // ************************************************************************ //
-  /// The currently active theme style.
+  /// The currently active theme style as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [themeDataChanges] when you need reactive updates.
   ThemeData get currentTheme => _currentTheme;
   ThemeData _currentTheme = ThemeData();
 
@@ -82,14 +97,20 @@ class ArcaneReactiveTheme extends ArcaneService {
   // ************************************************************************ //
   // * MARK: Light/Dark theme
   // ************************************************************************ //
-  /// Returns the current dark theme `ThemeData`.
+  /// Returns the current dark theme `ThemeData` as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [darkTheme] when you need reactive updates.
   ThemeData get dark => _darkTheme.value;
 
   /// ValueNotifier for the dark theme that can be observed for changes.
   ValueNotifier<ThemeData> get darkTheme => I._darkTheme;
   final ValueNotifier<ThemeData> _darkTheme = ValueNotifier(ThemeData.dark());
 
-  /// Returns the current light theme `ThemeData`.
+  /// Returns the current light theme `ThemeData` as a snapshot value.
+  ///
+  /// Reading this getter does not subscribe to changes and does not trigger
+  /// widget rebuilds. Use [lightTheme] when you need reactive updates.
   ThemeData get light => _lightTheme.value;
 
   /// ValueNotifier for the light theme that can be observed for changes.
@@ -106,13 +127,13 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.switchTheme();
+  /// ArcaneThemeService.I.switchTheme();
   /// // or
-  /// ArcaneReactiveTheme.I.switchTheme(themeMode: ThemeMode.dark);
+  /// ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
   /// // or
   /// Arcane.theme.switchTheme(themeMode: ThemeMode.light);
   /// ```
-  ArcaneReactiveTheme switchTheme({ThemeMode? themeMode}) {
+  ArcaneThemeService switchTheme({ThemeMode? themeMode}) {
     _followingSystemTheme = false;
 
     if (themeMode != null) {
@@ -134,11 +155,11 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.followSystemTheme(context);
+  /// ArcaneThemeService.I.followSystemTheme(context);
   /// // or
   /// Arcane.theme.followSystemTheme(context);
   /// ```
-  ArcaneReactiveTheme followSystemTheme(BuildContext context) {
+  ArcaneThemeService followSystemTheme(BuildContext context) {
     _followingSystemTheme = true;
 
     _currentSystemThemeMode =
@@ -160,9 +181,9 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.setDarkTheme(customDarkTheme);
+  /// ArcaneThemeService.I.setDarkTheme(customDarkTheme);
   /// ```
-  ArcaneReactiveTheme setDarkTheme(ThemeData theme) {
+  ArcaneThemeService setDarkTheme(ThemeData theme) {
     _darkTheme.value = theme;
     _themeController.add(theme);
     _currentTheme = theme;
@@ -177,14 +198,33 @@ class ArcaneReactiveTheme extends ArcaneService {
   ///
   /// Example:
   /// ```dart
-  /// ArcaneReactiveTheme.I.setLightTheme(customLightTheme);
+  /// ArcaneThemeService.I.setLightTheme(customLightTheme);
   /// ```
-  ArcaneReactiveTheme setLightTheme(ThemeData theme) {
+  ArcaneThemeService setLightTheme(ThemeData theme) {
     _lightTheme.value = theme;
     _themeController.add(theme);
     _currentTheme = theme;
 
     return I;
+  }
+
+  /// Should be called on first build to ensure the initial theme matches the platform brightness.
+  void setInitialTheme(BuildContext context) {
+    // Only update if the theme is still the default (not user-provided)
+    if (_currentTheme != ThemeData.light() &&
+        _currentTheme != ThemeData.dark()) {
+      return;
+    }
+    switch (_currentThemeMode) {
+      case ThemeMode.system:
+        final isDark =
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+        _currentTheme = isDark ? ThemeData.dark() : ThemeData.light();
+      case ThemeMode.dark:
+        _currentTheme = ThemeData.dark();
+      case ThemeMode.light:
+        _currentTheme = ThemeData.light();
+    }
   }
 
   /// Resets the theme service to its default state.
