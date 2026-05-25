@@ -89,7 +89,7 @@ void main() {
     Arcane.logger.reset();
     myInterface = TestLoggingInterface("primary");
     prefixInterceptor = LogInterceptor(
-      (event, {required context}) {
+      (event, context) {
         return event.copyWith(message: "[global] ${event.message}");
       },
     );
@@ -208,7 +208,7 @@ void main() {
 
       test("interface interceptors can be registered at runtime", () async {
         final LogInterceptor dropForPrimary = LogInterceptor(
-          (event, {required LogInterceptorContext context}) {
+          (event, context) {
             if ((context.interface as TestLoggingInterface).name == "primary") {
               return null;
             }
@@ -315,11 +315,11 @@ void main() {
 
       test("global interceptors run in registration order", () async {
         Arcane.logger.registerInterceptors([
-          LogInterceptor((event, {required context}) {
+          LogInterceptor((event, context) {
             expect(context.interface, same(myInterface));
             return event.copyWith(message: "${event.message}:first");
           }),
-          LogInterceptor((event, {required context}) {
+          LogInterceptor((event, context) {
             expect(context.interface, same(myInterface));
             return event.copyWith(message: "${event.message}:second");
           }),
@@ -333,7 +333,7 @@ void main() {
       test("global interceptors can drop events for all interfaces", () async {
         await Arcane.logger.registerInterface(myInterface);
         Arcane.logger.registerInterceptor(
-          LogInterceptor((event, {required context}) => null),
+          LogInterceptor((event, context) => null),
         );
 
         Arcane.log(logMessage);
@@ -359,7 +359,7 @@ void main() {
         final TestLoggingInterface secondaryInterface =
             TestLoggingInterface("secondary");
         final LogInterceptor allowPrimaryOnly = LogInterceptor(
-          (event, {required LogInterceptorContext context}) {
+          (event, context) {
             final String name =
                 (context.interface as TestLoggingInterface).name;
             return name == "primary" ? event : null;
@@ -382,7 +382,7 @@ void main() {
             TestLoggingInterface("secondary");
 
         Arcane.logger.registerInterceptor(
-          LogInterceptor((event, {required context}) {
+          LogInterceptor((event, context) {
             final TestLoggingInterface currentInterface =
                 context.interface! as TestLoggingInterface;
             return event.copyWith(
@@ -412,7 +412,7 @@ void main() {
             TestLoggingInterface("secondary");
 
         Arcane.logger.registerInterceptor(
-          LogInterceptor((event, {required context}) {
+          LogInterceptor((event, context) {
             event.metadata?["mutatedBy"] =
                 (context.interface as TestLoggingInterface).name;
             return event;
@@ -444,7 +444,7 @@ void main() {
         await Arcane.logger.registerInterface(
           myInterface,
           interceptors: [
-            LogInterceptor((event, {required context}) => null),
+            LogInterceptor((event, context) => null),
           ],
         );
 

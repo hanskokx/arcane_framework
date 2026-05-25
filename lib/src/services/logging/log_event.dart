@@ -1,6 +1,6 @@
 part of "logging_service.dart";
 
-final class LogEvent {
+class LogEvent {
   static const Object _sentinel = Object();
 
   const LogEvent({

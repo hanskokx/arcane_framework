@@ -73,6 +73,12 @@
 - [NEW] Added optional `feature` tag to `LoggingInterface` via constructor.
 - [CHANGE] `initializeInterfaces()` now initializes only interfaces that
   implement `LoggingInitializable`; other interfaces are skipped.
+- [NEW] Added a `skipAutodetection` parameter to `Arcane.log` (defaults to
+  `false`) that, when enabled, skips detection of the `module`, `method`, and
+  file/line number where logs originated from.
+- [NEW] Added the `LogInterceptor` class which can (optionally) be added to
+  `ArcaneLogger` to pre-process log messages before they are sent to the
+  registered `ArcaneLoggingInterface`(s).
 
 #### Migration Steps (LoggingInterface)
 

@@ -6,9 +6,21 @@ import "package:example/interfaces/debug_auth_interface.dart";
 import "package:example/interfaces/debug_print_interface.dart";
 import "package:example/services/favorite_color_service.dart";
 import "package:example/theme/theme.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (kIsWeb) {
+    // Work around a Flutter web debug assertion where legacy raw key messages
+    // can arrive before key data and force an incompatible transit mode.
+    SystemChannels.keyEvent.setMessageHandler(
+      (_) async => <String, dynamic>{"handled": false},
+    );
+  }
+
   final DebugPrint debugPrintInterface = DebugPrint();
   final DebugAuthInterface debugAuthInterface = DebugAuthInterface();
 
@@ -21,7 +33,7 @@ Future<void> main() async {
   await Arcane.logger.registerInterface(
     debugPrintInterface,
     interceptors: [
-      LogInterceptor((event, {required context}) {
+      LogInterceptor((event, context) {
         if (context.interface is DebugPrint && Feature.logging.disabled) {
           return null;
         }
