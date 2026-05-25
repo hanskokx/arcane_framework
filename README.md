@@ -7,7 +7,7 @@
 
 The Arcane Framework is a powerful Dart package designed to provide a robust
 architecture for managing key application services such as logging,
-authentication, secure storage, feature flags, theming, and more. This framework
+authentication, feature flags, theming, and more. This framework
 is ideal for building scalable applications that require dynamic configuration
 and service management.
 
@@ -38,9 +38,9 @@ and service management.
   log levels via `ArcaneLogger`.
 - **Authentication**: Built-in support for handling user authentication
   workflows.
-- **Dynamic Theming**: Switch between light and dark themes with
-  `ArcaneThemeService` (with `ArcaneReactiveTheme` kept as a deprecated
-  compatibility typedef).
+- **Dynamic Theming**: Switch between light and dark themes and update theme
+  definitions on-the-fly with `ArcaneThemeService`.
+- **Extensible Service Definitions**: Implement your own `ArcaneService` services and leverage the inherent powers of Arcane.
 - **Realtime Streams**: In addition to `ValueNotifier`s, core services expose
   broadcast streams for reactive consumers.
 
@@ -153,9 +153,8 @@ appropriate:
 
 ```dart
 class FavoriteColorService extends ArcaneService {
-  FavoriteColorService._internal();
-  static final FavoriteColorService _instance = FavoriteColorService._internal();
-  static FavoriteColorService get I => _instance;
+
+  FavoriteColorService();
 
   final ValueNotifier<Color?> _notifier = ValueNotifier<Color?>(null);
   ValueNotifier<Color?> get notifier => _notifier;
@@ -182,7 +181,7 @@ singleton instance) to the `services` list directly:
 ```dart
 ArcaneApp(
   services: [
-    FavoriteColorService.I,
+    FavoriteColorService(),
   ],
   builder: (context, _) => MainApp(),
 ),
@@ -199,7 +198,7 @@ ArcaneApp(
 ),
 
 // Add the service at runtime
-ArcaneServiceProvider.of(context).addService(FavoriteColorService.I);
+ArcaneServiceProvider.of(context).addService(FavoriteColorService());
 ```
 
 Unregistering an already registered `ArcaneService` is as simple as:
@@ -408,6 +407,20 @@ class FeatureGate extends StatelessWidget {
 }
 ```
 
+Additional `BuildContext` helpers are also available:
+
+```dart
+final ArcaneFeatureFlagProvider? maybeFlags = context.maybeFeatureFlags;
+
+if (context.isFeatureEnabled(Feature.awesomeFeature)) {
+  // Feature is enabled
+}
+
+if (context.isFeatureDisabled(Feature.prettyOkFeature)) {
+  // Feature is disabled
+}
+```
+
 Note that it is possible to register multiple different `Enum` types in the
 feature flag service, should one have a need to do so.
 
@@ -475,7 +488,7 @@ final DebugConsole debugConsole = DebugConsole();
 await Arcane.logger.registerInterface(
   debugConsole,
   interceptors: [
-    LogInterceptor((event, {required LogInterceptorContext context}) {
+    LogInterceptor((event, context) {
       if (context.interface is DebugConsole && event.level == Level.debug) {
         return null;
       }
@@ -486,7 +499,7 @@ await Arcane.logger.registerInterface(
 );
 
 Arcane.logger.registerInterceptor(
-  LogInterceptor((event, {required context}) {
+  LogInterceptor((event, context) {
     return event.copyWith(
       metadata: {
         ...?event.metadata,
@@ -527,8 +540,16 @@ Arcane.log(
   level: Level.debug,
   module: "ModuleName",
   method: "MethodName",
-  metadata: {"key": "value", "attempt": 1},
+  metadata: {"key": "value", "attempt": "1"},
   stackTrace: StackTrace.current,
+);
+
+// Optional: skip automatic module/method/file-line detection.
+Arcane.log(
+  "Manual log routing",
+  module: "CustomModule",
+  method: "customMethod",
+  skipAutodetection: true,
 );
 ```
 
@@ -561,9 +582,9 @@ prefer, you can also define your own interceptor class by implementing
 
 ```dart
 final LogInterceptor redactSecrets = LogInterceptor((
-  event, {
-  required LogInterceptorContext context,
-}) {
+  event,
+  context,
+) {
   final Object? token = event.metadata?["token"];
   if (token == null) return event;
 
@@ -655,10 +676,14 @@ class DebugAuthInterface
       );
 
   @override
-  Future<Result<void, String>> logout() async {
+  Future<Result<void, String>> logout({
+    Future<void> Function()? onLoggedOut,
+  }) async {
     Arcane.log("Logging out");
 
     _isSignedIn = false;
+
+    if (onLoggedOut != null) await onLoggedOut();
 
     return Result.ok(null);
   }
@@ -743,7 +768,7 @@ class DebugAuthInterface
 
 
 // Register an interface to handle user authentication.
-await Arcane.auth.registerInterface(AuthProviderInterface.I);
+await Arcane.auth.registerInterface(DebugAuthInterface.I);
 ```
 
 Once your interface has been created and registered, you can use it to perform a
@@ -752,7 +777,7 @@ number of common authentication tasks:
 ```dart
 // Register an account using the ArcaneAuthAccountRegistration mixin
   final nextStep = await Arcane.auth.register<Credentials>(
-    input: ("email": "user@example.com", "password": "password123"),
+    input: (email: "user@example.com", password: "password123"),
   );
 
 // Confirm a newly registered account using the ArcaneAuthAccountRegistration mixin
@@ -779,12 +804,12 @@ final passwordResetFinished = await Arcane.auth.resetPassword(
 
 // Sign in with email and password
 final result = await Arcane.auth.login(
-  input: ("email": "user@example.com", "password": "password123")
+  input: (email: "user@example.com", password: "password123"),
   onLoggedIn: () => Arcane.log("User logged in"),
 );
 
 // Sign out
-await Arcane.auth.logout();
+await Arcane.auth.logOut();
 ```
 
 Authentication updates can also be consumed through streams:
@@ -877,35 +902,22 @@ void main() {
 From here, you can either follow the system theme:
 
 ```dart
-// Follow the system's theme mode
-class MainApp extends StatefulWidget {
+// ArcaneApp already enables system-follow behavior by default.
+class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
-  State<MainApp> createState() => _MainAppState();
-}
-
-class _MainAppState extends State<MainApp> {
-  @override
-  void didChangeDependencies() {
-    Arcane.theme.followSystemTheme(context);
-    super.didChangeDependencies();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ArcaneApp(
-      builder: (context, _) => MaterialApp(
-        theme: Arcane.theme.light,
-        darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.currentModeOf(context),
-      ),
+    return MaterialApp(
+      theme: Arcane.theme.light,
+      darkTheme: Arcane.theme.dark,
+      themeMode: Arcane.theme.currentModeOf(context),
     );
   }
 }
 ```
 
-or manually control the theme mode:
+You can also manually control the theme mode:
 
 ```dart
 // Manually control the theme mode
@@ -914,12 +926,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ArcaneApp(
-      builder: (context, _) => MaterialApp(
-        theme: Arcane.theme.light,
-        darkTheme: Arcane.theme.dark,
-        themeMode: Arcane.theme.currentModeOf(context),
-      ),
+    return MaterialApp(
+      theme: Arcane.theme.light,
+      darkTheme: Arcane.theme.dark,
+      themeMode: Arcane.theme.currentModeOf(context),
     );
   }
 }

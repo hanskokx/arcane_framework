@@ -7,12 +7,18 @@
 - [CHANGE] `Arcane.features`, `Arcane.auth`, `Arcane.theme`, and
   `Arcane.environment` now prefer the live `ArcaneApp` registry instance when
   available, then fall back to built-in singletons.
+- [BREAKING] `Arcane` is now a static utility surface (no instantiable
+  singleton constructor).
+- [BREAKING] Several `package:arcane_framework/src/...` import paths changed
+  (for example, `src/providers/...` -> `src/service/...` and
+  `src/services/reactive_theme/...` -> `src/services/theme/...`). Consumers
+  importing from `src` directly must update import paths.
 - [NEW] Added optional `ArcaneApp.builder` callback (TransitionBuilder style)
   for capturing provider-aware build contexts from within `ArcaneApp`.
 - [DEPRECATED] `ArcaneApp.child` is now deprecated in favor of
   `ArcaneApp.builder` (legacy child usage remains supported during migration).
-- [UPDATE] README and examples now show `ArcaneApp.builder` as the preferred
-  integration path, with migration guidance from `child`.
+- [DEPRECATED] `BuildContext.serviceOfType<T>()` is now deprecated in favor of
+  `BuildContext.service<T>()`.
 
 ### Environment Service
 
@@ -21,15 +27,53 @@
   `InheritedWidget`.
 - [NEW] Added `Arcane.environment` shortcut for direct environment access.
 - [NEW] Added environment service to `Arcane.services` built-in list.
-- [CHANGE] `ArcaneEnvironmentProvider` is now a `StatefulWidget`.
+- [CHANGE] `ArcaneEnvironmentProvider` is now a `StatefulWidget` instead of a
+  `StatelessWidget` with a `BlocProvider`.
 - [NEW] `ArcaneEnvironmentProvider` now provides methods for
   `enableDebugMode()`, `disableDebugMode()` and `setEnvironment()`.
+- [NEW] Added `environmentChanges` stream for realtime environment updates.
 
 ### Authentication Service
 
+- [BREAKING] `ArcaneAuthInterface.logout` now accepts optional
+  `onLoggedOut` callback parameters. `ArcaneAuthInterface` implementers must
+  update logout signature to accept optional `onLoggedOut`. See the migration
+  steps for further details.
 - [NEW] Added `statusChanges` stream to observe `AuthenticationStatus` updates.
 - [NEW] Added `signedInChanges` stream to observe sign-in state changes.
 - [FIX] Added stream lifecycle cleanup in `dispose` with safe lazy recreation.
+
+#### Migration Steps (ArcaneAuthInterface)
+
+1. Update `ArcaneAuthInterface` implementations to accept the new optional
+   `onLoggedOut` callback parameter in `logout(...)`.
+2. If your implementation performs cleanup side effects on logout, invoke
+   `onLoggedOut` when provided.
+3. Run tests to confirm your authentication adapter still satisfies your
+   login/logout flows.
+
+Before:
+
+```dart
+@override
+Future<Result<void, String>> logout() async {
+  // ...
+  return Result.ok(null);
+}
+```
+
+After:
+
+```dart
+@override
+Future<Result<void, String>> logout({
+  Future<void> Function()? onLoggedOut,
+}) async {
+  // ...
+  if (onLoggedOut != null) await onLoggedOut();
+  return Result.ok(null);
+}
+```
 
 ### Feature Flag Service
 
@@ -43,6 +87,8 @@
 - [NEW] Added `ArcaneFeatureFlagProvider` (`InheritedWidget`) and
   `ArcaneFeatureFlagsProvider` (`StatefulWidget`) for first-class feature-flag
   integration in the widget tree.
+- [DEPRECATED] `ArcaneFeatureFlagsScope` has been renamed to
+  `ArcaneFeatureFlagProvider`.
 - [NEW] Added `BuildContext` convenience accessors for feature flags, including
   `context.featureFlags`, `context.maybeFeatureFlags`,
   `context.isFeatureEnabled(...)`, and `context.isFeatureDisabled(...)`.
@@ -51,8 +97,6 @@
   `ArcaneFeatureFlagProvider.of(context)`.
 - [UPDATE] README now documents `ArcaneFeatureFlagProvider` and `ArcaneApp`
   provider composition.
-- [UPDATE] Example app now demonstrates feature toggling via
-  `ArcaneFeatureFlagProvider` to highlight scope-based rebuilds.
 
 ### Theme Service
 
@@ -62,8 +106,8 @@
   `typedef ArcaneReactiveTheme = ArcaneThemeService`.
 - [FIX] Theme initialization now respects `ThemeMode.system` and initializes
   `ThemeData` using the effective brightness.
-- [FIX] `ArcaneThemeSwitcher` now initializes theme state once via
-  `setInitialTheme(context)`.
+- [FIX] `ArcaneThemeSwitcher` now initializes system-follow behavior once on
+  first dependency resolution.
 - [FIX] `ArcaneThemeSwitcher` now defaults to `followSystemTheme(context)` when
   mounted under `ArcaneApp`, so system-follow is enabled by default and system
   brightness changes are handled framework-side (no app-level observer needed).
@@ -81,6 +125,8 @@
 - [FIX] Setting a theme (e.g., dark) while in the opposite mode (e.g., light) no
   longer changes the current brightness or rendered theme. Only the active
   mode's theme updates the rendered appearance.
+- [NEW] Added `themeModeChanges` and `themeDataChanges` streams for realtime
+  theme updates.
 
 ### Arcane Logger
 
@@ -156,6 +202,13 @@ class ExternalLogger extends LoggingInterface with LoggingInitializationMixin {
 ```
 
 - If desired, adopt `feature` for destination-aware filtering in interceptors.
+
+### Dependencies
+
+- [BREAKING] Upgraded `result_monad` from `^2.3.2` to `^4.0.0`.
+- [CHANGE] Removed direct `flutter_bloc` dependency.
+- [CHANGE] Updated `collection` from `^1.18.0` to `^1.19.0`.
+- [CHANGE] Relaxed `arcane_helper_utils` constraint from `^1.4.7` to `any`.
 
 ## 1.2.5
 
