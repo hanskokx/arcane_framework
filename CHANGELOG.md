@@ -1,4 +1,4 @@
-## 2.0.0
+## 2.0.1
 
 ### Arcane Framework
 
@@ -293,6 +293,10 @@ Arcane.log(
 - [CHANGE] Updated `result_monad` from `^2.3.2` to `^4.0.0`.
 - [CHANGE] Removed direct `flutter_bloc` dependency.
 - [CHANGE] Updated `collection` from `^1.18.0` to `^1.19.0`.
+
+## 2.0.0
+
+- Version redacted. Use v2.0.1.
 
 ## 1.2.7
 
