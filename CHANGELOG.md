@@ -1,3 +1,25 @@
+## 2.0.1
+
+### Arcane Logger
+
+- [BREAKING] `Arcane.logger.registerInterceptor(...)` is now type-scoped and
+  requires a target interface type via
+  `registerInterceptor<YourLoggingInterface>(...)`.
+- [NEW] Added explicit global interceptor APIs:
+  `registerGlobalInterceptor(...)`, `registerGlobalInterceptors(...)`,
+  `unregisterGlobalInterceptor(...)`, and `clearGlobalInterceptors()`.
+- [CHANGE] Type-scoped interceptors now apply to already-registered matching
+  interfaces and also to future interface registrations of matching type.
+
+#### Migration Steps (ArcaneLogger interceptors)
+
+1. Replace global `registerInterceptor(...)` calls with
+  `registerGlobalInterceptor(...)`.
+2. Replace interface-specific global interceptors that inspect
+  `context.interface` with `registerInterceptor<YourInterface>(...)`.
+3. Continue using registration-time `registerInterface(..., interceptors: ...)`
+  when interceptors should apply only to that specific interface instance.
+
 ## 2.0.0
 
 ### Arcane Framework

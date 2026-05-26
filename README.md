@@ -531,9 +531,9 @@ class AnalyticsLogger extends LoggingInterface {
   }
 }
 
-Arcane.logger.registerInterceptor(
+Arcane.logger.registerInterceptor<AnalyticsLogger>(
   LogInterceptor((event, context) {
-    if (context.interface is AnalyticsLogger && event.level == Level.debug) {
+    if (event.level == Level.debug) {
       return null;
     }
 
@@ -575,7 +575,7 @@ await Arcane.logger.registerInterface(
   debugConsole,
   interceptors: [
     LogInterceptor((event, context) {
-      if (context.interface is DebugConsole && event.level == Level.debug) {
+      if (event.level == Level.debug) {
         return null;
       }
 
@@ -584,7 +584,7 @@ await Arcane.logger.registerInterface(
   ],
 );
 
-Arcane.logger.registerInterceptor(
+Arcane.logger.registerGlobalInterceptor(
   LogInterceptor((event, context) {
     return event.copyWith(
       metadata: {
@@ -601,10 +601,11 @@ await Arcane.logger.initializeInterfaces();
 ```
 
 Global interceptors are evaluated for each registered interface, and interface
-interceptors run immediately after them for that same destination. Every
+interceptors run immediately after them for that same destination. Use
+`registerGlobalInterceptor(...)` for all interfaces, and
+`registerInterceptor<YourInterface>(...)` for one interface type. Every
 interceptor receives a `LogInterceptorContext` whose `interface` value is the
-current destination, which allows a single global interceptor to allow one
-interface to receive an event while dropping it for another.
+current destination.
 
 Returning `null` from an interceptor drops the event for the current scope.
 Returning a modified `LogEvent` allows you to rewrite the message, metadata,
@@ -665,9 +666,9 @@ void dispose() {
 ```
 
 You can also add and remove global interceptors after startup. Because every
-interceptor receives a `LogInterceptorContext`, a single global interceptor can
-still make interface-specific decisions by checking `context.interface`. If you
-prefer, you can also define your own interceptor class by implementing
+interceptor receives a `LogInterceptorContext`, global interceptors can still
+make interface-specific decisions when needed by checking `context.interface`.
+If you prefer, you can also define your own interceptor class by implementing
 `LogInterceptor` instead of using the callback constructor.
 
 ```dart
@@ -686,8 +687,8 @@ final LogInterceptor redactSecrets = LogInterceptor((
   );
 });
 
-Arcane.logger.registerInterceptor(redactSecrets);
-Arcane.logger.unregisterInterceptor(redactSecrets);
+Arcane.logger.registerGlobalInterceptor(redactSecrets);
+Arcane.logger.unregisterGlobalInterceptor(redactSecrets);
 ```
 
 If you prefer a reusable named type, you can also implement `LogInterceptor`
@@ -716,8 +717,8 @@ class RedactingLogInterceptor implements LogInterceptor {
 
 final LogInterceptor redactSecrets = RedactingLogInterceptor();
 
-Arcane.logger.registerInterceptor(redactSecrets);
-Arcane.logger.unregisterInterceptor(redactSecrets);
+Arcane.logger.registerGlobalInterceptor(redactSecrets);
+Arcane.logger.unregisterGlobalInterceptor(redactSecrets);
 ```
 
 Multiple logging interfaces and multiple interceptors can be registered
