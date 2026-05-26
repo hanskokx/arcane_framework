@@ -11,6 +11,10 @@ authentication, feature flags, theming, and more. This framework
 is ideal for building scalable applications that require dynamic configuration
 and service management.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ab314468-e039-4e6d-8919-5297658c2be3" alt="Arcane logo" width="500">
+</p>
+
 - [Arcane Framework](#arcane-framework)
   - [Features](#features)
   - [Installation](#installation)
