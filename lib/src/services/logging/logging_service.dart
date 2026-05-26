@@ -5,6 +5,7 @@ import "package:arcane_helper_utils/arcane_helper_utils.dart";
 part "log_event.dart";
 part "log_interceptor.dart";
 part "logging_enums.dart";
+part "logging_interceptors_service.dart";
 part "logging_interface.dart";
 
 /// A singleton class that manages logging to one or more logging interfaces
@@ -22,10 +23,8 @@ class ArcaneLogger {
   static ArcaneLogger get I => _instance;
 
   final List<_LoggingInterfaceRegistration> _interfaceRegistrations = [];
-
-  final List<LogInterceptor> _globalInterceptors = [];
-  final List<_TypeScopedInterceptorRegistration>
-      _typeScopedInterceptorRegistrations = [];
+  final LoggingInterceptorsService _interceptorService =
+      LoggingInterceptorsService.I;
 
   /// A list of registered logging interfaces.
   List<LoggingInterface> get interfaces => [
@@ -34,10 +33,8 @@ class ArcaneLogger {
           registration.interface,
       ];
 
-  /// A list of globally registered interceptors.
-  List<LogInterceptor> get interceptors => [
-        ...I._globalInterceptors,
-      ];
+  /// Interceptor service used to add, remove, and clear interceptors.
+  LoggingInterceptorsService get interceptors => I._interceptorService;
 
   final Map<String, String> _additionalMetadata = {};
 
@@ -274,16 +271,16 @@ class ArcaneLogger {
     for (final _LoggingInterfaceRegistration registration
         in I._interfaceRegistrations) {
       if (initialized) {
+        final List<LogInterceptor> interceptors =
+            I.interceptors.resolveForInterface(registration.interface);
+
         final LogEvent? interfaceEvent = _runInterceptors(
           event.copyWith(
             metadata: event.metadata == null
                 ? null
                 : Map<String, Object?>.from(event.metadata!),
           ),
-          interceptors: [
-            ...I._globalInterceptors,
-            ...registration.interceptors,
-          ],
+          interceptors: interceptors,
           context: LogInterceptorContext(interface: registration.interface),
         );
 
@@ -318,65 +315,17 @@ class ArcaneLogger {
   }) async {
     if (!initialized) await _init();
 
+    I.interceptors.registerForInterface(
+      loggingInterface,
+      interceptors ?? const <LogInterceptor>[],
+    );
+
     I._interfaceRegistrations.add(
       _LoggingInterfaceRegistration(
         interface: loggingInterface,
-        interceptors: [
-          ...I._typeScopedInterceptorsFor(loggingInterface),
-          ...?interceptors,
-        ],
       ),
     );
 
-    return I;
-  }
-
-  /// Registers an interceptor for interfaces matching [InterfaceType].
-  ///
-  /// This interceptor is attached to currently-registered interfaces matching
-  /// [InterfaceType], and is also applied to future registrations of the same
-  /// interface type.
-  ArcaneLogger registerInterceptor<InterfaceType extends LoggingInterface>(
-    LogInterceptor interceptor,
-  ) {
-    I._typeScopedInterceptorRegistrations.add(
-      _TypeScopedInterceptorRegistration(
-        interceptor: interceptor,
-        matcher: (LoggingInterface interface) => interface is InterfaceType,
-      ),
-    );
-
-    for (final _LoggingInterfaceRegistration registration
-        in I._interfaceRegistrations) {
-      if (registration.interface is InterfaceType) {
-        registration.interceptors.add(interceptor);
-      }
-    }
-
-    return I;
-  }
-
-  /// Registers a global [LogInterceptor] to run before interface fan-out.
-  ArcaneLogger registerGlobalInterceptor(LogInterceptor interceptor) {
-    I._globalInterceptors.add(interceptor);
-    return I;
-  }
-
-  /// Registers a `List` of global [LogInterceptor]s.
-  ArcaneLogger registerGlobalInterceptors(List<LogInterceptor> interceptors) {
-    I._globalInterceptors.addAll(interceptors);
-    return I;
-  }
-
-  /// Unregisters a previously registered global [LogInterceptor].
-  ArcaneLogger unregisterGlobalInterceptor(LogInterceptor interceptor) {
-    I._globalInterceptors.remove(interceptor);
-    return I;
-  }
-
-  /// Removes all previously registered global interceptors.
-  ArcaneLogger clearGlobalInterceptors() {
-    I._globalInterceptors.clear();
     return I;
   }
 
@@ -391,13 +340,14 @@ class ArcaneLogger {
     if (!initialized) await _init();
 
     for (final LoggingInterface i in interfaces) {
+      I.interceptors.registerForInterface(
+        i,
+        interceptors?[i] ?? const <LogInterceptor>[],
+      );
+
       I._interfaceRegistrations.add(
         _LoggingInterfaceRegistration(
           interface: i,
-          interceptors: [
-            ...I._typeScopedInterceptorsFor(i),
-            ...?interceptors?[i],
-          ],
         ),
       );
     }
@@ -411,6 +361,8 @@ class ArcaneLogger {
     LoggingInterface interface,
   ) async {
     if (!initialized) await _init();
+
+    I.interceptors.unregisterInterface(interface);
 
     I._interfaceRegistrations.removeWhere(
       (_LoggingInterfaceRegistration registration) =>
@@ -428,6 +380,8 @@ class ArcaneLogger {
     if (!initialized) await _init();
 
     for (final LoggingInterface i in interfaces) {
+      I.interceptors.unregisterInterface(i);
+
       I._interfaceRegistrations.removeWhere(
         (_LoggingInterfaceRegistration registration) =>
             identical(registration.interface, i),
@@ -441,6 +395,12 @@ class ArcaneLogger {
   /// [ArcaneLogger], if any were previously registered.
   Future<ArcaneLogger> unregisterAllInterfaces() async {
     if (!initialized) await _init();
+
+    for (final _LoggingInterfaceRegistration registration
+        in I._interfaceRegistrations) {
+      I.interceptors.unregisterInterface(registration.interface);
+    }
+
     I._interfaceRegistrations.clear();
     return I;
   }
@@ -515,8 +475,7 @@ class ArcaneLogger {
   void reset() {
     dispose();
     I._interfaceRegistrations.clear();
-    I._globalInterceptors.clear();
-    I._typeScopedInterceptorRegistrations.clear();
+    I.interceptors.clear();
     I._initialized = false;
     I._additionalMetadata.clear();
   }
@@ -543,36 +502,4 @@ class ArcaneLogger {
 
     return currentEvent;
   }
-
-  List<LogInterceptor> _typeScopedInterceptorsFor(LoggingInterface interface) {
-    return [
-      for (final _TypeScopedInterceptorRegistration registration
-          in I._typeScopedInterceptorRegistrations)
-        if (registration.matches(interface)) registration.interceptor,
-    ];
-  }
-}
-
-final class _LoggingInterfaceRegistration {
-  _LoggingInterfaceRegistration({
-    required this.interface,
-    List<LogInterceptor>? interceptors,
-  }) : interceptors = [
-          ...?interceptors,
-        ];
-
-  final LoggingInterface interface;
-  final List<LogInterceptor> interceptors;
-}
-
-final class _TypeScopedInterceptorRegistration {
-  _TypeScopedInterceptorRegistration({
-    required this.interceptor,
-    required bool Function(LoggingInterface interface) matcher,
-  }) : _matcher = matcher;
-
-  final LogInterceptor interceptor;
-  final bool Function(LoggingInterface interface) _matcher;
-
-  bool matches(LoggingInterface interface) => _matcher(interface);
 }

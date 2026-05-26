@@ -86,6 +86,10 @@ class TestAlternativeLoggingInterface extends LoggingInterface {
   }
 }
 
+class TestDerivedLoggingInterface extends TestLoggingInterface {
+  TestDerivedLoggingInterface(super.name);
+}
+
 class RedactingLogInterceptor implements LogInterceptor {
   const RedactingLogInterceptor();
 
@@ -224,7 +228,18 @@ void main() {
         await Arcane.logger.registerInterface(myInterface);
 
         Arcane.log("before");
-        Arcane.logger.registerGlobalInterceptor(prefixInterceptor);
+        Arcane.logger.interceptors.add(prefixInterceptor);
+        Arcane.log("after");
+
+        expect(myInterface.events[0].message, "before");
+        expect(myInterface.events[1].message, "[global] after");
+      });
+
+      test("interceptor collection add defaults to global", () async {
+        await Arcane.logger.registerInterface(myInterface);
+
+        Arcane.log("before");
+        Arcane.logger.interceptors.add(prefixInterceptor);
         Arcane.log("after");
 
         expect(myInterface.events[0].message, "before");
@@ -245,8 +260,10 @@ void main() {
         await Arcane.logger.registerInterface(myInterface);
 
         Arcane.log("before");
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           dropForPrimary,
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
         Arcane.log("blocked");
 
@@ -266,15 +283,45 @@ void main() {
           alternativeInterface,
         ]);
 
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           LogInterceptor((event, context) {
             return event.copyWith(message: "[typed] ${event.message}");
           }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
 
         Arcane.log("typed");
 
         expect(myInterface.events.last.message, "[typed] typed");
+        expect(alternativeInterface.events.last.message, "typed");
+      });
+
+      test("matcher-based type-scoped interceptors can include subtypes",
+          () async {
+        final TestDerivedLoggingInterface derivedInterface =
+            TestDerivedLoggingInterface("derived");
+        final TestAlternativeLoggingInterface alternativeInterface =
+            TestAlternativeLoggingInterface("alternative");
+
+        await Arcane.logger.registerInterfaces([
+          myInterface,
+          derivedInterface,
+          alternativeInterface,
+        ]);
+
+        Arcane.logger.interceptors.add(
+          LogInterceptor((event, context) {
+            return event.copyWith(message: "[family] ${event.message}");
+          }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
+        );
+
+        Arcane.log("typed");
+
+        expect(myInterface.events.last.message, "[family] typed");
+        expect(derivedInterface.events.last.message, "[family] typed");
         expect(alternativeInterface.events.last.message, "typed");
       });
 
@@ -284,10 +331,12 @@ void main() {
         final TestLoggingInterface secondary =
             TestLoggingInterface("secondary");
 
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           LogInterceptor((event, context) {
             return event.copyWith(message: "[future] ${event.message}");
           }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
 
         await Arcane.logger.registerInterface(secondary);
@@ -379,7 +428,7 @@ void main() {
       });
 
       test("global interceptors run in registration order", () async {
-        Arcane.logger.registerGlobalInterceptors([
+        Arcane.logger.interceptors.addAll([
           LogInterceptor((event, context) {
             expect(context.interface, same(myInterface));
             return event.copyWith(message: "${event.message}:first");
@@ -397,7 +446,7 @@ void main() {
 
       test("global interceptors can drop events for all interfaces", () async {
         await Arcane.logger.registerInterface(myInterface);
-        Arcane.logger.registerGlobalInterceptor(
+        Arcane.logger.interceptors.add(
           LogInterceptor((event, context) => null),
         );
 
@@ -406,9 +455,17 @@ void main() {
         expect(myInterface.events, isEmpty);
       });
 
+      test("interceptor collection remove defaults to global", () async {
+        Arcane.logger.interceptors.add(prefixInterceptor);
+        Arcane.logger.interceptors.remove(prefixInterceptor);
+
+        Arcane.log(logMessage);
+
+        expect(myInterface.events.single.message, logMessage);
+      });
+
       test("custom interceptor classes can implement LogInterceptor", () async {
-        Arcane.logger
-            .registerGlobalInterceptor(const RedactingLogInterceptor());
+        Arcane.logger.interceptors.add(const RedactingLogInterceptor());
 
         Arcane.log(
           logMessage,
@@ -432,8 +489,10 @@ void main() {
           },
         );
 
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           allowPrimaryOnly,
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
         await Arcane.logger.registerInterface(
           secondaryInterface,
@@ -445,11 +504,39 @@ void main() {
         expect(secondaryInterface.events, isEmpty);
       });
 
+      test("interceptor collection remove with matcher removes scoped entries",
+          () async {
+        final TestLoggingInterface secondaryInterface =
+            TestLoggingInterface("secondary");
+        final LogInterceptor scopedInterceptor =
+            LogInterceptor((event, context) {
+          return event.copyWith(message: "[scoped] ${event.message}");
+        });
+        bool scopedMatcher(LoggingInterface interface) =>
+            interface is TestLoggingInterface;
+
+        Arcane.logger.interceptors.add(
+          scopedInterceptor,
+          matcher: scopedMatcher,
+        );
+
+        await Arcane.logger.registerInterface(secondaryInterface);
+        Arcane.logger.interceptors.remove(
+          scopedInterceptor,
+          matcher: scopedMatcher,
+        );
+
+        Arcane.log(logMessage);
+
+        expect(myInterface.events.single.message, logMessage);
+        expect(secondaryInterface.events.single.message, logMessage);
+      });
+
       test("interface interceptors receive the current interface", () async {
         final TestLoggingInterface secondaryInterface =
             TestLoggingInterface("secondary");
 
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           LogInterceptor((event, context) {
             final TestLoggingInterface currentInterface =
                 context.interface! as TestLoggingInterface;
@@ -460,6 +547,8 @@ void main() {
               },
             );
           }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
         await Arcane.logger.registerInterface(
           secondaryInterface,
@@ -479,12 +568,14 @@ void main() {
         final TestLoggingInterface secondaryInterface =
             TestLoggingInterface("secondary");
 
-        Arcane.logger.registerInterceptor<TestLoggingInterface>(
+        Arcane.logger.interceptors.add(
           LogInterceptor((event, context) {
             event.metadata?["mutatedBy"] =
                 (context.interface as TestLoggingInterface).name;
             return event;
           }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
         );
         await Arcane.logger.registerInterface(
           secondaryInterface,
@@ -526,7 +617,7 @@ void main() {
       });
 
       test("reset clears global interceptors", () async {
-        Arcane.logger.registerGlobalInterceptor(prefixInterceptor);
+        Arcane.logger.interceptors.add(prefixInterceptor);
         Arcane.logger.reset();
         await Arcane.logger.registerInterface(myInterface);
 
@@ -550,8 +641,12 @@ void main() {
         );
 
         Arcane.logger
-          ..registerGlobalInterceptor(duplicateInterceptor)
-          ..registerInterceptor<TestLoggingInterface>(duplicateInterceptor);
+          ..interceptors.add(duplicateInterceptor)
+          ..interceptors.add(
+            duplicateInterceptor,
+            matcher: (LoggingInterface interface) =>
+                interface is TestLoggingInterface,
+          );
 
         Arcane.log(
           logMessage,
@@ -561,6 +656,24 @@ void main() {
         );
 
         expect(myInterface.events.single.metadata?["count"], 2);
+      });
+
+      test(
+          "interceptor collection clear removes global and scoped interceptors",
+          () async {
+        Arcane.logger.interceptors.add(prefixInterceptor);
+        Arcane.logger.interceptors.add(
+          LogInterceptor((event, context) {
+            return event.copyWith(message: "[scoped] ${event.message}");
+          }),
+          matcher: (LoggingInterface interface) =>
+              interface is TestLoggingInterface,
+        );
+
+        Arcane.logger.interceptors.clear();
+        Arcane.log(logMessage);
+
+        expect(myInterface.events.single.message, logMessage);
       });
     });
   });

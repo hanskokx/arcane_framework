@@ -1,25 +1,3 @@
-## 2.0.1
-
-### Arcane Logger
-
-- [BREAKING] `Arcane.logger.registerInterceptor(...)` is now type-scoped and
-  requires a target interface type via
-  `registerInterceptor<YourLoggingInterface>(...)`.
-- [NEW] Added explicit global interceptor APIs:
-  `registerGlobalInterceptor(...)`, `registerGlobalInterceptors(...)`,
-  `unregisterGlobalInterceptor(...)`, and `clearGlobalInterceptors()`.
-- [CHANGE] Type-scoped interceptors now apply to already-registered matching
-  interfaces and also to future interface registrations of matching type.
-
-#### Migration Steps (ArcaneLogger interceptors)
-
-1. Replace global `registerInterceptor(...)` calls with
-  `registerGlobalInterceptor(...)`.
-2. Replace interface-specific global interceptors that inspect
-  `context.interface` with `registerInterceptor<YourInterface>(...)`.
-3. Continue using registration-time `registerInterface(..., interceptors: ...)`
-  when interceptors should apply only to that specific interface instance.
-
 ## 2.0.0
 
 ### Arcane Framework
@@ -197,22 +175,28 @@ MaterialApp(
 
 - [NEW] Added `logStream` for realtime log subscriptions.
 - [NEW] Added explicit `dispose` cleanup for logger stream resources.
-- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
-  initialization state.
 - [NEW] Added optional lifecycle capability via `LoggingInitializable` and
   `LoggingInitialization`.
 - [NEW] Added optional `feature` tag support via `@LoggingFeature(...)`
   annotation.
-- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
-  implement `LoggingInitializable`; other interfaces are skipped.
 - [NEW] Added a `skipAutodetection` parameter to `Arcane.log` (defaults to
   `false`) that, when enabled, skips detection of the `module`, `method`, and
   file/line number where logs originated from.
 - [NEW] Added the `LogInterceptor` class which can (optionally) be added to
   `ArcaneLogger` to pre-process log messages before they are sent to the
   registered `ArcaneLoggingInterface`(s).
+- [NEW] Added collection-style interceptor APIs:
+  `Arcane.logger.interceptors.add(...)`,
+  `Arcane.logger.interceptors.remove(...)`, and
+  `Arcane.logger.interceptors.clear()` with an optional `matcher` for
+  explicit type-scoped matching strategies, including subtype-inclusive
+  matching.
 - [CHANGE] Updated `Arcane.log` metadata type from `Map<String, String>?` to
   `Map<String, Object?>?` to support structured metadata values.
+- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
+  implement `LoggingInitializable`; other interfaces are skipped.
+- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
+  initialization state.
 
 #### Migration Steps (LoggingInterface)
 
