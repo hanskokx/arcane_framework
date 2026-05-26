@@ -330,62 +330,6 @@ class ArcaneThemeExample extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Switch(
-                      value: Arcane.theme.currentTheme == ThemeMode.dark,
-                      thumbIcon: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return const Icon(Icons.dark_mode);
-                        }
-                        return const Icon(Icons.light_mode);
-                      }),
-                      onChanged: (_) {
-                        Arcane.theme.switchTheme();
-                      },
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Checkbox(
-                          value: Arcane.theme.isFollowingSystemTheme,
-                          onChanged: (value) {
-                            if (value == true) {
-                              Arcane.theme.followSystemTheme(context);
-                            } else {
-                              Arcane.theme.switchTheme(
-                                themeMode: Arcane.theme.systemTheme,
-                              );
-                            }
-                          },
-                        ),
-                        const Text("Follow system"),
-                      ],
-                    ),
-                    Switch(
-                      value: Arcane.theme.currentTheme == ThemeMode.dark,
-                      thumbIcon: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.selected)) {
-                          return const Icon(Icons.dark_mode);
-                        }
-                        return const Icon(Icons.light_mode);
-                      }),
-                      onChanged: (_) {
-                        Arcane.theme.switchTheme();
-                      },
-                    ),
-                    Text(
-                      "The current theme mode is ${context.themeMode.name} and\n"
-                      "is ${Arcane.theme.isFollowingSystemTheme ? "" : "not "}"
-                      "following the system theme.",
-                    ),
-                  ],
-                ),
-              ),
-            ),
             Text(
               "Theme",
               style: Theme.of(context).textTheme.headlineSmall,
@@ -712,21 +656,5 @@ class ArcaneServicesExample extends StatelessWidget {
         );
       },
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _subscription = Arcane.logger.logStream.listen((message) {
-      setState(() {
-        if (Feature.logging.enabled) latestLogs.insert(0, message);
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
   }
 }
