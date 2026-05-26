@@ -11,6 +11,10 @@ authentication, feature flags, theming, and more. This framework
 is ideal for building scalable applications that require dynamic configuration
 and service management.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ab314468-e039-4e6d-8919-5297658c2be3" alt="Arcane logo" width="500">
+</p>
+
 - [Arcane Framework](#arcane-framework)
   - [Features](#features)
   - [Installation](#installation)
@@ -531,14 +535,15 @@ class AnalyticsLogger extends LoggingInterface {
   }
 }
 
-Arcane.logger.registerInterceptor(
+Arcane.logger.interceptors.add(
   LogInterceptor((event, context) {
-    if (context.interface is AnalyticsLogger && event.level == Level.debug) {
+    if (event.level == Level.debug) {
       return null;
     }
 
     return event;
   }),
+  matcher: (interface) => interface is AnalyticsLogger,
 );
 ```
 
@@ -565,8 +570,8 @@ await Arcane.logger.registerInterface(AuthLogger());
 ```
 
 Next, register your logging interface with the Arcane logger service. You can
-attach interceptors when registering an interface, or add global interceptors
-later at runtime.
+attach interceptors when registering an interface, or manage logger
+interceptors via `Arcane.logger.interceptors` later at runtime.
 
 ```dart
 final DebugConsole debugConsole = DebugConsole();
@@ -575,7 +580,7 @@ await Arcane.logger.registerInterface(
   debugConsole,
   interceptors: [
     LogInterceptor((event, context) {
-      if (context.interface is DebugConsole && event.level == Level.debug) {
+      if (event.level == Level.debug) {
         return null;
       }
 
@@ -584,7 +589,7 @@ await Arcane.logger.registerInterface(
   ],
 );
 
-Arcane.logger.registerInterceptor(
+Arcane.logger.interceptors.add(
   LogInterceptor((event, context) {
     return event.copyWith(
       metadata: {
@@ -601,10 +606,24 @@ await Arcane.logger.initializeInterfaces();
 ```
 
 Global interceptors are evaluated for each registered interface, and interface
-interceptors run immediately after them for that same destination. Every
+interceptors run immediately after them for that same destination. Use
+`Arcane.logger.interceptors.add(...)` with no matcher for global behavior, or
+provide a matcher for scoped behavior. Every
 interceptor receives a `LogInterceptorContext` whose `interface` value is the
-current destination, which allows a single global interceptor to allow one
-interface to receive an event while dropping it for another.
+current destination.
+
+If you want subtype-inclusive matching (for example, a base interface plus all
+derived interfaces), use `Arcane.logger.interceptors.add(...)` with
+an explicit matcher.
+
+```dart
+Arcane.logger.interceptors.add(
+  LogInterceptor((event, context) {
+    return event.copyWith(message: "[scoped] ${event.message}");
+  }),
+  matcher: (interface) => interface is AnalyticsLogger,
+);
+```
 
 Returning `null` from an interceptor drops the event for the current scope.
 Returning a modified `LogEvent` allows you to rewrite the message, metadata,
@@ -664,10 +683,10 @@ void dispose() {
 }
 ```
 
-You can also add and remove global interceptors after startup. Because every
-interceptor receives a `LogInterceptorContext`, a single global interceptor can
-still make interface-specific decisions by checking `context.interface`. If you
-prefer, you can also define your own interceptor class by implementing
+You can also add, remove, and clear interceptors after startup. Because every
+interceptor receives a `LogInterceptorContext`, global interceptors can still
+make interface-specific decisions when needed by checking `context.interface`.
+If you prefer, you can also define your own interceptor class by implementing
 `LogInterceptor` instead of using the callback constructor.
 
 ```dart
@@ -686,8 +705,8 @@ final LogInterceptor redactSecrets = LogInterceptor((
   );
 });
 
-Arcane.logger.registerInterceptor(redactSecrets);
-Arcane.logger.unregisterInterceptor(redactSecrets);
+Arcane.logger.interceptors.add(redactSecrets);
+Arcane.logger.interceptors.remove(redactSecrets);
 ```
 
 If you prefer a reusable named type, you can also implement `LogInterceptor`
@@ -716,8 +735,8 @@ class RedactingLogInterceptor implements LogInterceptor {
 
 final LogInterceptor redactSecrets = RedactingLogInterceptor();
 
-Arcane.logger.registerInterceptor(redactSecrets);
-Arcane.logger.unregisterInterceptor(redactSecrets);
+Arcane.logger.interceptors.add(redactSecrets);
+Arcane.logger.interceptors.remove(redactSecrets);
 ```
 
 Multiple logging interfaces and multiple interceptors can be registered

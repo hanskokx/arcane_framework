@@ -36,9 +36,11 @@ void main() {
 
     test("reset restores defaults", () {
       ArcaneThemeService.I.setDarkTheme(
-          ThemeData(primaryColor: Colors.red, brightness: Brightness.dark),);
+        ThemeData(primaryColor: Colors.red, brightness: Brightness.dark),
+      );
       ArcaneThemeService.I.setLightTheme(
-          ThemeData(primaryColor: Colors.blue, brightness: Brightness.light),);
+        ThemeData(primaryColor: Colors.blue, brightness: Brightness.light),
+      );
       ArcaneThemeService.I.reset();
       expect(ArcaneThemeService.I.dark, ThemeData.dark());
       expect(ArcaneThemeService.I.light, ThemeData.light());

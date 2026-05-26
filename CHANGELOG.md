@@ -175,22 +175,28 @@ MaterialApp(
 
 - [NEW] Added `logStream` for realtime log subscriptions.
 - [NEW] Added explicit `dispose` cleanup for logger stream resources.
-- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
-  initialization state.
 - [NEW] Added optional lifecycle capability via `LoggingInitializable` and
   `LoggingInitialization`.
 - [NEW] Added optional `feature` tag support via `@LoggingFeature(...)`
   annotation.
-- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
-  implement `LoggingInitializable`; other interfaces are skipped.
 - [NEW] Added a `skipAutodetection` parameter to `Arcane.log` (defaults to
   `false`) that, when enabled, skips detection of the `module`, `method`, and
   file/line number where logs originated from.
 - [NEW] Added the `LogInterceptor` class which can (optionally) be added to
   `ArcaneLogger` to pre-process log messages before they are sent to the
   registered `ArcaneLoggingInterface`(s).
+- [NEW] Added collection-style interceptor APIs:
+  `Arcane.logger.interceptors.add(...)`,
+  `Arcane.logger.interceptors.remove(...)`, and
+  `Arcane.logger.interceptors.clear()` with an optional `matcher` for
+  explicit type-scoped matching strategies, including subtype-inclusive
+  matching.
 - [CHANGE] Updated `Arcane.log` metadata type from `Map<String, String>?` to
   `Map<String, Object?>?` to support structured metadata values.
+- [CHANGE] `initializeInterfaces()` now initializes only interfaces that
+  implement `LoggingInitializable`; other interfaces are skipped.
+- [BREAKING] `LoggingInterface` no longer includes built-in singleton-style
+  initialization state.
 
 #### Migration Steps (LoggingInterface)
 
