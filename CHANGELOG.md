@@ -16,13 +16,13 @@ Before:
 
 ```dart
 @LoggingFeature("my-feature")
-class MyLogger implements LoggingInterface {...}
+class MyLogger extends LoggingInterface {...}
 ```
 
 After:
 
 ```dart
-class MyLogger implements LoggingInterface with LoggerName {
+class MyLogger extends LoggingInterface with LoggerName {
   @override
   String get name => "my-feature";
 }
