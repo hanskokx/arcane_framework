@@ -470,8 +470,8 @@ class ArcaneLogger {
   void clearPersistentMetadata() => _additionalMetadata.clear();
 
   /// Resets the Arcane logging service by clearing all persistent metadata,
-  /// clearing all registered [LoggingInterface]s and marking the logging
-  /// service as no longer being initialized.
+  /// clearing all registered [LoggingInterface]s, clearing all interceptors,
+  /// and marking the logging service as no longer being initialized.
   void reset() {
     dispose();
     I._interfaceRegistrations.clear();

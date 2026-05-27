@@ -514,12 +514,13 @@ class ExternalLogger extends LoggingInterface with LoggingInitialization {
 }
 ```
 
-If you want to tag a destination, annotate the interface with
-`@LoggingFeature(...)`:
+If you want to give a destination a name and access it at runtime,
+mix in `LoggerName` and override `name`:
 
 ```dart
-@LoggingFeature("Analytics")
-class AnalyticsLogger extends LoggingInterface {
+class AnalyticsLogger extends LoggingInterface with LoggerName {
+  @override
+  String get name => 'Analytics';
 
   @override
   void log(
@@ -529,6 +530,7 @@ class AnalyticsLogger extends LoggingInterface {
     StackTrace? stackTrace,
     Object? extra,
   }) {
+    // name is accessible here at runtime.
     // Forward to analytics pipeline.
   }
 }
@@ -545,12 +547,14 @@ Arcane.logger.interceptors.add(
 );
 ```
 
-You can use this tag as source-level documentation and keep destination routing
+You can use `name` inside `log()` and keep destination routing
 explicit in interceptors.
 
 ```dart
-@LoggingFeature("auth")
-class AuthLogger extends LoggingInterface {
+class AuthLogger extends LoggingInterface with LoggerName {
+  @override
+  String get name => 'auth';
+
   @override
   void log(
     String message, {

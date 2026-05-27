@@ -110,9 +110,37 @@ class RedactingLogInterceptor implements LogInterceptor {
   }
 }
 
+class TestLoggerWithLoggerName extends LoggingInterface with LoggerName {
+  @override
+  String get name => "test-logger";
+
+  final List<LogEvent> events = [];
+
+  @override
+  void log(
+    String message, {
+    Map<String, Object?>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+    Object? extra,
+  }) {
+    events.add(
+      LogEvent(
+        message: message,
+        metadata: metadata == null ? null : Map<String, Object?>.from(metadata),
+        level: level,
+        stackTrace: stackTrace,
+        extra: extra,
+      ),
+    );
+  }
+}
+
 void main() {
   late TestLoggingInterface myInterface;
   late LogInterceptor prefixInterceptor;
+  final TestLoggerWithLoggerName loggerWithLoggerName =
+      TestLoggerWithLoggerName();
 
   setUp(() {
     Arcane.logger.reset();
@@ -676,5 +704,13 @@ void main() {
         expect(myInterface.events.single.message, logMessage);
       });
     });
+  });
+
+  test("LoggerName mixin exposes name at runtime", () {
+    expect(loggerWithLoggerName.name, "test-logger");
+
+    loggerWithLoggerName.log("Test message");
+    expect(loggerWithLoggerName.events.length, 1);
+    expect(loggerWithLoggerName.events.first.message, "Test message");
   });
 }

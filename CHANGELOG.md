@@ -1,3 +1,33 @@
+## 2.0.2
+
+### Logging Service
+
+- [BREAKING] Replaced the `@LoggingFeature(...)` annotation (compile-time only,
+  not readable at runtime in Flutter) with the `LoggerName` mixin.
+  Mix `LoggerName` into a `LoggingInterface` subclass and override
+  `name` to expose a runtime-accessible name inside `log()`.
+
+#### Migration Steps (LoggingFeature)
+
+1. Replace any `@LoggingFeature("...")` annotation with `with LoggerName` and
+   add an `@override String get name => '...';` getter to the class body.
+
+Before:
+
+```dart
+@LoggingFeature("my-feature")
+class MyLogger extends LoggingInterface {...}
+```
+
+After:
+
+```dart
+class MyLogger extends LoggingInterface with LoggerName {
+  @override
+  String get name => "my-feature";
+}
+```
+
 ## 2.0.1
 
 ### Arcane Framework
