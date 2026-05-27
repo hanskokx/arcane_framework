@@ -1,31 +1,4 @@
-## 2.0.5
-
-### Arcane Framework
-
-- [NEW] Added `Arcane.service` typed lookup entrypoint for provider-aware
-  service access:
-  - `Arcane.service.ofType<T>(context)`
-  - `Arcane.service.requiredOfType<T>(context)`
-
-## 2.0.4
-
-### Logging Service
-
-- [NEW] Added `LogInterceptorCallback` typedef and updated `LogInterceptor`
-  callback-based APIs to use the shared callback type alias.
-
-## 2.0.3
-
-### Logging Service
-
-- [CHANGE] `LogEvent` JSON serialization now delegates recursive nested
-  `metadata` / `extra` encode-decode handling to `arcane_helper_utils` JSON
-  extensions (`toJsonValue`, `toJsonMap`, `fromJsonValue`, `fromJsonMap`).
-- [CHANGE] Refactored `LogInterceptor` to an interface-style contract with a
-  factory constructor for callback interceptors, so reusable class-based
-  interceptors can be implemented without superclass callback plumbing.
-
-## 2.0.2
+## Unreleased
 
 ### Logging Service
 
@@ -33,27 +6,6 @@
   not readable at runtime in Flutter) with the `LoggerName` mixin.
   Mix `LoggerName` into a `LoggingInterface` subclass and override
   `name` to expose a runtime-accessible name inside `log()`.
-
-#### Migration Steps (LoggingFeature)
-
-1. Replace any `@LoggingFeature("...")` annotation with `with LoggerName` and
-   add an `@override String get name => '...';` getter to the class body.
-
-Before:
-
-```dart
-@LoggingFeature("my-feature")
-class MyLogger extends LoggingInterface {...}
-```
-
-After:
-
-```dart
-class MyLogger extends LoggingInterface with LoggerName {
-  @override
-  String get name => "my-feature";
-}
-```
 
 ## 2.0.1
 
