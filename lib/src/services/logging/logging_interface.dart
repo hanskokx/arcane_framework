@@ -41,13 +41,24 @@ mixin LoggingInitialization implements LoggingInitializable {
   }
 }
 
-/// Annotation used to tag a logging destination with a feature name.
+/// Opt-in mixin that exposes a [name] string on a [LoggingInterface].
+///
+/// Mix this into a concrete logger to declare what [name] should be associated
+/// with this logging interface.
 ///
 /// Example:
-/// `@LoggingFeature("analytics")`
-final class LoggingFeature {
-  const LoggingFeature(this.value);
-
-  /// The feature name associated with this logging destination.
-  final String value;
+/// ```dart
+/// class MyLogger extends LoggingInterface with LoggerName {
+///   @override
+///   String get name => 'my-feature';
+///
+///   @override
+///   void log(String message, {...}) {
+///     print('[$name] $message');
+///   }
+/// }
+/// ```
+mixin LoggerName on LoggingInterface {
+  /// The name associated with this logging interface.
+  String get name;
 }
