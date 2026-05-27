@@ -7,6 +7,27 @@
   Mix `LoggerName` into a `LoggingInterface` subclass and override
   `name` to expose a runtime-accessible name inside `log()`.
 
+#### Migration Steps (LoggingFeature)
+
+1. Replace any `@LoggingFeature("...")` annotation with `with LoggerName` and
+   add an `@override String get name => '...';` getter to the class body.
+
+Before:
+
+```dart
+@LoggingFeature("my-feature")
+class MyLogger implements LoggingInterface {...}
+```
+
+After:
+
+```dart
+class MyLogger implements LoggingInterface with LoggerName {
+  @override
+  String get name => "my-feature";
+}
+```
+
 ## 2.0.1
 
 ### Arcane Framework
