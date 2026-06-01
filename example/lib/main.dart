@@ -23,6 +23,14 @@ Future<void> main() async {
 
   final DebugPrint debugPrintInterface = DebugPrint();
   final DebugAuthInterface debugAuthInterface = DebugAuthInterface();
+  LogEvent? skipDebugPrintWhenDisabled(
+      LogEvent event, LogInterceptorContext context) {
+    if (context.interface is DebugPrint && Feature.logging.disabled) {
+      return null;
+    }
+
+    return event;
+  }
 
   // If any Feature enum items are `enabledAtStartup`, enable them within Arcane.
   for (final Feature feature in Feature.values) {
@@ -33,13 +41,7 @@ Future<void> main() async {
   await Arcane.logger.registerInterface(
     debugPrintInterface,
     interceptors: [
-      LogInterceptor((event, context) {
-        if (context.interface is DebugPrint && Feature.logging.disabled) {
-          return null;
-        }
-
-        return event;
-      }),
+      LogInterceptor(skipDebugPrintWhenDisabled),
     ],
   );
 

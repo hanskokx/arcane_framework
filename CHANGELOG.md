@@ -1,3 +1,10 @@
+## 2.0.4
+
+### Logging Service
+
+- [NEW] Added `LogInterceptorCallback` typedef and updated `LogInterceptor`
+  callback-based APIs to use the shared callback type alias.
+
 ## 2.0.3
 
 ### Logging Service

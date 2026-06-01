@@ -536,7 +536,10 @@ class AnalyticsLogger extends LoggingInterface with LoggerName {
 }
 
 Arcane.logger.interceptors.add(
-  LogInterceptor((event, context) {
+  LogInterceptor((
+    LogEvent event,
+    LogInterceptorContext context,
+  ) {
     if (event.level == Level.debug) {
       return null;
     }
@@ -581,7 +584,10 @@ final DebugConsole debugConsole = DebugConsole();
 await Arcane.logger.registerInterface(
   debugConsole,
   interceptors: [
-    LogInterceptor((event, context) {
+    LogInterceptor((
+      LogEvent event,
+      LogInterceptorContext context,
+    ) {
       if (event.level == Level.debug) {
         return null;
       }
@@ -592,7 +598,10 @@ await Arcane.logger.registerInterface(
 );
 
 Arcane.logger.interceptors.add(
-  LogInterceptor((event, context) {
+  LogInterceptor((
+    LogEvent event,
+    LogInterceptorContext context,
+  ) {
     return event.copyWith(
       metadata: {
         ...?event.metadata,
@@ -620,7 +629,10 @@ an explicit matcher.
 
 ```dart
 Arcane.logger.interceptors.add(
-  LogInterceptor((event, context) {
+  LogInterceptor((
+    LogEvent event,
+    LogInterceptorContext context,
+  ) {
     return event.copyWith(message: "[scoped] ${event.message}");
   }),
   matcher: (interface) => interface is AnalyticsLogger,
@@ -693,8 +705,8 @@ If you prefer, you can also define your own interceptor class by implementing
 
 ```dart
 final LogInterceptor redactSecrets = LogInterceptor((
-  event,
-  context,
+  LogEvent event,
+  LogInterceptorContext context,
 ) {
   final Object? token = event.metadata?["token"];
   if (token == null) return event;

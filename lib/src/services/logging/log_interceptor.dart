@@ -30,6 +30,12 @@ final class LogInterceptorContext {
   final LoggingInterface? interface;
 }
 
+/// Signature for callbacks used by [LogInterceptor].
+typedef LogInterceptorCallback = LogEvent? Function(
+  LogEvent event,
+  LogInterceptorContext context,
+);
+
 /// A function-like object that intercepts and optionally transforms log events.
 ///
 /// [LogInterceptor] allows you to observe, modify, or suppress log events as
@@ -39,11 +45,12 @@ final class LogInterceptorContext {
 ///
 /// Example usage:
 /// ```dart
-/// final interceptor = CallbackLogInterceptor((event, context) {
+/// final LogInterceptorCallback callback = (event, context) {
 ///   // Filter out debug-level logs
 ///   if (event.level == Level.debug) return null;
 ///   return event;
-/// });
+/// };
+/// final interceptor = LogInterceptor(callback);
 /// ```
 ///
 /// See also:
@@ -54,10 +61,7 @@ abstract class LogInterceptor {
   ///
   /// This keeps inline interceptor usage ergonomic.
   const factory LogInterceptor(
-    LogEvent? Function(
-      LogEvent event,
-      LogInterceptorContext context,
-    ) callback,
+    LogInterceptorCallback callback,
   ) = CallbackLogInterceptor;
 
   /// Invokes the interceptor on the given [event] and [context].
@@ -74,10 +78,7 @@ final class CallbackLogInterceptor implements LogInterceptor {
   /// Creates a callback-backed interceptor.
   const CallbackLogInterceptor(this._callback);
 
-  final LogEvent? Function(
-    LogEvent event,
-    LogInterceptorContext context,
-  ) _callback;
+  final LogInterceptorCallback _callback;
 
   @override
   LogEvent? call(
