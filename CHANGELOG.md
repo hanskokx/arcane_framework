@@ -1,3 +1,14 @@
+## 2.0.3
+
+### Logging Service
+
+- [CHANGE] `LogEvent` JSON serialization now delegates recursive nested
+  `metadata` / `extra` encode-decode handling to `arcane_helper_utils` JSON
+  extensions (`toJsonValue`, `toJsonMap`, `fromJsonValue`, `fromJsonMap`).
+- [CHANGE] Refactored `LogInterceptor` to an interface-style contract with a
+  factory constructor for callback interceptors, so reusable class-based
+  interceptors can be implemented without superclass callback plumbing.
+
 ## 2.0.2
 
 ### Logging Service

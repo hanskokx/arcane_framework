@@ -39,7 +39,7 @@ final class LogInterceptorContext {
 ///
 /// Example usage:
 /// ```dart
-/// final interceptor = LogInterceptor((event, context) {
+/// final interceptor = CallbackLogInterceptor((event, context) {
 ///   // Filter out debug-level logs
 ///   if (event.level == Level.debug) return null;
 ///   return event;
@@ -49,26 +49,37 @@ final class LogInterceptorContext {
 /// See also:
 /// - [LogEvent], which represents a log entry.
 /// - [LogInterceptorContext], which provides context for the interception.
-class LogInterceptor {
-  /// Creates a [LogInterceptor] with the given callback.
+abstract class LogInterceptor {
+  /// Creates a callback-backed [LogInterceptor].
   ///
-  /// The [_callback] function will be invoked for each log event, with the
-  /// event and its context. Return a [LogEvent] to continue processing, or
-  /// `null` to suppress the event.
-  const LogInterceptor(this._callback);
+  /// This keeps inline interceptor usage ergonomic.
+  const factory LogInterceptor(
+    LogEvent? Function(
+      LogEvent event,
+      LogInterceptorContext context,
+    ) callback,
+  ) = CallbackLogInterceptor;
 
-  /// The callback function that processes each log event.
+  /// Invokes the interceptor on the given [event] and [context].
   ///
-  /// The function receives the [event] and its [context], and should return
-  /// either a (possibly modified) [LogEvent], or `null` to suppress the event.
+  /// Returns the (possibly modified) [LogEvent], or `null` to suppress the event.
+  LogEvent? call(
+    LogEvent event, {
+    required LogInterceptorContext context,
+  });
+}
+
+/// A callback-backed implementation of [LogInterceptor].
+final class CallbackLogInterceptor implements LogInterceptor {
+  /// Creates a callback-backed interceptor.
+  const CallbackLogInterceptor(this._callback);
+
   final LogEvent? Function(
     LogEvent event,
     LogInterceptorContext context,
   ) _callback;
 
-  /// Invokes the interceptor on the given [event] and [context].
-  ///
-  /// Returns the (possibly modified) [LogEvent], or `null` to suppress the event.
+  @override
   LogEvent? call(
     LogEvent event, {
     required LogInterceptorContext context,
