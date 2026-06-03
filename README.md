@@ -169,6 +169,8 @@ services:
   `ArcaneService` instances. **Note**: This widget is already part of the
   _`ArcaneApp`_ widget, however if you are not using the `ArcaneApp` widget you
   can instead use this widget directly.
+- `Arcane.service`: Typed service lookup entrypoint with
+  `ofType<T>(context)` and `requiredOfType<T>(context)`.
 - The `service<T>` and `requiredService<T>` extensions on `BuildContext`:
   nullable and non-nullable getters used to locate a given `ArcaneService` via
   `BuildContext`. **Note**: For app-defined services, these lookups require an
@@ -255,11 +257,13 @@ whatever method you prefer:
 ```dart
 // If a service of the given type is not registered, `null` is returned.
 final FavoriteColorService? nullableService = ArcaneService.ofType<FavoriteColorService>(context);
+final FavoriteColorService? nullableViaArcane = Arcane.service.ofType<FavoriteColorService>(context);
 final FavoriteColorService? nullableViaContext = context.service<FavoriteColorService>();
 final FavoriteColorService? nullableViaProvider = ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
 
 // If a service of the given type is not registered, an exception is thrown.
 final FavoriteColorService nonNullableService = ArcaneService.requiredOfType<FavoriteColorService>(context);
+final FavoriteColorService nonNullableViaArcane = Arcane.service.requiredOfType<FavoriteColorService>(context);
 final FavoriteColorService nonNullableViaContext = context.requiredService<FavoriteColorService>();
 final FavoriteColorService nonNullableViaProvider = ArcaneServiceProvider.requiredServiceOfType<FavoriteColorService>(context);
 ```

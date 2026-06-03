@@ -144,3 +144,20 @@ class ArcaneServiceProvider
     return true;
   }
 }
+
+/// Typed service lookup entrypoint for `Arcane.service`.
+class ArcaneServiceLookup {
+  const ArcaneServiceLookup();
+
+  /// Returns a service of type `T` from the closest provider in [context].
+  ///
+  /// Falls back to Arcane's built-in services when no provider instance exists.
+  T? ofType<T extends ArcaneService>(BuildContext context) =>
+      ArcaneService.ofType<T>(context);
+
+  /// Returns a service of type `T` from the closest provider in [context].
+  ///
+  /// Throws an assertion error if no matching service is available.
+  T requiredOfType<T extends ArcaneService>(BuildContext context) =>
+      ArcaneService.requiredOfType<T>(context);
+}

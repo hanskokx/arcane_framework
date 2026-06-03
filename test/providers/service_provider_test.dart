@@ -325,6 +325,52 @@ void main() {
         ),
       );
     });
+
+    testWidgets("Arcane.service.ofType<T> helper works", (tester) async {
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: testServices,
+          child: Builder(
+            builder: (context) {
+              final service = Arcane.service.ofType<MockArcaneService>(context);
+              expect(service, isNotNull);
+              expect(service, isA<MockArcaneService>());
+
+              final missing = Arcane.service.ofType<UnregisteredService>(
+                context,
+              );
+              expect(missing, isNull);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("Arcane.service.requiredOfType<T> helper works",
+        (tester) async {
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: testServices,
+          child: Builder(
+            builder: (context) {
+              final service = Arcane.service.requiredOfType<MockArcaneService>(
+                context,
+              );
+              expect(service, isA<MockArcaneService>());
+
+              expect(
+                () =>
+                    Arcane.service.requiredOfType<UnregisteredService>(context),
+                throwsA(isA<AssertionError>()),
+              );
+
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
   });
 }
 

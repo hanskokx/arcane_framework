@@ -43,6 +43,9 @@ abstract class Arcane {
   /// Logger is not a service and is always the singleton.
   static ArcaneLogger get logger => ArcaneLogger.I;
 
+  /// Provides typed service lookups through `Arcane.service.ofType<T>(context)`.
+  static const ArcaneServiceLookup service = ArcaneServiceLookup();
+
   /// Provides access to the feature flags service instance registered in ArcaneApp, or the singleton if not present.
   static ArcaneFeatureFlagService get features =>
       services.whereType<ArcaneFeatureFlagService>().firstOrNull ??

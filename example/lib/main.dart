@@ -24,7 +24,9 @@ Future<void> main() async {
   final DebugPrint debugPrintInterface = DebugPrint();
   final DebugAuthInterface debugAuthInterface = DebugAuthInterface();
   LogEvent? skipDebugPrintWhenDisabled(
-      LogEvent event, LogInterceptorContext context) {
+    LogEvent event,
+    LogInterceptorContext context,
+  ) {
     if (context.interface is DebugPrint && Feature.logging.disabled) {
       return null;
     }

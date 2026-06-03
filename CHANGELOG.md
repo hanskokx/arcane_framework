@@ -1,3 +1,12 @@
+## 2.0.5
+
+### Arcane Framework
+
+- [NEW] Added `Arcane.service` typed lookup entrypoint for provider-aware
+  service access:
+  - `Arcane.service.ofType<T>(context)`
+  - `Arcane.service.requiredOfType<T>(context)`
+
 ## 2.0.4
 
 ### Logging Service
