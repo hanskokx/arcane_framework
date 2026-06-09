@@ -33,6 +33,32 @@ class MockAuth implements ArcaneAuthInterface {
   }
 }
 
+class MinimalAuth extends ArcaneAuthInterface {
+  @override
+  Future<bool> get isSignedIn => Future.value(false);
+
+  @override
+  Future<String?>? get accessToken => Future.value(null);
+
+  @override
+  Future<String?>? get refreshToken => Future.value(null);
+
+  @override
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  }) async {
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void, String>> logout({
+    Future<void> Function()? onLoggedOut,
+  }) async {
+    return const Result.ok(null);
+  }
+}
+
 void main() {
   test("MockAuth fulfills ArcaneAuthInterface contract", () async {
     final auth = MockAuth();
@@ -46,5 +72,10 @@ void main() {
       },
     );
     expect(called, isTrue);
+  });
+
+  test("default init implementation completes", () async {
+    final auth = MinimalAuth();
+    await auth.init();
   });
 }

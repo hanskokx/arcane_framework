@@ -372,6 +372,45 @@ void main() {
 
         expect(secondary.events.single.message, "[future] hello");
       });
+
+      test("registerInterfaces accepts empty interceptor map", () async {
+        await Arcane.logger.registerInterfaces(
+          [myInterface],
+          interceptors: <LoggingInterface, List<LogInterceptor>>{},
+        );
+
+        Arcane.log("hello");
+        expect(myInterface.events.single.message, "hello");
+      });
+
+      test("unregisterInterfaces removes all listed interfaces", () async {
+        final TestLoggingInterface secondary =
+            TestLoggingInterface("secondary");
+
+        await Arcane.logger.registerInterfaces([myInterface, secondary]);
+        await Arcane.logger.unregisterInterfaces([myInterface, secondary]);
+
+        expect(Arcane.logger.interfaces, isEmpty);
+      });
+
+      test("unregisterAllInterfaces removes all registered interfaces",
+          () async {
+        final TestLoggingInterface secondary =
+            TestLoggingInterface("secondary");
+
+        await Arcane.logger.registerInterfaces([myInterface, secondary]);
+        await Arcane.logger.unregisterAllInterfaces();
+
+        expect(Arcane.logger.interfaces, isEmpty);
+      });
+
+      test("initializeInterfaces throws when no interfaces are registered",
+          () async {
+        expect(
+          () => Arcane.logger.initializeInterfaces(),
+          throwsException,
+        );
+      });
     });
 
     group("persistent metadata", () {
@@ -392,6 +431,18 @@ void main() {
             .addPersistentMetadata({"test": "value", "another": "value"});
         Arcane.logger.clearPersistentMetadata();
         expect(Arcane.logger.additionalMetadata.isEmpty, true);
+      });
+
+      test("addPersistentMetadata removes an existing key on empty value", () {
+        Arcane.logger.addPersistentMetadata({"token": "abc"});
+        Arcane.logger.addPersistentMetadata({"token": ""});
+
+        expect(Arcane.logger.additionalMetadata.containsKey("token"), isFalse);
+      });
+
+      test("addPersistentMetadata ignores null values for new keys", () {
+        Arcane.logger.addPersistentMetadata({"token": null});
+        expect(Arcane.logger.additionalMetadata.containsKey("token"), isFalse);
       });
     });
 
@@ -453,6 +504,31 @@ void main() {
           myInterface.events.single.metadata?.containsKey("timestamp"),
           true,
         );
+      });
+
+      test("explicit method parameter is preserved in metadata", () async {
+        Arcane.log(
+          logMessage,
+          method: "customMethod",
+          skipAutodetection: true,
+        );
+
+        expect(myInterface.events.single.metadata?["method"], "customMethod");
+      });
+
+      test("module and method can be inferred from provided metadata",
+          () async {
+        Arcane.log(
+          logMessage,
+          metadata: {
+            "module": "InjectedModule",
+            "method": "InjectedMethod",
+          },
+          skipAutodetection: true,
+        );
+
+        expect(myInterface.events.single.metadata?["module"], "InjectedModule");
+        expect(myInterface.events.single.metadata?["method"], "InjectedMethod");
       });
 
       test("global interceptors run in registration order", () async {

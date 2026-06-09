@@ -27,6 +27,23 @@ void main() {
     );
   });
 
+  testWidgets("ArcaneFeatureFlagProvider.of throws without provider",
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            expect(
+              () => ArcaneFeatureFlagProvider.of(context),
+              throwsA(isA<StateError>()),
+            );
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+  });
+
   testWidgets("feature flag updates trigger rebuilds for dependent widgets",
       (tester) async {
     int buildCount = 0;
@@ -100,6 +117,20 @@ void main() {
     await tester.tap(find.text("disable"));
     await tester.pump();
     expect(find.text("off"), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ArcaneApp(
+          child: Builder(
+            builder: (context) {
+              final scope = context.featureFlags;
+              expect(scope.isDisabled(TestFeature.beta), isTrue);
+              return const SizedBox();
+            },
+          ),
+        ),
+      ),
+    );
   });
 
   testWidgets("scope exposes notifier and stream for reactive consumers",

@@ -225,11 +225,9 @@ class ArcaneLogger {
         ...?parts?.split("(package:").lastOrNull?.split(":"),
       ];
 
-      if (fileAndLineParts.length < 2) {
-        filenameAndLineNumber = fileAndLineParts.firstOrNull;
-      } else {
-        filenameAndLineNumber = "${fileAndLineParts[0]}:${fileAndLineParts[1]}";
-      }
+      final String parsedFilenameAndLine = fileAndLineParts.take(2).join(":");
+      filenameAndLineNumber =
+          parsedFilenameAndLine.isEmpty ? null : parsedFilenameAndLine;
     }
 
     // Module management

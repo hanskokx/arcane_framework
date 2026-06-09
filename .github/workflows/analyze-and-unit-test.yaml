@@ -4,7 +4,7 @@ on:
   pull_request:
 jobs:
   test:
-    name: Analyze and test
+    name: Analyze, test, and enforce coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,5 +17,7 @@ jobs:
         run: flutter pub get
       - name: Analyze
         run: flutter analyze
-      - name: Test
-        run: flutter test
+      - name: Run tests with coverage
+        run: flutter test --coverage
+      - name: Enforce 100% package line coverage
+        run: bash tool/check_coverage.sh
