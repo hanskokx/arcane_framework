@@ -406,8 +406,8 @@ void main() {
 
       test("initializeInterfaces throws when no interfaces are registered",
           () async {
-        expect(
-          () => Arcane.logger.initializeInterfaces(),
+        await expectLater(
+          Arcane.logger.initializeInterfaces(),
           throwsException,
         );
       });
