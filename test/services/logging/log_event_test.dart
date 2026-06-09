@@ -78,4 +78,80 @@ void main() {
       expect(cleared.extra, isNull);
     });
   });
+
+  group("LogEvent.fromJson", () {
+    test("round-trips a fully populated event", () {
+      const original = LogEvent(
+        message: "hello",
+        metadata: {"key": "value"},
+        level: Level.warning,
+        extra: 42,
+      );
+
+      final json = original.toJson();
+      final restored = LogEvent.fromJson(json);
+
+      expect(restored.message, "hello");
+      expect(restored.metadata, {"key": "value"});
+      expect(restored.level, Level.warning);
+      expect(restored.extra, 42);
+    });
+
+    test("round-trips an event with a stack trace", () {
+      final original = LogEvent(
+        message: "crash",
+        stackTrace: StackTrace.fromString("frame #0"),
+      );
+
+      final json = original.toJson();
+      final restored = LogEvent.fromJson(json);
+
+      expect(restored.stackTrace.toString(), "frame #0");
+    });
+
+    test("omits null optional fields from toJson output", () {
+      const event = LogEvent(message: "bare");
+      final json = event.toJson();
+
+      expect(json.containsKey("metadata"), isFalse);
+      expect(json.containsKey("level"), isFalse);
+      expect(json.containsKey("stackTrace"), isFalse);
+      expect(json.containsKey("extra"), isFalse);
+    });
+
+    test("fromJson handles missing optional fields gracefully", () {
+      final event = LogEvent.fromJson({"message": "minimal"});
+
+      expect(event.message, "minimal");
+      expect(event.metadata, isNull);
+      expect(event.level, isNull);
+      expect(event.stackTrace, isNull);
+      expect(event.extra, isNull);
+    });
+
+    test("fromJson falls back to Level.debug for unrecognised level name", () {
+      final event = LogEvent.fromJson({
+        "message": "x",
+        "level": "nonExistentLevel",
+      });
+
+      expect(event.level, Level.debug);
+    });
+
+    test("toJson encodes metadata and extra recursively", () {
+      const event = LogEvent(
+        message: "nested",
+        metadata: {
+          "map": {"inner": 1},
+          "list": [1, 2, 3],
+        },
+        extra: {"deep": true},
+      );
+
+      final json = event.toJson();
+      expect((json["metadata"] as Map)["map"], {"inner": 1});
+      expect((json["metadata"] as Map)["list"], [1, 2, 3]);
+      expect(json["extra"], {"deep": true});
+    });
+  });
 }

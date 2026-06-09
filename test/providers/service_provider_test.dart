@@ -485,6 +485,38 @@ void main() {
         ),
       );
     });
+
+    testWidgets(
+        "ArcaneApp.didUpdateWidget updates notifier when service list changes",
+        (tester) async {
+      final first = MockArcaneService();
+      final second = AnotherMockService();
+      late StateSetter setStateRef;
+      var useSecond = false;
+
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setStateRef = setState;
+            return ArcaneApp(
+              services: useSecond ? [first, second] : [first],
+              child: const SizedBox(),
+            );
+          },
+        ),
+      );
+
+      // Trigger didUpdateWidget with a different service list.
+      setStateRef(() => useSecond = true);
+      await tester.pump();
+
+      // Verify AnotherMockService is now in the merged service list.
+      final notifier = Arcane.registry!;
+      expect(
+        notifier.value.whereType<AnotherMockService>(),
+        isNotEmpty,
+      );
+    });
   });
 }
 

@@ -155,5 +155,70 @@ void main() {
       await tester.pump();
       expect(buildCount, 2);
     });
+
+    testWidgets(
+      "state enableDebugMode updates to debug and no-ops when already debug",
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ArcaneEnvironmentProvider(
+              child: Builder(
+                builder: (context) {
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        );
+
+        final ArcaneEnvironmentModeController state =
+            tester.state<State<ArcaneEnvironmentProvider>>(
+          find.byType(ArcaneEnvironmentProvider),
+        ) as ArcaneEnvironmentModeController;
+
+        expect(Arcane.environment.current, Environment.normal);
+
+        state.enableDebugMode();
+        await tester.pump();
+        expect(Arcane.environment.current, Environment.debug);
+
+        state.enableDebugMode();
+        await tester.pump();
+        expect(Arcane.environment.current, Environment.debug);
+      },
+    );
+
+    testWidgets(
+      "state disableDebugMode updates to normal and no-ops when already normal",
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ArcaneEnvironmentProvider(
+              environment: Environment.debug,
+              child: Builder(
+                builder: (context) {
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        );
+
+        final ArcaneEnvironmentModeController state =
+            tester.state<State<ArcaneEnvironmentProvider>>(
+          find.byType(ArcaneEnvironmentProvider),
+        ) as ArcaneEnvironmentModeController;
+
+        expect(Arcane.environment.current, Environment.debug);
+
+        state.disableDebugMode();
+        await tester.pump();
+        expect(Arcane.environment.current, Environment.normal);
+
+        state.disableDebugMode();
+        await tester.pump();
+        expect(Arcane.environment.current, Environment.normal);
+      },
+    );
   });
 }

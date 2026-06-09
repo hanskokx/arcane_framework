@@ -3,6 +3,18 @@ import "package:flutter/widgets.dart";
 
 import "environment_interface.dart";
 
+/// Typed API for mutating environment mode from provider state.
+abstract interface class ArcaneEnvironmentModeController {
+  /// Enables debug mode by setting the environment to `Environment.debug`.
+  void enableDebugMode();
+
+  /// Disables debug mode by setting the environment to `Environment.normal`.
+  void disableDebugMode();
+
+  /// Sets the current environment.
+  void setEnvironment(Environment environment);
+}
+
 /// An `InheritedWidget` that provides access to the application environment.
 ///
 /// The `ArcaneEnvironment` widget holds the current environment and allows
@@ -77,7 +89,8 @@ class ArcaneEnvironmentProvider extends StatefulWidget {
       _ArcaneEnvironmentProviderState();
 }
 
-class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
+class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider>
+    implements ArcaneEnvironmentModeController {
   late Environment _environment;
 
   void _handleEnvironmentChange() {
@@ -111,17 +124,20 @@ class _ArcaneEnvironmentProviderState extends State<ArcaneEnvironmentProvider> {
   }
 
   /// Enables debug mode by setting the environment to `Environment.debug`.
+  @override
   void enableDebugMode() {
     if (_environment == Environment.debug) return;
     setEnvironment(Environment.debug);
   }
 
   /// Disables debug mode by setting the environment to `Environment.normal`.
+  @override
   void disableDebugMode() {
     if (_environment == Environment.normal) return;
     setEnvironment(Environment.normal);
   }
 
+  @override
   void setEnvironment(Environment environment) {
     Arcane.environment.setEnvironment(environment);
   }
