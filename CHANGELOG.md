@@ -1,7 +1,3 @@
-## 2.0.6
-
-- Added additional tests to reach full test coverage
-
 ## 2.0.5
 
 ### Arcane Framework
