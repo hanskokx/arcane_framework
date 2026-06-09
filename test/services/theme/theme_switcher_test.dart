@@ -40,7 +40,7 @@ void main() {
       expect(ArcaneThemeService.I.isFollowingSystemTheme, isTrue);
 
       // Simulate a platform brightness change via the WidgetsBindingObserver.
-      WidgetsBinding.instance.handlePlatformBrightnessChanged();
+      tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
       await tester.pump();
 
       // After the post-frame callback the service should still be in
@@ -63,7 +63,7 @@ void main() {
       expect(ArcaneThemeService.I.isFollowingSystemTheme, isFalse);
 
       // Simulate platform brightness change — should be a no-op without error.
-      WidgetsBinding.instance.handlePlatformBrightnessChanged();
+      tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
       await tester.pump();
 
       expect(ArcaneThemeService.I.currentThemeMode, ThemeMode.dark);
