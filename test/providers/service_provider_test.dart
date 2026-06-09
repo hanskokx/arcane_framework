@@ -286,6 +286,120 @@ void main() {
       expect(buildCount, 3);
     });
 
+    testWidgets("maybeOf returns null when provider is missing",
+        (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              expect(ArcaneServiceProvider.maybeOf(context), isNull);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("of asserts when provider is missing", (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              expect(
+                () => ArcaneServiceProvider.of(context),
+                throwsA(isA<AssertionError>()),
+              );
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets(
+        "requiredServiceOfType returns service and asserts when missing",
+        (tester) async {
+      await tester.pumpWidget(
+        ArcaneApp(
+          services: testServices,
+          child: Builder(
+            builder: (context) {
+              final service = ArcaneServiceProvider.requiredServiceOfType<
+                  MockArcaneService>(context);
+              expect(service, isA<MockArcaneService>());
+
+              expect(
+                () => ArcaneServiceProvider.requiredServiceOfType<
+                    UnregisteredService>(context),
+                throwsA(isA<AssertionError>()),
+              );
+
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("addService replaces same runtime type", (tester) async {
+      late ArcaneServiceProvider provider;
+      final first = MockArcaneService();
+      final replacement = MockArcaneService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ArcaneServiceProvider(
+            serviceInstances: [first],
+            child: Builder(
+              builder: (context) {
+                provider = ArcaneServiceProvider.of(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+
+      provider.addService(replacement);
+      await tester.pump();
+
+      final matches =
+          provider.registeredServices.whereType<MockArcaneService>();
+      expect(matches.length, 1);
+      expect(matches.single, same(replacement));
+    });
+
+    testWidgets("removeService removes matching type and reports status",
+        (tester) async {
+      late ArcaneServiceProvider provider;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ArcaneServiceProvider(
+            serviceInstances: [MockArcaneService(), AnotherMockService()],
+            child: Builder(
+              builder: (context) {
+                provider = ArcaneServiceProvider.of(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+
+      final removed = provider.removeService<MockArcaneService>();
+      await tester.pump();
+
+      expect(removed, isTrue);
+      expect(
+        provider.registeredServices.whereType<MockArcaneService>(),
+        isEmpty,
+      );
+
+      final secondRemoval = provider.removeService<MockArcaneService>();
+      expect(secondRemoval, isFalse);
+    });
+
     testWidgets("ArcaneService.of<T> static helper works", (tester) async {
       await tester.pumpWidget(
         ArcaneApp(
@@ -369,6 +483,38 @@ void main() {
             },
           ),
         ),
+      );
+    });
+
+    testWidgets(
+        "ArcaneApp.didUpdateWidget updates notifier when service list changes",
+        (tester) async {
+      final first = MockArcaneService();
+      final second = AnotherMockService();
+      late StateSetter setStateRef;
+      var useSecond = false;
+
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) {
+            setStateRef = setState;
+            return ArcaneApp(
+              services: useSecond ? [first, second] : [first],
+              child: const SizedBox(),
+            );
+          },
+        ),
+      );
+
+      // Trigger didUpdateWidget with a different service list.
+      setStateRef(() => useSecond = true);
+      await tester.pump();
+
+      // Verify AnotherMockService is now in the merged service list.
+      final notifier = Arcane.registry!;
+      expect(
+        notifier.value.whereType<AnotherMockService>(),
+        isNotEmpty,
       );
     });
   });
