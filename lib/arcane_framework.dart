@@ -52,4 +52,4 @@ export "package:arcane_framework/src/services/theme/arcane_theme.dart";
 export "package:arcane_framework/src/services/theme/theme_extensions.dart";
 export "package:arcane_framework/src/services/theme/theme_service.dart";
 export "package:arcane_framework/src/services/theme/theme_switcher.dart";
-export "package:result_monad/result_monad.dart";
+export "package:result_monad/result_monad.dart" hide Error, Ok;
