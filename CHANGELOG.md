@@ -1,3 +1,16 @@
+## 2.0.6
+
+### Arcane Framework
+
+- [BREAKING] This package no longer exports the `Error` and `Ok` symbols from
+  the `result_monad` package.
+
+#### Migration Steps (`Error`/`Ok`)
+
+1. Add the `result_monad` package to your `pubspec.yaml` file.
+2. Use the import `import 'package:result_monad/result_monad.dart';` to access
+   `Error` and `Ok` symbols.
+
 ## 2.0.5
 
 ### Arcane Framework
