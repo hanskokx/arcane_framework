@@ -221,6 +221,53 @@ void main() {
       ArcaneAuthenticationService.I.dispose();
       // No assertion needed; just ensure no crash
     });
+
+    test("notifier getter reflects unauthenticated default", () {
+      expect(
+        ArcaneAuthenticationService.I.notifier.value,
+        AuthenticationStatus.unauthenticated,
+      );
+    });
+
+    test("accessToken and refreshToken fall back to empty string", () async {
+      expect(await ArcaneAuthenticationService.I.accessToken, "");
+      expect(await ArcaneAuthenticationService.I.refreshToken, "");
+    });
+
+    testWidgets("setDebug and setNormal callbacks run on state transitions",
+        (tester) async {
+      late BuildContext capturedContext;
+      var debugCallbackCalled = false;
+      var normalCallbackCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              capturedContext = context;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      await ArcaneAuthenticationService.I.setDebug(
+        capturedContext,
+        onDebugModeSet: () async {
+          debugCallbackCalled = true;
+        },
+      );
+
+      await ArcaneAuthenticationService.I.setNormal(
+        capturedContext,
+        onDebugModeUnset: () async {
+          normalCallbackCalled = true;
+        },
+      );
+
+      expect(debugCallbackCalled, isTrue);
+      expect(normalCallbackCalled, isTrue);
+    });
   });
 
   late ArcaneAuthInterface authInterface;

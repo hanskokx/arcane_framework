@@ -34,6 +34,56 @@ void main() {
       expect(ArcaneThemeService.I.light, customLight);
     });
 
+    test("dark and light setters delegate to setDarkTheme/setLightTheme", () {
+      final customDark =
+          ThemeData(primaryColor: Colors.teal, brightness: Brightness.dark);
+      final customLight =
+          ThemeData(primaryColor: Colors.amber, brightness: Brightness.light);
+
+      ArcaneThemeService.I.dark = customDark;
+      ArcaneThemeService.I.light = customLight;
+
+      expect(ArcaneThemeService.I.dark, customDark);
+      expect(ArcaneThemeService.I.light, customLight);
+    });
+
+    testWidgets("currentModeOf returns context themeMode", (tester) async {
+      ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              expect(
+                ArcaneThemeService.I.currentModeOf(context),
+                ThemeMode.dark,
+              );
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+    });
+
+    testWidgets("setInitialTheme handles explicit dark mode", (tester) async {
+      ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
+
+      late BuildContext capturedContext;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              capturedContext = context;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      ArcaneThemeService.I.setInitialTheme(capturedContext);
+      expect(ArcaneThemeService.I.currentTheme.brightness, Brightness.dark);
+    });
+
     test("reset restores defaults", () {
       ArcaneThemeService.I.setDarkTheme(
         ThemeData(primaryColor: Colors.red, brightness: Brightness.dark),

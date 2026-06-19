@@ -1,6 +1,29 @@
 import "package:arcane_framework/arcane_framework.dart";
 import "package:flutter_test/flutter_test.dart";
 
+class FeatureFlagLoggingInterface extends LoggingInterface {
+  final List<LogEvent> events = <LogEvent>[];
+
+  @override
+  void log(
+    String message, {
+    Map<String, Object?>? metadata,
+    Level? level,
+    StackTrace? stackTrace,
+    Object? extra,
+  }) {
+    events.add(
+      LogEvent(
+        message: message,
+        metadata: metadata == null ? null : Map<String, Object?>.from(metadata),
+        level: level,
+        stackTrace: stackTrace,
+        extra: extra,
+      ),
+    );
+  }
+}
+
 void main() {
   group("ArcaneFeatureFlagService", () {
     late ArcaneFeatureFlagService featureFlags;
@@ -8,10 +31,19 @@ void main() {
     setUp(() {
       featureFlags = ArcaneFeatureFlagService.I;
       Arcane.features.reset();
+      Arcane.logger.reset();
     });
 
     test("singleton instance is consistent", () {
       expect(identical(ArcaneFeatureFlagService.I, featureFlags), true);
+    });
+
+    test("initialized reflects init and reset transitions", () {
+      expect(ArcaneFeatureFlagService.initialized, isFalse);
+      featureFlags.enableFeature(MockFeature.test);
+      expect(ArcaneFeatureFlagService.initialized, isTrue);
+      featureFlags.reset();
+      expect(ArcaneFeatureFlagService.initialized, isFalse);
     });
 
     group("feature management", () {
@@ -98,6 +130,50 @@ void main() {
         expect(secondEmission, isNot(contains(MockFeature.test)));
 
         await secondSubscription.cancel();
+      });
+
+      test("enableFeature logs when logger is initialized", () async {
+        final logger = FeatureFlagLoggingInterface();
+        await Arcane.logger.registerInterface(logger);
+
+        featureFlags.enableFeature(MockFeature.test);
+
+        expect(logger.events, isNotEmpty);
+        expect(logger.events.last.message, contains("Feature enabled"));
+        expect(logger.events.last.level, Level.info);
+        expect(
+          logger.events.last.metadata?[MockFeature.test.toString()],
+          "✅",
+        );
+      });
+
+      test("disableFeature logs when logger is initialized", () async {
+        final logger = FeatureFlagLoggingInterface();
+        await Arcane.logger.registerInterface(logger);
+
+        featureFlags.enableFeature(MockFeature.test);
+        featureFlags.disableFeature(MockFeature.test);
+
+        expect(logger.events, isNotEmpty);
+        expect(logger.events.last.message, contains("Feature disabled"));
+        expect(logger.events.last.level, Level.info);
+        expect(
+          logger.events.last.metadata?[MockFeature.test.toString()],
+          "❌",
+        );
+      });
+
+      test("dispose closes stream and future subscribers still receive events",
+          () async {
+        featureFlags.dispose();
+
+        final event = expectLater(
+          featureFlags.enabledFeaturesChanges,
+          emitsThrough(contains(MockFeature.another)),
+        );
+
+        featureFlags.enableFeature(MockFeature.another);
+        await event;
       });
     });
   });
