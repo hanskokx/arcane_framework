@@ -28,7 +28,7 @@ void main() {
       expect(ArcaneAuthenticationService.I.authInterface, isNull);
       expect(
         ArcaneAuthenticationService.I.status,
-        AuthenticationStatus.unauthenticated,
+        AuthenticationStatus.unknown,
       );
       expect(ArcaneAuthenticationService.I.isSignedIn.value, false);
     });
@@ -225,7 +225,67 @@ void main() {
     test("notifier getter reflects unauthenticated default", () {
       expect(
         ArcaneAuthenticationService.I.notifier.value,
-        AuthenticationStatus.unauthenticated,
+        AuthenticationStatus.unknown,
+      );
+    });
+
+    test("isUnknown getter reflects unknown status", () {
+      expect(
+        ArcaneAuthenticationService.I.status.isUnknown,
+        isTrue,
+      );
+    });
+
+    test("isUnknown getter reflects unknown status after a reset", () async {
+      expect(
+        ArcaneAuthenticationService.I.status.isUnknown,
+        isTrue,
+      );
+
+      ArcaneAuthenticationService.I.setAuthenticated();
+
+      expect(
+        ArcaneAuthenticationService.I.status.isUnknown,
+        isFalse,
+      );
+
+      expect(
+        ArcaneAuthenticationService.I.status.isAuthenticated,
+        isTrue,
+      );
+
+      ArcaneAuthenticationService.I.setUnauthenticated();
+
+      expect(
+        ArcaneAuthenticationService.I.status.isUnknown,
+        isFalse,
+      );
+
+      expect(
+        ArcaneAuthenticationService.I.status.isAuthenticated,
+        isFalse,
+      );
+
+      expect(
+        ArcaneAuthenticationService.I.status.isUnauthenticated,
+        isTrue,
+      );
+
+      await ArcaneAuthenticationService.I.reset();
+
+      expect(
+        ArcaneAuthenticationService.I.status.isUnknown,
+        isTrue,
+      );
+
+      expect(
+        ArcaneAuthenticationService.I.status.isAuthenticated,
+        isFalse,
+      );
+
+      expect(
+        ArcaneAuthenticationService.I.status.isUnauthenticated,
+        isTrue,
       );
     });
 
@@ -334,7 +394,7 @@ void main() {
       expect(result.isFailure, true);
       expect(
         ArcaneAuthenticationService.I.status,
-        equals(AuthenticationStatus.unauthenticated),
+        equals(AuthenticationStatus.unknown),
       );
     });
 

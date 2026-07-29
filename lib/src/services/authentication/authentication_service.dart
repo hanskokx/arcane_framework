@@ -20,7 +20,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   static ArcaneAuthenticationService get I => _instance;
 
   final ValueNotifier<AuthenticationStatus> _notifier =
-      ValueNotifier<AuthenticationStatus>(AuthenticationStatus.unauthenticated);
+      ValueNotifier<AuthenticationStatus>(AuthenticationStatus.unknown);
 
   /// A `ValueNotifier` that emits the current `AuthenticationStatus`.
   ValueNotifier<AuthenticationStatus> get notifier => _notifier;
@@ -54,7 +54,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   ArcaneAuthInterface? get authInterface => _authInterface;
 
   /// Returns `true` when the current status is authenticated.
-  bool get isAuthenticated => status == AuthenticationStatus.authenticated;
+  bool get isAuthenticated => status.isAuthenticated;
 
   final ValueNotifier<bool> _isSignedIn = ValueNotifier<bool>(false);
 
@@ -86,7 +86,7 @@ class ArcaneAuthenticationService extends ArcaneService {
   /// default.
   Future<void> reset() async {
     _authInterface = null;
-    _notifier.value = AuthenticationStatus.unauthenticated;
+    _notifier.value = AuthenticationStatus.unknown;
     _isSignedIn.value = isAuthenticated;
     _statusController.add(_notifier.value);
     _signedInController.add(_isSignedIn.value);

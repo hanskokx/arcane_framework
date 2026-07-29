@@ -966,6 +966,37 @@ void dispose() {
 }
 ```
 
+#### Authentication Status
+
+The `AuthenticationStatus` enum represents the current authentication state:
+
+| Status            | Description                                                 |
+| ----------------- | ----------------------------------------------------------- |
+| `authenticated`   | The user is authenticated and signed in.                    |
+| `unauthenticated` | The user is not authenticated (explicitly signed out).      |
+| `unknown`         | The authentication status is not yet known (initial state). |
+
+Use the provided getters to check the current status:
+
+```dart
+// Check if user is authenticated
+if (Arcane.auth.status.isAuthenticated) {
+  // User is signed in
+}
+
+// Check if user is explicitly unauthenticated (signed out)
+if (Arcane.auth.status.isUnauthenticated) {
+  // User is not signed in
+}
+
+// Check if authentication status is still being determined
+if (Arcane.auth.status.isUnknown) {
+  // Show loading indicator, etc.
+}
+```
+
+The default status is `unknown` until an authentication interface is registered and initialized. After calling `reset()`, the status returns to `unknown`.
+
 ### Application Environments
 
 Arcane environments are value-based and extensible. Two built-in values are

@@ -27,6 +27,7 @@ enum SignUpStep {
 /// This enum has two possible states:
 /// - `authenticated`: The user is authenticated.
 /// - `unauthenticated`: The user is not authenticated.
+/// - `unknown` (default): The authentication status is not yet known.
 ///
 /// Example:
 /// ```dart
@@ -40,11 +41,17 @@ enum AuthenticationStatus {
   authenticated,
 
   /// The user is not authenticated.
-  unauthenticated;
+  unauthenticated,
+
+  /// The authentication status is currently unknown.
+  unknown;
 
   /// Returns `true` if the current status is `authenticated`.
   bool get isAuthenticated => this == authenticated;
 
-  /// Returns `true` if the current status is `unauthenticated`.
-  bool get isUnauthenticated => this == unauthenticated;
+  /// Returns `true` if the current status is not `authenticated`.
+  bool get isUnauthenticated => !isAuthenticated;
+
+  /// Returns `true` if the current status is `unknown`.
+  bool get isUnknown => this == unknown;
 }

@@ -13,10 +13,17 @@ void main() {
     test("isAuthenticated returns true only for authenticated", () {
       expect(AuthenticationStatus.authenticated.isAuthenticated, isTrue);
       expect(AuthenticationStatus.unauthenticated.isAuthenticated, isFalse);
+      expect(AuthenticationStatus.unknown.isAuthenticated, isFalse);
     });
-    test("isUnauthenticated returns true only for unauthenticated", () {
+    test("isUnauthenticated returns true for unauthenticated and unknown", () {
       expect(AuthenticationStatus.authenticated.isUnauthenticated, isFalse);
       expect(AuthenticationStatus.unauthenticated.isUnauthenticated, isTrue);
+      expect(AuthenticationStatus.unknown.isUnauthenticated, isTrue);
+    });
+    test("isUnknown returns true only for unknown", () {
+      expect(AuthenticationStatus.authenticated.isUnknown, isFalse);
+      expect(AuthenticationStatus.unauthenticated.isUnknown, isFalse);
+      expect(AuthenticationStatus.unknown.isUnknown, isTrue);
     });
   });
 }

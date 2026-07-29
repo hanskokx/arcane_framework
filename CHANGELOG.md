@@ -1,3 +1,14 @@
+## 2.1.0
+
+### Authentication Service
+
+- [NEW] Added `AuthenticationStatus.unknown` as the new default authentication state (replaces `unauthenticated` as default).
+- [NEW] Added `AuthenticationStatus.isUnknown` getter to explicitly check for unknown state.
+- [CHANGE] `AuthenticationStatus.isUnauthenticated` now returns `true` for both `unauthenticated` and `unknown` states (use `isUnknown` to distinguish).
+- [CHANGE] `ArcaneAuthenticationService` now initializes with `AuthenticationStatus.unknown` instead of `unauthenticated`.
+- [CHANGE] `ArcaneAuthenticationService.reset()` now resets status to `unknown`.
+- [CHANGE] Updated tests to reflect new default status behavior.
+
 ## 2.0.6
 
 ### Arcane Framework
