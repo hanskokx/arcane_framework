@@ -1,7 +1,6 @@
 # Arcane Framework
 
-> _**A**gnostic **R**eusable **C**omponent **A**rchitecture for **N**ew
-> **E**cosystems_
+> _**A**gnostic **R**eusable **C**omponent **A**rchitecture for **N**ew **E**cosystems_
 
 [![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)](https://pub.dev/packages/arcane_analysis)
 
