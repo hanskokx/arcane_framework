@@ -3,7 +3,7 @@
 > _**A**gnostic **R**eusable **C**omponent **A**rchitecture for **N**ew
 > **E**cosystems_
 
-![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)
+[![style: arcane analysis](https://img.shields.io/badge/style-arcane_analysis-6E35AE)](https://pub.dev/packages/arcane_analysis)
 
 The Arcane Framework is a powerful Dart package designed to provide a robust
 architecture for managing key application services such as logging,
@@ -27,6 +27,7 @@ and service management.
     - [Feature Flags](#feature-flags)
     - [Logging](#logging)
     - [Authentication](#authentication)
+      - [Authentication Status](#authentication-status)
     - [Application Environments](#application-environments)
     - [Dynamic Theming](#dynamic-theming)
   - [Contributing](#contributing)
