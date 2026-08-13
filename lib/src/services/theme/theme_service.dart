@@ -1,7 +1,7 @@
 import "dart:async";
 
 import "package:arcane_framework/src/service/arcane_service.dart";
-import "package:flutter/material.dart";
+import "package:material_ui/material_ui.dart";
 
 import "theme_extensions.dart";
 

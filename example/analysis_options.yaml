@@ -7,6 +7,14 @@ analyzer:
     # treat missing returns as an error (not a hint)
     missing_return: error
     invalid_annotation_target: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   language:
     strict-casts: true
 

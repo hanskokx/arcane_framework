@@ -7,8 +7,8 @@ import "package:example/interfaces/debug_print_interface.dart";
 import "package:example/services/favorite_color_service.dart";
 import "package:example/theme/theme.dart";
 import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:material_ui/material_ui.dart";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

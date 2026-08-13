@@ -1,3 +1,7 @@
+## 3.0.0-dev.1
+
+- [CHANGE] Migrated from `flutter/material.dart` to `material_ui`
+
 ## 2.1.0
 
 ### Authentication Service

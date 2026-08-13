@@ -1,6 +1,6 @@
 import "package:arcane_framework/src/service/arcane_service.dart";
 import "package:collection/collection.dart";
-import "package:flutter/material.dart";
+import "package:material_ui/material_ui.dart";
 
 import "arcane.dart";
 import "services/environment/environment_provider.dart";
