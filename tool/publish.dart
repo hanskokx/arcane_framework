@@ -30,6 +30,10 @@ Future<void> main(List<String> args) async {
     );
 
     try {
+      await _cleanWorkspace(
+        frameworkRoot: frameworkRoot,
+      );
+
       await _buildExtension(
         extensionRoot: extensionRoot,
         frameworkRoot: frameworkRoot,
@@ -211,6 +215,29 @@ void _deleteOverride(String extensionRoot) {
   }
 }
 
+Future<void> _cleanWorkspace({
+  required String frameworkRoot,
+}) async {
+  _log("Cleaning workspace...");
+  final (int cleanCode, String cleanOutput) = await _runCaptured([
+    _flutterBinary(),
+    "clean",
+  ], frameworkRoot);
+  if (cleanCode != 0) {
+    _fail("flutter clean failed:\n$cleanOutput");
+  }
+
+  _log("Cleaning build...");
+  final (int buildCode, String buildOutput) = await _runCaptured([
+    _flutterBinary(),
+    "clean",
+    "build",
+  ], frameworkRoot);
+  if (buildCode != 0) {
+    _fail("flutter clean build failed:\n$buildOutput");
+  }
+}
+
 Future<void> _buildExtension({
   required String extensionRoot,
   required String frameworkRoot,
@@ -307,9 +334,9 @@ Future<void> _publish({
   }
 
   if (dryRun) {
-    _log("Dry run complete. Nothing was uploaded.");
+    _log("Dry run complete. Nothing was uploaded.\n$output");
   } else {
-    _log("arcane_framework published successfully.");
+    _log("arcane_framework published successfully.\n$output");
   }
 }
 
