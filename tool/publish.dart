@@ -118,7 +118,7 @@ Future<void> _ensureExtensionRepo(String extensionRoot, String? gitUrl) async {
       );
     }
     _log("Cloning extension repo into $extensionRoot...");
-    final (int code, String output) = await _runCaptured([
+    final (int code, String output) = await _runStreaming([
       "git",
       "clone",
       gitUrl,
@@ -131,7 +131,7 @@ Future<void> _ensureExtensionRepo(String extensionRoot, String? gitUrl) async {
   }
 
   _log("Verifying the extension repo at $extensionRoot is up to date...");
-  final (int statusCode, String statusOutput) = await _runCaptured([
+  final (int statusCode, String statusOutput) = await _runStreaming([
     "git",
     "-C",
     extensionRoot,
@@ -144,7 +144,7 @@ Future<void> _ensureExtensionRepo(String extensionRoot, String? gitUrl) async {
     _warn("The extension repo has uncommitted changes; proceeding anyway.");
   }
 
-  final (int remoteCode, _) = await _runCaptured([
+  final (int remoteCode, _) = await _runStreaming([
     "git",
     "-C",
     extensionRoot,
@@ -159,7 +159,7 @@ Future<void> _ensureExtensionRepo(String extensionRoot, String? gitUrl) async {
     return;
   }
 
-  final (int fetchCode, String fetchOutput) = await _runCaptured([
+  final (int fetchCode, String fetchOutput) = await _runStreaming([
     "git",
     "-C",
     extensionRoot,
@@ -171,7 +171,7 @@ Future<void> _ensureExtensionRepo(String extensionRoot, String? gitUrl) async {
     return;
   }
 
-  final (int pullCode, String pullOutput) = await _runCaptured([
+  final (int pullCode, String pullOutput) = await _runStreaming([
     "git",
     "-C",
     extensionRoot,
@@ -226,7 +226,7 @@ Future<void> _cleanWorkspace({
   required String frameworkRoot,
 }) async {
   _log("Cleaning workspace...");
-  final (int cleanCode, String cleanOutput) = await _runCaptured([
+  final (int cleanCode, String cleanOutput) = await _runStreaming([
     _flutterBinary(),
     "clean",
   ], frameworkRoot);
@@ -235,7 +235,7 @@ Future<void> _cleanWorkspace({
   }
 
   _log("Cleaning build...");
-  final (int buildCode, String buildOutput) = await _runCaptured([
+  final (int buildCode, String buildOutput) = await _runStreaming([
     _flutterBinary(),
     "clean",
     "build",
@@ -252,7 +252,7 @@ Future<void> _buildExtension({
   final String dest = _join(_join(frameworkRoot, "extension"), "devtools");
 
   _log("Installing extension dependencies...");
-  final (int pubGetCode, String pubGetOutput) = await _runCaptured([
+  final (int pubGetCode, String pubGetOutput) = await _runStreaming([
     _flutterBinary(),
     "pub",
     "get",
@@ -264,7 +264,7 @@ Future<void> _buildExtension({
   _log(
     "Building the extension web app and copying it into arcane_framework...",
   );
-  final (int buildCode, String buildOutput) = await _runCaptured([
+  final (int buildCode, String buildOutput) = await _runStreaming([
     "dart",
     "run",
     "devtools_extensions",
@@ -277,7 +277,7 @@ Future<void> _buildExtension({
   }
 
   _log("Validating the extension contents...");
-  final (int validateCode, String validateOutput) = await _runCaptured([
+  final (int validateCode, String validateOutput) = await _runStreaming([
     "dart",
     "run",
     "devtools_extensions",
@@ -331,7 +331,7 @@ Future<void> _publish({
     _log("Publishing arcane_framework to pub.dev...");
   }
 
-  final (int code, String output) = await _runInteractive(
+  final (int code, String output) = await _runStreaming(
     [
       _flutterBinary(),
       "pub",
@@ -340,6 +340,7 @@ Future<void> _publish({
     ],
     frameworkRoot,
     autoApprove: autoApprove,
+    interactive: true,
   );
   if (code != 0) {
     _fail("flutter pub publish failed:\n$output");
@@ -354,30 +355,11 @@ Future<void> _publish({
 
 String _flutterBinary() => Platform.isWindows ? "flutter.bat" : "flutter";
 
-Future<(int, String)> _runCaptured(
-  List<String> command,
-  String workingDirectory,
-) async {
-  final ProcessResult result = await Process.run(
-    command.first,
-    command.sublist(1),
-    workingDirectory: workingDirectory,
-    stdoutEncoding: utf8,
-    stderrEncoding: utf8,
-  );
-  final String stdout = result.stdout as String? ?? "";
-  final String stderr = result.stderr as String? ?? "";
-  final String stderrTrimmed = stderr.trim();
-  if (stderrTrimmed.isEmpty) {
-    return (result.exitCode, stdout);
-  }
-  return (result.exitCode, "$stderrTrimmed\n\n---\n\n$stdout");
-}
-
-Future<(int, String)> _runInteractive(
+Future<(int, String)> _runStreaming(
   List<String> command,
   String workingDirectory, {
-  required bool autoApprove,
+  bool autoApprove = false,
+  bool interactive = false,
 }) async {
   final Process process = await Process.start(
     command.first,
@@ -390,9 +372,11 @@ Future<(int, String)> _runInteractive(
   final StringBuffer promptBuffer = StringBuffer();
   bool promptHandled = false;
 
+  // Stream stdout
   process.stdout.transform(utf8.decoder).listen((String data) {
     outputBuffer.write(data);
-    if (!promptHandled) {
+    stdout.write(data);
+    if (!promptHandled && autoApprove) {
       promptBuffer.write(data);
       _checkAndRespondToPrompt(
         process,
@@ -403,9 +387,11 @@ Future<(int, String)> _runInteractive(
     }
   });
 
+  // Stream stderr
   process.stderr.transform(utf8.decoder).listen((String data) {
     outputBuffer.write(data);
-    if (!promptHandled) {
+    stderr.write(data);
+    if (!promptHandled && autoApprove) {
       promptBuffer.write(data);
       _checkAndRespondToPrompt(
         process,
@@ -415,6 +401,13 @@ Future<(int, String)> _runInteractive(
       );
     }
   });
+
+  // Pipe stdin from terminal to child process (for interactive prompts)
+  if (interactive && !autoApprove) {
+    stdin.transform(utf8.decoder).listen((String data) {
+      process.stdin.write(data);
+    });
+  }
 
   final int exitCode = await process.exitCode;
   return (exitCode, outputBuffer.toString());
@@ -440,6 +433,8 @@ void _checkAndRespondToPrompt(
       _warn(
         "Run with --yes to auto-approve, or the publish will wait for input.",
       );
+
+      _log(content);
       // The process will hang waiting for stdin input - user needs to type in the terminal
     }
     markHandled();
