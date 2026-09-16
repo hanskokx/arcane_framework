@@ -10,9 +10,9 @@ final class LoggingInterceptorsService {
 
   final List<LogInterceptor> _globalInterceptors = [];
   final List<_InterfaceScopedInterceptorRegistration>
-      _interfaceScopedInterceptorRegistrations = [];
+  _interfaceScopedInterceptorRegistrations = [];
   final List<_TypeScopedInterceptorRegistration>
-      _typeScopedInterceptorRegistrations = [];
+  _typeScopedInterceptorRegistrations = [];
 
   /// Registers an interceptor.
   ///

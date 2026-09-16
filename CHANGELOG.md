@@ -1,3 +1,13 @@
+## 3.0.0-dev.2
+
+- [NEW] Added a single VM service extension, `ext.arcane.devtools.invoke`, registered automatically when an app mounts `ArcaneApp`. It exposes read-only introspection for services, recent logs, feature flags, authentication, theme, and environment, plus narrow mutations (`set_feature_flag`, `set_theme_mode`, `set_environment`, `set_auth_status`). The extension powers both the DevTools extension and the bundled MCP server.
+- [NEW] Added a bundled MCP server (`dart run arcane_framework:arcane_mcp_server`) that speaks MCP JSON-RPC over stdio. It discovers running apps through the Dart Tooling Daemon (`find_apps`, `connect_app`), connects to a selected app's VM service, and mirrors the extension methods as `get_*` tools with an `arcane://*` resource collection.
+- [NEW] Added a rolling log buffer (default 500 events) attached to `ArcaneLogger` while `ArcaneApp` is mounted, so logs can be polled over the extension without an active stream subscription.
+- [NEW] Added `ArcaneFeatureFlagService.catalog`. A flag becomes known the first time the app enables or disables it and can then be toggled remotely by name; `ArcaneFeatureFlagService.reset()` now clears the catalog.
+- [NEW] Added a DevTools extension for deeper insights into running `ArcaneApp` applications.
+- [DOC] To access the DevTools extension, start the app with `flutter run` and open DevTools (press `d` in the `flutter run` terminal or launch DevTools from your IDE). DevTools discovers the extension in this package's `extension/devtools` directory and shows an `arcane_framework` tab once the app is connected; the tab requires a running debug build of the app.
+- [SECURITY] The VM service extension and its log buffer are registered only when `kDebugMode` is true; profile and release apps never expose live runtime state on the VM service.
+
 ## 3.0.0-dev.1
 
 - [CHANGE] Migrated from `flutter/material.dart` to `material_ui`

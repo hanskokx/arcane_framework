@@ -28,10 +28,10 @@ class ArcaneLogger {
 
   /// A list of registered logging interfaces.
   List<LoggingInterface> get interfaces => [
-        for (final _LoggingInterfaceRegistration registration
-            in I._interfaceRegistrations)
-          registration.interface,
-      ];
+    for (final _LoggingInterfaceRegistration registration
+        in I._interfaceRegistrations)
+      registration.interface,
+  ];
 
   /// Interceptor service used to add, remove, and clear interceptors.
   LoggingInterceptorsService get interceptors => I._interceptorService;
@@ -138,6 +138,7 @@ class ArcaneLogger {
   void log(
     /// The message to be logged
     String message, {
+
     /// The Dart class from which the `log` call was invoked. This is useful
     /// in determining which part of the code called the log event. If the
     /// [module] is not specified and [skipAutodetection] is set to [false],
@@ -204,22 +205,24 @@ class ArcaneLogger {
     if (!skipAutodetection) {
       String? parts;
       try {
-        parts = StackTrace.current
-            .toString()
-            .split("\n")[2]
-            .split(RegExp("#2"))[1]
-            .trim();
+        parts =
+            StackTrace.current
+                .toString()
+                .split("\n")[2]
+                .split(RegExp("#2"))[1]
+                .trim();
       } catch (_) {}
 
       module ??= parts?.split(".").firstOrNull?.replaceFirst("new ", "");
 
-      method ??= ((parts?.split(".").length ?? 0) <= 1)
-          ? null
-          : parts
-              ?.split(".")[1]
-              .split(" ")
-              .firstOrNull
-              ?.replaceAll("<anonymous", "");
+      method ??=
+          ((parts?.split(".").length ?? 0) <= 1)
+              ? null
+              : parts
+                  ?.split(".")[1]
+                  .split(" ")
+                  .firstOrNull
+                  ?.replaceAll("<anonymous", "");
 
       final List<String> fileAndLineParts = [
         ...?parts?.split("(package:").lastOrNull?.split(":"),
@@ -250,12 +253,14 @@ class ArcaneLogger {
 
     logMetadata.addAll(additionalMetadata);
 
-    module ??= logMetadata.containsKey("module")
-        ? logMetadata["module"] as String?
-        : null;
-    method ??= logMetadata.containsKey("method")
-        ? logMetadata["method"] as String?
-        : null;
+    module ??=
+        logMetadata.containsKey("module")
+            ? logMetadata["module"] as String?
+            : null;
+    method ??=
+        logMetadata.containsKey("method")
+            ? logMetadata["method"] as String?
+            : null;
 
     final LogEvent event = LogEvent(
       message: message,
@@ -269,14 +274,15 @@ class ArcaneLogger {
     for (final _LoggingInterfaceRegistration registration
         in I._interfaceRegistrations) {
       if (initialized) {
-        final List<LogInterceptor> interceptors =
-            I.interceptors.resolveForInterface(registration.interface);
+        final List<LogInterceptor> interceptors = I.interceptors
+            .resolveForInterface(registration.interface);
 
         final LogEvent? interfaceEvent = _runInterceptors(
           event.copyWith(
-            metadata: event.metadata == null
-                ? null
-                : Map<String, Object?>.from(event.metadata!),
+            metadata:
+                event.metadata == null
+                    ? null
+                    : Map<String, Object?>.from(event.metadata!),
           ),
           interceptors: interceptors,
           context: LogInterceptorContext(interface: registration.interface),

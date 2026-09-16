@@ -31,10 +31,11 @@ final class LogInterceptorContext {
 }
 
 /// Signature for callbacks used by [LogInterceptor].
-typedef LogInterceptorCallback = LogEvent? Function(
-  LogEvent event,
-  LogInterceptorContext context,
-);
+typedef LogInterceptorCallback =
+    LogEvent? Function(
+      LogEvent event,
+      LogInterceptorContext context,
+    );
 
 /// A function-like object that intercepts and optionally transforms log events.
 ///

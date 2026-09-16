@@ -25,48 +25,50 @@ void main() {
     });
 
     testWidgets(
-        "didChangePlatformBrightness calls followSystemTheme when following system",
-        (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ArcaneThemeSwitcher(child: SizedBox()),
-        ),
-      );
+      "didChangePlatformBrightness calls followSystemTheme when following system",
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ArcaneThemeSwitcher(child: SizedBox()),
+          ),
+        );
 
-      // followSystemTheme is set during didChangeDependencies; enable it.
-      ArcaneThemeService.I.followSystemTheme(
-        tester.element(find.byType(ArcaneThemeSwitcher)),
-      );
-      expect(ArcaneThemeService.I.isFollowingSystemTheme, isTrue);
+        // followSystemTheme is set during didChangeDependencies; enable it.
+        ArcaneThemeService.I.followSystemTheme(
+          tester.element(find.byType(ArcaneThemeSwitcher)),
+        );
+        expect(ArcaneThemeService.I.isFollowingSystemTheme, isTrue);
 
-      // Simulate a platform brightness change via the WidgetsBindingObserver.
-      tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
-      await tester.pump();
+        // Simulate a platform brightness change via the WidgetsBindingObserver.
+        tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
+        await tester.pump();
 
-      // After the post-frame callback the service should still be in
-      // follow-system mode — the key assertion is that no exception was thrown
-      // and the widget remained mounted.
-      expect(ArcaneThemeService.I.isFollowingSystemTheme, isTrue);
-    });
+        // After the post-frame callback the service should still be in
+        // follow-system mode — the key assertion is that no exception was thrown
+        // and the widget remained mounted.
+        expect(ArcaneThemeService.I.isFollowingSystemTheme, isTrue);
+      },
+    );
 
     testWidgets(
-        "didChangePlatformBrightness is a no-op when not following system",
-        (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ArcaneThemeSwitcher(child: SizedBox()),
-        ),
-      );
+      "didChangePlatformBrightness is a no-op when not following system",
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: ArcaneThemeSwitcher(child: SizedBox()),
+          ),
+        );
 
-      // Explicitly switch to a manual dark mode (disables follow-system).
-      ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
-      expect(ArcaneThemeService.I.isFollowingSystemTheme, isFalse);
+        // Explicitly switch to a manual dark mode (disables follow-system).
+        ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
+        expect(ArcaneThemeService.I.isFollowingSystemTheme, isFalse);
 
-      // Simulate platform brightness change — should be a no-op without error.
-      tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
-      await tester.pump();
+        // Simulate platform brightness change — should be a no-op without error.
+        tester.binding.platformDispatcher.onPlatformBrightnessChanged?.call();
+        await tester.pump();
 
-      expect(ArcaneThemeService.I.currentThemeMode, ThemeMode.dark);
-    });
+        expect(ArcaneThemeService.I.currentThemeMode, ThemeMode.dark);
+      },
+    );
   });
 }

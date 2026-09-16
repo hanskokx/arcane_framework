@@ -1,0 +1,38 @@
+name: Extension build
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/**"
+      - "extension/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - "example/**"
+      - ".github/workflows/extension-build.yaml"
+jobs:
+  extension-build:
+    name: Build and validate DevTools extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout arcane_framework
+        uses: actions/checkout@v4
+        with:
+          path: arcane_framework
+      - name: Checkout arcane_framework_devtools_extension
+        uses: actions/checkout@v4
+        with:
+          repository: hanskokx/arcane_framework_devtools_extension
+          path: arcane_framework_devtools_extension
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+      - name: Point arcane_framework at the local checkout
+        run: |
+          printf 'dependency_overrides:\n  arcane_framework:\n    path: ../arcane_framework\n' > arcane_framework_devtools_extension/pubspec_overrides.yaml
+      - name: Build and validate extension
+        working-directory: arcane_framework_devtools_extension
+        run: |
+          flutter pub get
+          dart run devtools_extensions build_and_copy --source=. --dest=../arcane_framework/extension/devtools
+          dart run devtools_extensions validate --package=../arcane_framework

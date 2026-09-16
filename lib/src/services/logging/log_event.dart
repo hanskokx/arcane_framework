@@ -46,15 +46,17 @@ class LogEvent {
     return LogEvent(
       message: json["message"] as String,
       metadata: json["metadata"].fromJsonMap(),
-      level: rawLevel != null
-          ? Level.values.firstWhere(
-              (l) => l.name == rawLevel,
-              orElse: () => Level.debug,
-            )
-          : null,
-      stackTrace: rawStackTrace != null
-          ? _StringStackTrace(rawStackTrace as String)
-          : null,
+      level:
+          rawLevel != null
+              ? Level.values.firstWhere(
+                (l) => l.name == rawLevel,
+                orElse: () => Level.debug,
+              )
+              : null,
+      stackTrace:
+          rawStackTrace != null
+              ? _StringStackTrace(rawStackTrace as String)
+              : null,
       extra: json["extra"].fromJsonValue(),
     );
   }
@@ -87,13 +89,15 @@ class LogEvent {
   }) {
     return LogEvent(
       message: message ?? this.message,
-      metadata: identical(metadata, _sentinel)
-          ? this.metadata
-          : metadata as Map<String, Object?>?,
+      metadata:
+          identical(metadata, _sentinel)
+              ? this.metadata
+              : metadata as Map<String, Object?>?,
       level: identical(level, _sentinel) ? this.level : level as Level?,
-      stackTrace: identical(stackTrace, _sentinel)
-          ? this.stackTrace
-          : stackTrace as StackTrace?,
+      stackTrace:
+          identical(stackTrace, _sentinel)
+              ? this.stackTrace
+              : stackTrace as StackTrace?,
       extra: identical(extra, _sentinel) ? this.extra : extra,
     );
   }

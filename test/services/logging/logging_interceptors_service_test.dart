@@ -38,8 +38,9 @@ void main() {
 
     test("clearGlobal removes global interceptors only", () {
       Arcane.logger.interceptors.add(global);
-      Arcane.logger.interceptors
-          .registerForInterface(primary, [interfaceScoped]);
+      Arcane.logger.interceptors.registerForInterface(primary, [
+        interfaceScoped,
+      ]);
 
       Arcane.logger.interceptors.clearGlobal();
 
@@ -50,18 +51,21 @@ void main() {
 
     test("resolveForInterface includes only matching registrations", () {
       Arcane.logger.interceptors.add(global);
-      Arcane.logger.interceptors
-          .registerForInterface(primary, [interfaceScoped]);
+      Arcane.logger.interceptors.registerForInterface(primary, [
+        interfaceScoped,
+      ]);
 
       Arcane.logger.interceptors.add(
         typeScoped,
         matcher: (interface) => interface is _InterceptorsTestInterface,
       );
 
-      final forPrimary =
-          Arcane.logger.interceptors.resolveForInterface(primary);
-      final forSecondary =
-          Arcane.logger.interceptors.resolveForInterface(secondary);
+      final forPrimary = Arcane.logger.interceptors.resolveForInterface(
+        primary,
+      );
+      final forSecondary = Arcane.logger.interceptors.resolveForInterface(
+        secondary,
+      );
 
       expect(forPrimary, contains(global));
       expect(forPrimary, contains(interfaceScoped));

@@ -27,8 +27,9 @@ void main() {
     );
   });
 
-  testWidgets("ArcaneFeatureFlagProvider.of throws without provider",
-      (tester) async {
+  testWidgets("ArcaneFeatureFlagProvider.of throws without provider", (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -44,8 +45,9 @@ void main() {
     );
   });
 
-  testWidgets("feature flag updates trigger rebuilds for dependent widgets",
-      (tester) async {
+  testWidgets("feature flag updates trigger rebuilds for dependent widgets", (
+    tester,
+  ) async {
     int buildCount = 0;
 
     await tester.pumpWidget(
@@ -79,8 +81,9 @@ void main() {
     expect(buildCount, 3);
   });
 
-  testWidgets("scope helper methods can enable and disable features",
-      (tester) async {
+  testWidgets("scope helper methods can enable and disable features", (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ArcaneApp(
@@ -133,8 +136,9 @@ void main() {
     );
   });
 
-  testWidgets("scope exposes notifier and stream for reactive consumers",
-      (tester) async {
+  testWidgets("scope exposes notifier and stream for reactive consumers", (
+    tester,
+  ) async {
     late ArcaneFeatureFlagProvider scope;
 
     await tester.pumpWidget(
@@ -154,19 +158,21 @@ void main() {
     expect(scope.enabledFeaturesChanges, isA<Stream<List<Enum>>>());
   });
 
-  testWidgets("context fallback helpers work without ArcaneFeatureFlagProvider",
-      (tester) async {
-    Arcane.features.enableFeature(TestFeature.alpha);
+  testWidgets(
+    "context fallback helpers work without ArcaneFeatureFlagProvider",
+    (tester) async {
+      Arcane.features.enableFeature(TestFeature.alpha);
 
-    await tester.pumpWidget(
-      Builder(
-        builder: (context) {
-          expect(context.maybeFeatureFlags, isNull);
-          expect(context.isFeatureEnabled(TestFeature.alpha), isTrue);
-          expect(context.isFeatureDisabled(TestFeature.beta), isTrue);
-          return const SizedBox();
-        },
-      ),
-    );
-  });
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            expect(context.maybeFeatureFlags, isNull);
+            expect(context.isFeatureEnabled(TestFeature.alpha), isTrue);
+            expect(context.isFeatureDisabled(TestFeature.beta), isTrue);
+            return const SizedBox();
+          },
+        ),
+      );
+    },
+  );
 }

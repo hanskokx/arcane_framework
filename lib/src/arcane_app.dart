@@ -3,6 +3,7 @@ import "package:collection/collection.dart";
 import "package:material_ui/material_ui.dart";
 
 import "arcane.dart";
+import "extension/arcane_service_extensions.dart";
 import "services/environment/environment_provider.dart";
 import "services/feature_flags/feature_flags_provider.dart";
 import "services/theme/theme_switcher.dart";
@@ -112,9 +113,9 @@ class ArcaneApp extends StatefulWidget {
     this.builder,
     super.key,
   }) : assert(
-          child != null || builder != null,
-          "ArcaneApp requires either a child or a builder.",
-        );
+         child != null || builder != null,
+         "ArcaneApp requires either a child or a builder.",
+       );
 
   @override
   State<ArcaneApp> createState() => _ArcaneAppState();
@@ -127,8 +128,9 @@ class _ArcaneAppState extends State<ArcaneApp> {
   late final ValueNotifier<List<ArcaneService>> _serviceNotifier;
 
   List<ArcaneService> _computeMergedServices() {
-    final List<ArcaneService> merged =
-        List<ArcaneService>.from(widget.services);
+    final List<ArcaneService> merged = List<ArcaneService>.from(
+      widget.services,
+    );
     final Set<Type> existingTypes =
         merged.map((service) => service.runtimeType).toSet();
 
@@ -145,9 +147,11 @@ class _ArcaneAppState extends State<ArcaneApp> {
   @override
   void initState() {
     super.initState();
-    _serviceNotifier =
-        ValueNotifier<List<ArcaneService>>(_computeMergedServices());
+    _serviceNotifier = ValueNotifier<List<ArcaneService>>(
+      _computeMergedServices(),
+    );
     Arcane.setRegistry(_serviceNotifier);
+    ArcaneServiceExtensions.register();
   }
 
   @override
@@ -169,11 +173,12 @@ class _ArcaneAppState extends State<ArcaneApp> {
 
   @override
   Widget build(BuildContext context) {
-    final Widget appChild = widget.builder != null
-        ? Builder(
-            builder: (context) => widget.builder!(context, widget.child),
-          )
-        : widget.child!;
+    final Widget appChild =
+        widget.builder != null
+            ? Builder(
+              builder: (context) => widget.builder!(context, widget.child),
+            )
+            : widget.child!;
 
     return ArcaneServiceProvider(
       serviceNotifier: _serviceNotifier,

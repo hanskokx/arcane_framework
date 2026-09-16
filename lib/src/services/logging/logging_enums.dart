@@ -43,8 +43,7 @@ enum Level {
   fatal(6000),
 
   /// Disables all logging.
-  off(10000),
-  ;
+  off(10000);
 
   /// The integer value representing the severity of the logging level.
   ///

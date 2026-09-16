@@ -82,8 +82,9 @@ void main() {
       );
     });
 
-    testWidgets("setEnvironment updates service and inherited widget",
-        (tester) async {
+    testWidgets("setEnvironment updates service and inherited widget", (
+      tester,
+    ) async {
       late BuildContext capturedContext;
 
       await tester.pumpWidget(
@@ -104,8 +105,9 @@ void main() {
       expect(Arcane.environment.current, Environment.debug);
     });
 
-    testWidgets("enableDebugMode and disableDebugMode proxy correctly",
-        (tester) async {
+    testWidgets("enableDebugMode and disableDebugMode proxy correctly", (
+      tester,
+    ) async {
       late BuildContext capturedContext;
 
       await tester.pumpWidget(
@@ -130,8 +132,9 @@ void main() {
       expect(Arcane.environment.current, Environment.normal);
     });
 
-    testWidgets("provider rebuilds when service environment changes",
-        (tester) async {
+    testWidgets("provider rebuilds when service environment changes", (
+      tester,
+    ) async {
       var buildCount = 0;
 
       await tester.pumpWidget(
@@ -173,8 +176,9 @@ void main() {
 
         final ArcaneEnvironmentModeController state =
             tester.state<State<ArcaneEnvironmentProvider>>(
-          find.byType(ArcaneEnvironmentProvider),
-        ) as ArcaneEnvironmentModeController;
+                  find.byType(ArcaneEnvironmentProvider),
+                )
+                as ArcaneEnvironmentModeController;
 
         expect(Arcane.environment.current, Environment.normal);
 
@@ -206,8 +210,9 @@ void main() {
 
         final ArcaneEnvironmentModeController state =
             tester.state<State<ArcaneEnvironmentProvider>>(
-          find.byType(ArcaneEnvironmentProvider),
-        ) as ArcaneEnvironmentModeController;
+                  find.byType(ArcaneEnvironmentProvider),
+                )
+                as ArcaneEnvironmentModeController;
 
         expect(Arcane.environment.current, Environment.debug);
 

@@ -47,17 +47,19 @@ void main() {
       );
     });
 
-    testWidgets("does not duplicate built-ins when explicitly provided",
-        (tester) async {
+    testWidgets("does not duplicate built-ins when explicitly provided", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: [Arcane.environment],
           child: Builder(
             builder: (context) {
               final provider = ArcaneServiceProvider.of(context);
-              final environmentServices = provider.registeredServices
-                  .whereType<ArcaneEnvironmentService>()
-                  .toList();
+              final environmentServices =
+                  provider.registeredServices
+                      .whereType<ArcaneEnvironmentService>()
+                      .toList();
 
               expect(environmentServices.length, 1);
               expect(environmentServices.single, same(Arcane.environment));
@@ -68,8 +70,9 @@ void main() {
       );
     });
 
-    testWidgets("ArcaneApp builder receives provider-aware context",
-        (tester) async {
+    testWidgets("ArcaneApp builder receives provider-aware context", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
@@ -108,8 +111,9 @@ void main() {
       );
     });
 
-    testWidgets("static serviceOfType<T> method returns correct service",
-        (tester) async {
+    testWidgets("static serviceOfType<T> method returns correct service", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
@@ -117,8 +121,8 @@ void main() {
             builder: (context) {
               final service =
                   ArcaneServiceProvider.serviceOfType<MockArcaneService>(
-                context,
-              );
+                    context,
+                  );
               expect(service, isNotNull);
               expect(service, isA<MockArcaneService>());
               return const SizedBox();
@@ -129,35 +133,36 @@ void main() {
     });
 
     testWidgets(
-        "static serviceOfType<T> method returns correct service and returns null when not found",
-        (tester) async {
-      await tester.pumpWidget(
-        ArcaneApp(
-          services: testServices,
-          child: Builder(
-            builder: (context) {
-              // Should find this service
-              final service =
-                  ArcaneServiceProvider.serviceOfType<MockArcaneService>(
-                context,
-              );
+      "static serviceOfType<T> method returns correct service and returns null when not found",
+      (tester) async {
+        await tester.pumpWidget(
+          ArcaneApp(
+            services: testServices,
+            child: Builder(
+              builder: (context) {
+                // Should find this service
+                final service =
+                    ArcaneServiceProvider.serviceOfType<MockArcaneService>(
+                      context,
+                    );
 
-              expect(service, isA<MockArcaneService>());
+                expect(service, isA<MockArcaneService>());
 
-              // Returns null for unregistered services
-              expect(
-                ArcaneServiceProvider.serviceOfType<UnregisteredService>(
-                  context,
-                ),
-                isNull,
-              );
+                // Returns null for unregistered services
+                expect(
+                  ArcaneServiceProvider.serviceOfType<UnregisteredService>(
+                    context,
+                  ),
+                  isNull,
+                );
 
-              return const SizedBox();
-            },
+                return const SizedBox();
+              },
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     testWidgets("service<T> extension returns correct service", (tester) async {
       await tester.pumpWidget(
@@ -175,51 +180,55 @@ void main() {
       );
     });
 
-    testWidgets("service<T> prefers provider services over built-in fallbacks",
-        (tester) async {
-      final providerService = MockArcaneService();
+    testWidgets(
+      "service<T> prefers provider services over built-in fallbacks",
+      (tester) async {
+        final providerService = MockArcaneService();
 
-      await tester.pumpWidget(
-        ArcaneApp(
-          services: [providerService],
-          child: Builder(
-            builder: (context) {
-              final service = context.service<ArcaneService>();
-              expect(service, same(providerService));
-              return const SizedBox();
-            },
+        await tester.pumpWidget(
+          ArcaneApp(
+            services: [providerService],
+            child: Builder(
+              builder: (context) {
+                final service = context.service<ArcaneService>();
+                expect(service, same(providerService));
+                return const SizedBox();
+              },
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     testWidgets(
-        "requiredService<T> extension returns correct service and throws when not found",
-        (tester) async {
-      await tester.pumpWidget(
-        ArcaneApp(
-          services: testServices,
-          child: Builder(
-            builder: (context) {
-              // Should find this service
-              final service = context.requiredService<MockArcaneService>();
-              expect(service, isA<MockArcaneService>());
+      "requiredService<T> extension returns correct service and throws when not found",
+      (tester) async {
+        await tester.pumpWidget(
+          ArcaneApp(
+            services: testServices,
+            child: Builder(
+              builder: (context) {
+                // Should find this service
+                final service = context.requiredService<MockArcaneService>();
+                expect(service, isA<MockArcaneService>());
 
-              // Should throw for missing service
-              expect(
-                () => context.requiredService<UnregisteredService>(),
-                throwsA(isA<AssertionError>()),
-              );
+                // Should throw for missing service
+                expect(
+                  () => context.requiredService<UnregisteredService>(),
+                  throwsA(isA<AssertionError>()),
+                );
 
-              return const SizedBox();
-            },
+                return const SizedBox();
+              },
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
-    testWidgets("service<T> returns null for unregistered service",
-        (tester) async {
+    testWidgets("service<T> returns null for unregistered service", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
@@ -234,8 +243,9 @@ void main() {
       );
     });
 
-    testWidgets("legacy serviceOfType method still works but is deprecated",
-        (tester) async {
+    testWidgets("legacy serviceOfType method still works but is deprecated", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
@@ -286,8 +296,9 @@ void main() {
       expect(buildCount, 3);
     });
 
-    testWidgets("maybeOf returns null when provider is missing",
-        (tester) async {
+    testWidgets("maybeOf returns null when provider is missing", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -317,29 +328,32 @@ void main() {
     });
 
     testWidgets(
-        "requiredServiceOfType returns service and asserts when missing",
-        (tester) async {
-      await tester.pumpWidget(
-        ArcaneApp(
-          services: testServices,
-          child: Builder(
-            builder: (context) {
-              final service = ArcaneServiceProvider.requiredServiceOfType<
-                  MockArcaneService>(context);
-              expect(service, isA<MockArcaneService>());
+      "requiredServiceOfType returns service and asserts when missing",
+      (tester) async {
+        await tester.pumpWidget(
+          ArcaneApp(
+            services: testServices,
+            child: Builder(
+              builder: (context) {
+                final service = ArcaneServiceProvider.requiredServiceOfType<
+                  MockArcaneService
+                >(context);
+                expect(service, isA<MockArcaneService>());
 
-              expect(
-                () => ArcaneServiceProvider.requiredServiceOfType<
-                    UnregisteredService>(context),
-                throwsA(isA<AssertionError>()),
-              );
+                expect(
+                  () => ArcaneServiceProvider.requiredServiceOfType<
+                    UnregisteredService
+                  >(context),
+                  throwsA(isA<AssertionError>()),
+                );
 
-              return const SizedBox();
-            },
+                return const SizedBox();
+              },
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     testWidgets("addService replaces same runtime type", (tester) async {
       late ArcaneServiceProvider provider;
@@ -369,8 +383,9 @@ void main() {
       expect(matches.single, same(replacement));
     });
 
-    testWidgets("removeService removes matching type and reports status",
-        (tester) async {
+    testWidgets("removeService removes matching type and reports status", (
+      tester,
+    ) async {
       late ArcaneServiceProvider provider;
 
       await tester.pumpWidget(
@@ -416,15 +431,17 @@ void main() {
       );
     });
 
-    testWidgets("ArcaneService.requiredOf<T> static helper works",
-        (tester) async {
+    testWidgets("ArcaneService.requiredOf<T> static helper works", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
           child: Builder(
             builder: (context) {
-              final service =
-                  ArcaneService.requiredOfType<MockArcaneService>(context);
+              final service = ArcaneService.requiredOfType<MockArcaneService>(
+                context,
+              );
               expect(service, isA<MockArcaneService>());
 
               expect(
@@ -461,8 +478,9 @@ void main() {
       );
     });
 
-    testWidgets("Arcane.service.requiredOfType<T> helper works",
-        (tester) async {
+    testWidgets("Arcane.service.requiredOfType<T> helper works", (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ArcaneApp(
           services: testServices,
@@ -487,36 +505,37 @@ void main() {
     });
 
     testWidgets(
-        "ArcaneApp.didUpdateWidget updates notifier when service list changes",
-        (tester) async {
-      final first = MockArcaneService();
-      final second = AnotherMockService();
-      late StateSetter setStateRef;
-      var useSecond = false;
+      "ArcaneApp.didUpdateWidget updates notifier when service list changes",
+      (tester) async {
+        final first = MockArcaneService();
+        final second = AnotherMockService();
+        late StateSetter setStateRef;
+        var useSecond = false;
 
-      await tester.pumpWidget(
-        StatefulBuilder(
-          builder: (context, setState) {
-            setStateRef = setState;
-            return ArcaneApp(
-              services: useSecond ? [first, second] : [first],
-              child: const SizedBox(),
-            );
-          },
-        ),
-      );
+        await tester.pumpWidget(
+          StatefulBuilder(
+            builder: (context, setState) {
+              setStateRef = setState;
+              return ArcaneApp(
+                services: useSecond ? [first, second] : [first],
+                child: const SizedBox(),
+              );
+            },
+          ),
+        );
 
-      // Trigger didUpdateWidget with a different service list.
-      setStateRef(() => useSecond = true);
-      await tester.pump();
+        // Trigger didUpdateWidget with a different service list.
+        setStateRef(() => useSecond = true);
+        await tester.pump();
 
-      // Verify AnotherMockService is now in the merged service list.
-      final notifier = Arcane.registry!;
-      expect(
-        notifier.value.whereType<AnotherMockService>(),
-        isNotEmpty,
-      );
-    });
+        // Verify AnotherMockService is now in the merged service list.
+        final notifier = Arcane.registry!;
+        expect(
+          notifier.value.whereType<AnotherMockService>(),
+          isNotEmpty,
+        );
+      },
+    );
   });
 }
 

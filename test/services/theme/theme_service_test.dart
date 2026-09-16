@@ -24,10 +24,14 @@ void main() {
     });
 
     test("setDarkTheme and setLightTheme update themes", () {
-      final customDark =
-          ThemeData(primaryColor: Colors.red, brightness: Brightness.dark);
-      final customLight =
-          ThemeData(primaryColor: Colors.blue, brightness: Brightness.light);
+      final customDark = ThemeData(
+        primaryColor: Colors.red,
+        brightness: Brightness.dark,
+      );
+      final customLight = ThemeData(
+        primaryColor: Colors.blue,
+        brightness: Brightness.light,
+      );
       ArcaneThemeService.I.setDarkTheme(customDark);
       expect(ArcaneThemeService.I.dark, customDark);
       ArcaneThemeService.I.setLightTheme(customLight);
@@ -35,10 +39,14 @@ void main() {
     });
 
     test("dark and light setters delegate to setDarkTheme/setLightTheme", () {
-      final customDark =
-          ThemeData(primaryColor: Colors.teal, brightness: Brightness.dark);
-      final customLight =
-          ThemeData(primaryColor: Colors.amber, brightness: Brightness.light);
+      final customDark = ThemeData(
+        primaryColor: Colors.teal,
+        brightness: Brightness.dark,
+      );
+      final customLight = ThemeData(
+        primaryColor: Colors.amber,
+        brightness: Brightness.light,
+      );
 
       ArcaneThemeService.I.dark = customDark;
       ArcaneThemeService.I.light = customLight;

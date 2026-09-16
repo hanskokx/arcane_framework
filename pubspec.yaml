@@ -1,7 +1,7 @@
 name: arcane_framework
 description: "Agnostic Reusable Component Architecture for New Ecosystems: a
   modern framework for bootstrapping new applications"
-version: 3.0.0-dev.1
+version: 3.0.0-dev.2
 repository: https://github.com/hanskokx/arcane_framework
 issue_tracker: https://github.com/hanskokx/arcane_framework/issues
 
@@ -9,19 +9,29 @@ topics:
   - arcane-framework
 
 environment:
-  sdk: ^3.5.2
+  sdk: ^3.7.0
   flutter: ">=1.17.0"
 
 dependencies:
   arcane_helper_utils: ^1.4.8
   collection: ^1.19.0
+  dart_mcp: ^0.5.2
+  dtd: ^4.0.0
   flutter:
     sdk: flutter
   material_ui: ^1.0.0
+  meta: ^1.9.0
   result_monad: ^4.0.0
+  stream_channel: ^2.1.2
+  vm_service: ^15.0.0
 
 dev_dependencies:
   arcane_analysis: ^1.0.4
   flutter_test:
     sdk: flutter
   mocktail: ^1.0.5
+  test: ^1.25.15
+
+executables:
+  arcane_mcp_server: arcane_mcp_server
+  register_skills: register_skills

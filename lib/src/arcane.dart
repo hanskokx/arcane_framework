@@ -31,11 +31,11 @@ abstract class Arcane {
 
   // The built-in singleton services (used as fallback if no ArcaneApp is present).
   static List<ArcaneService> get builtInServices => List.unmodifiable([
-        ArcaneFeatureFlagService.I,
-        ArcaneAuthenticationService.I,
-        ArcaneThemeService.I,
-        ArcaneEnvironmentService.I,
-      ]);
+    ArcaneFeatureFlagService.I,
+    ArcaneAuthenticationService.I,
+    ArcaneThemeService.I,
+    ArcaneEnvironmentService.I,
+  ]);
 
   /// Provides access to the singleton instance of the logger service.
   ///

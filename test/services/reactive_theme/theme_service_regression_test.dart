@@ -19,18 +19,21 @@ void main() {
       expect(Arcane.theme.dark.primaryColor, Colors.purple);
     });
 
-    test("setLightTheme does not update rendered theme if not in light mode",
-        () {
-      Arcane.theme.switchTheme(themeMode: ThemeMode.dark);
-      expect(Arcane.theme.currentThemeMode, ThemeMode.dark);
-      final originalTheme = Arcane.theme.currentTheme;
-      final lightTheme =
-          ThemeData.light().copyWith(primaryColor: Colors.orange);
-      Arcane.theme.setLightTheme(lightTheme);
-      // Should not update rendered theme
-      expect(Arcane.theme.currentTheme, originalTheme);
-      expect(Arcane.theme.light.primaryColor, Colors.orange);
-    });
+    test(
+      "setLightTheme does not update rendered theme if not in light mode",
+      () {
+        Arcane.theme.switchTheme(themeMode: ThemeMode.dark);
+        expect(Arcane.theme.currentThemeMode, ThemeMode.dark);
+        final originalTheme = Arcane.theme.currentTheme;
+        final lightTheme = ThemeData.light().copyWith(
+          primaryColor: Colors.orange,
+        );
+        Arcane.theme.setLightTheme(lightTheme);
+        // Should not update rendered theme
+        expect(Arcane.theme.currentTheme, originalTheme);
+        expect(Arcane.theme.light.primaryColor, Colors.orange);
+      },
+    );
 
     test("setDarkTheme updates rendered theme if in dark mode", () {
       Arcane.theme.switchTheme(themeMode: ThemeMode.dark);

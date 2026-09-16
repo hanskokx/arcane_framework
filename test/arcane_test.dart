@@ -24,15 +24,16 @@ void main() {
     });
 
     test(
-        "fallback getters return singletons when registry is present but empty",
-        () {
-      final notifier = ValueNotifier<List<ArcaneService>>(<ArcaneService>[]);
-      Arcane.setRegistry(notifier);
+      "fallback getters return singletons when registry is present but empty",
+      () {
+        final notifier = ValueNotifier<List<ArcaneService>>(<ArcaneService>[]);
+        Arcane.setRegistry(notifier);
 
-      expect(Arcane.features, same(ArcaneFeatureFlagService.I));
-      expect(Arcane.auth, same(ArcaneAuthenticationService.I));
-      expect(Arcane.theme, same(ArcaneThemeService.I));
-      expect(Arcane.environment, same(ArcaneEnvironmentService.I));
-    });
+        expect(Arcane.features, same(ArcaneFeatureFlagService.I));
+        expect(Arcane.auth, same(ArcaneAuthenticationService.I));
+        expect(Arcane.theme, same(ArcaneThemeService.I));
+        expect(Arcane.environment, same(ArcaneEnvironmentService.I));
+      },
+    );
   });
 }

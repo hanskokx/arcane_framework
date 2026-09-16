@@ -2,8 +2,11 @@ import "dart:async";
 
 import "package:arcane_framework/src/service/arcane_service.dart";
 import "package:material_ui/material_ui.dart";
+import "package:meta/meta.dart";
 
 import "theme_extensions.dart";
+
+part "theme_devtools_extensions.dart";
 
 @Deprecated(
   "Deprecated in 2.0.0. "

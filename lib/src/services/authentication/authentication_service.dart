@@ -285,8 +285,9 @@ class ArcaneAuthenticationService extends ArcaneService {
 
     final auth = authInterface as ArcaneAuthAccountRegistration;
 
-    final Future<Result<String, String>>? result =
-        auth.resendVerificationCode(input: email);
+    final Future<Result<String, String>>? result = auth.resendVerificationCode(
+      input: email,
+    );
 
     if (result == null) {
       return const Result.error(

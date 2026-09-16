@@ -34,9 +34,10 @@ class ArcaneServiceProvider
     ValueNotifier<List<ArcaneService>>? serviceNotifier,
     super.key,
   }) : super(
-          notifier: serviceNotifier ??
-              ValueNotifier<List<ArcaneService>>(serviceInstances),
-        );
+         notifier:
+             serviceNotifier ??
+             ValueNotifier<List<ArcaneService>>(serviceInstances),
+       );
 
   /// Retrieves the nearest `ArcaneServiceProvider` in the widget tree.
   ///
@@ -115,8 +116,9 @@ class ArcaneServiceProvider
       (s) => s.runtimeType == service.runtimeType,
     );
 
-    final List<ArcaneService> newList =
-        List<ArcaneService>.from(registeredServices);
+    final List<ArcaneService> newList = List<ArcaneService>.from(
+      registeredServices,
+    );
 
     if (existingIndex >= 0) {
       newList[existingIndex] = service;
@@ -130,8 +132,9 @@ class ArcaneServiceProvider
   /// Removes all services of the specified type from the registry.
   /// Returns true if any services were removed, false otherwise.
   bool removeService<T extends ArcaneService>() {
-    final List<ArcaneService> newList =
-        List<ArcaneService>.from(registeredServices);
+    final List<ArcaneService> newList = List<ArcaneService>.from(
+      registeredServices,
+    );
     final int originalLength = newList.length;
 
     newList.removeWhere((service) => service.runtimeType == T);

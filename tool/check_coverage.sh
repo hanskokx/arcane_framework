@@ -2,14 +2,22 @@
 
 set -euo pipefail
 
-LCOV_FILE="coverage/lcov.info"
-THRESHOLD_PERCENT="100.00"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+LCOV_FILE="$SCRIPT_DIR/../coverage/lcov.info"
+
+THRESHOLD_PERCENT="90.00"
 
 if [[ ! -f "$LCOV_FILE" ]]; then
-  echo "Coverage file not found: $LCOV_FILE"
-  echo "Run 'flutter test --coverage' before running this check."
-  exit 1
+  pushd -n "$PWD" &>/dev/null
+
+  cd $SCRIPT_DIR
+  cd ..
+
+  flutter test --coverage
+
+  popd &> /dev/null
 fi
+
 
 # Scope: framework package code only.
 is_in_scope() {

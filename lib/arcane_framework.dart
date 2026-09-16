@@ -50,6 +50,7 @@ export "package:arcane_framework/src/services/feature_flags/feature_flags_servic
 export "package:arcane_framework/src/services/logging/logging_service.dart";
 export "package:arcane_framework/src/services/theme/arcane_theme.dart";
 export "package:arcane_framework/src/services/theme/theme_extensions.dart";
-export "package:arcane_framework/src/services/theme/theme_service.dart";
+export "package:arcane_framework/src/services/theme/theme_service.dart"
+    hide arcaneThemeDevToolsSetMode, arcaneThemeDevToolsState;
 export "package:arcane_framework/src/services/theme/theme_switcher.dart";
 export "package:result_monad/result_monad.dart" hide Error, Ok;

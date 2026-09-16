@@ -14,8 +14,9 @@ class ArcaneEnvironmentService extends ArcaneService {
   /// Provides access to the singleton instance.
   static ArcaneEnvironmentService get I => _instance;
 
-  final ValueNotifier<Environment> _notifier =
-      ValueNotifier<Environment>(Environment.normal);
+  final ValueNotifier<Environment> _notifier = ValueNotifier<Environment>(
+    Environment.normal,
+  );
 
   /// A notifier that emits updates when [current] changes.
   ValueNotifier<Environment> get notifier => _notifier;

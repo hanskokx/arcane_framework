@@ -1,0 +1,5 @@
+name: arcane_framework
+issueTracker: https://github.com/hanskokx/arcane_framework/issues
+version: 1.0.0
+materialIconCodePoint: "0xe50a"
+requiresConnection: true

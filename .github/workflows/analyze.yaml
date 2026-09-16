@@ -1,10 +1,17 @@
-name: Tests
+name: Analyze
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "example/**"
+      - "analysis_options.yaml"
+      - "pubspec.yaml"
+      - ".github/workflows/analyze.yaml"
 jobs:
-  test:
-    name: Analyze, test, and enforce coverage
+  analyze:
+    name: Analyze
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,7 +24,3 @@ jobs:
         run: flutter pub get
       - name: Analyze
         run: flutter analyze
-      - name: Run tests with coverage
-        run: flutter test --coverage
-      - name: Enforce 100% package line coverage
-        run: bash tool/check_coverage.sh

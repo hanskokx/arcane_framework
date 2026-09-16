@@ -47,8 +47,9 @@ void main() {
     );
   });
 
-  testWidgets("themeMode falls back to Arcane theme service without provider",
-      (tester) async {
+  testWidgets("themeMode falls back to Arcane theme service without provider", (
+    tester,
+  ) async {
     Arcane.theme.reset();
     Arcane.theme.switchTheme(themeMode: ThemeMode.dark);
 

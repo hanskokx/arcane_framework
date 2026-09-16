@@ -20,8 +20,8 @@ class ArcaneFeatureFlagProvider extends InheritedWidget {
     required void Function(Enum) disableFeature,
     required super.child,
     super.key,
-  })  : _enableFeature = enableFeature,
-        _disableFeature = disableFeature;
+  }) : _enableFeature = enableFeature,
+       _disableFeature = disableFeature;
 
   /// Retrieves the nearest `ArcaneFeatureFlagProvider` from the widget tree.
   ///
@@ -98,8 +98,9 @@ class _ArcaneFeatureFlagsProviderState
   void _handleFeatureFlagsChange() {
     if (!mounted) return;
 
-    final List<Enum> nextEnabled =
-        List<Enum>.from(Arcane.features.notifier.value);
+    final List<Enum> nextEnabled = List<Enum>.from(
+      Arcane.features.notifier.value,
+    );
     if (listEquals(nextEnabled, _enabledFeatures)) return;
 
     setState(() {

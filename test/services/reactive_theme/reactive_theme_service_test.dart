@@ -29,40 +29,45 @@ void main() {
       });
 
       testWidgets(
-          "switchTheme toggles from effective system mode, not always to dark",
-          (WidgetTester tester) async {
-        await tester.pumpWidget(
-          const MediaQuery(
-            data: MediaQueryData(platformBrightness: Brightness.dark),
-            child: ArcaneApp(
-              child: SizedBox(),
+        "switchTheme toggles from effective system mode, not always to dark",
+        (WidgetTester tester) async {
+          await tester.pumpWidget(
+            const MediaQuery(
+              data: MediaQueryData(platformBrightness: Brightness.dark),
+              child: ArcaneApp(
+                child: SizedBox(),
+              ),
             ),
-          ),
-        );
+          );
 
-        final BuildContext darkContext = tester.element(find.byType(SizedBox));
-        theme.switchTheme(themeMode: ThemeMode.system);
-        theme.setInitialTheme(darkContext);
-        theme.switchTheme();
+          final BuildContext darkContext = tester.element(
+            find.byType(SizedBox),
+          );
+          theme.switchTheme(themeMode: ThemeMode.system);
+          theme.setInitialTheme(darkContext);
+          theme.switchTheme();
 
-        expect(theme.currentThemeMode, equals(ThemeMode.light));
+          expect(theme.currentThemeMode, equals(ThemeMode.light));
 
-        await tester.pumpWidget(
-          const MediaQuery(
-            data: MediaQueryData(platformBrightness: Brightness.light),
-            child: ArcaneApp(
-              child: SizedBox(),
+          await tester.pumpWidget(
+            const MediaQuery(
+              data: MediaQueryData(platformBrightness: Brightness.light),
+              child: ArcaneApp(
+                child: SizedBox(),
+              ),
             ),
-          ),
-        );
+          );
 
-        final BuildContext lightContext = tester.element(find.byType(SizedBox));
-        theme.switchTheme(themeMode: ThemeMode.system);
-        theme.setInitialTheme(lightContext);
-        theme.switchTheme();
+          final BuildContext lightContext = tester.element(
+            find.byType(SizedBox),
+          );
+          theme.switchTheme(themeMode: ThemeMode.system);
+          theme.setInitialTheme(lightContext);
+          theme.switchTheme();
 
-        expect(theme.currentThemeMode, equals(ThemeMode.dark));
-      });
+          expect(theme.currentThemeMode, equals(ThemeMode.dark));
+        },
+      );
 
       test("switching theme notifies theme mode stream", () async {
         ThemeMode? emittedMode;
@@ -176,39 +181,45 @@ void main() {
         Arcane.theme.reset();
       });
 
-      testWidgets("followSystemTheme updates theme based on context brightness",
-          (WidgetTester tester) async {
-        // Create widgets with different brightness contexts
-        await tester.pumpWidget(
-          const MediaQuery(
-            data: MediaQueryData(platformBrightness: Brightness.light),
-            child: ArcaneApp(
-              child: SizedBox(),
+      testWidgets(
+        "followSystemTheme updates theme based on context brightness",
+        (WidgetTester tester) async {
+          // Create widgets with different brightness contexts
+          await tester.pumpWidget(
+            const MediaQuery(
+              data: MediaQueryData(platformBrightness: Brightness.light),
+              child: ArcaneApp(
+                child: SizedBox(),
+              ),
             ),
-          ),
-        );
+          );
 
-        final BuildContext lightContext = tester.element(find.byType(SizedBox));
-        Arcane.theme.followSystemTheme(lightContext);
-        await tester.pumpAndSettle();
+          final BuildContext lightContext = tester.element(
+            find.byType(SizedBox),
+          );
+          Arcane.theme.followSystemTheme(lightContext);
+          await tester.pumpAndSettle();
 
-        expect(theme.currentThemeMode, equals(ThemeMode.light));
+          expect(theme.currentThemeMode, equals(ThemeMode.light));
 
-        await tester.pumpWidget(
-          const MediaQuery(
-            data: MediaQueryData(platformBrightness: Brightness.dark),
-            child: ArcaneApp(
-              child: SizedBox(),
+          await tester.pumpWidget(
+            const MediaQuery(
+              data: MediaQueryData(platformBrightness: Brightness.dark),
+              child: ArcaneApp(
+                child: SizedBox(),
+              ),
             ),
-          ),
-        );
+          );
 
-        final BuildContext darkContext = tester.element(find.byType(SizedBox));
-        Arcane.theme.followSystemTheme(darkContext);
-        await tester.pumpAndSettle();
+          final BuildContext darkContext = tester.element(
+            find.byType(SizedBox),
+          );
+          Arcane.theme.followSystemTheme(darkContext);
+          await tester.pumpAndSettle();
 
-        expect(theme.currentThemeMode, equals(ThemeMode.dark));
-      });
+          expect(theme.currentThemeMode, equals(ThemeMode.dark));
+        },
+      );
     });
   });
 }

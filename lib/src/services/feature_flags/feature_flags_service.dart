@@ -46,6 +46,18 @@ class ArcaneFeatureFlagService extends ArcaneService {
   List<Enum> get enabledFeatures => _enabledFeatures;
   final List<Enum> _enabledFeatures = [];
 
+  final List<Enum> _known = [];
+
+  /// The set of feature flags the app has toggled at least once.
+  ///
+  /// A flag becomes known the first time the app calls [enableFeature] or
+  /// [disableFeature] on it. Known flags (including ones that are currently
+  /// disabled) can be toggled by name over the runtime service extension, so
+  /// the DevTools extension and the MCP server can observe and toggle them;
+  /// flags the app has never touched cannot be toggled remotely. The in-code
+  /// [enableFeature]/[disableFeature] API never depends on this getter.
+  List<Enum> get catalog => List<Enum>.unmodifiable(_known);
+
   final ValueNotifier<List<Enum>> _notifier = ValueNotifier<List<Enum>>([]);
 
   /// A `ValueNotifier` that notifies listeners when the list of enabled features changes.
@@ -93,6 +105,7 @@ class ArcaneFeatureFlagService extends ArcaneService {
   /// ```
   ArcaneFeatureFlagService enableFeature(Enum feature) {
     if (!I._initialized) _init();
+    if (!_known.contains(feature)) _known.add(feature);
 
     if (_enabledFeatures.contains(feature)) return I;
 
@@ -123,6 +136,7 @@ class ArcaneFeatureFlagService extends ArcaneService {
   /// ```
   ArcaneFeatureFlagService disableFeature(Enum feature) {
     if (!I._initialized) _init();
+    if (!_known.contains(feature)) _known.add(feature);
     if (!_enabledFeatures.contains(feature)) return I;
 
     _notifier.value = [..._enabledFeatures]..removeWhere((i) => i == feature);
@@ -154,13 +168,15 @@ class ArcaneFeatureFlagService extends ArcaneService {
 
   /// Resets the feature flags to their initial state.
   ///
-  /// This method clears all enabled features, resets notification values,
-  /// marks the flags as uninitialized, and notifies listeners of the changes.
+  /// This method clears all enabled features and the set of known flags,
+  /// resets notification values, marks the flags as uninitialized, and
+  /// notifies listeners of the changes.
   void reset() {
     notifier
       ..removeListener(_listener)
       ..addListener(_listener);
     _notifier.value = [];
+    _known.clear();
     _enabledFeaturesController.add(List<Enum>.from(_notifier.value));
     I._initialized = false;
   }

@@ -74,6 +74,44 @@ void main() {
       });
     });
 
+    group("known flags", () {
+      test("a flag becomes known on first enable", () {
+        featureFlags.enableFeature(MockFeature.test);
+        expect(featureFlags.catalog, contains(MockFeature.test));
+      });
+
+      test("a flag becomes known on first disable", () {
+        featureFlags.disableFeature(MockFeature.test);
+        expect(featureFlags.catalog, contains(MockFeature.test));
+      });
+
+      test("a disabled flag that was enabled stays known", () {
+        featureFlags
+          ..enableFeature(MockFeature.test)
+          ..disableFeature(MockFeature.test);
+        expect(featureFlags.enabledFeatures, isEmpty);
+        expect(featureFlags.catalog, contains(MockFeature.test));
+      });
+
+      test("known flags are deduplicated", () {
+        featureFlags
+          ..enableFeature(MockFeature.test)
+          ..disableFeature(MockFeature.test)
+          ..enableFeature(MockFeature.test);
+        expect(
+          featureFlags.catalog.where((f) => f == MockFeature.test).length,
+          equals(1),
+        );
+      });
+
+      test("reset clears the known flags", () {
+        featureFlags.enableFeature(MockFeature.test);
+        expect(featureFlags.catalog, contains(MockFeature.test));
+        featureFlags.reset();
+        expect(featureFlags.catalog, isEmpty);
+      });
+    });
+
     group("notifications", () {
       test("enableFeature notifies listeners", () {
         var notified = false;
@@ -92,8 +130,9 @@ void main() {
 
       test("enabledFeaturesChanges emits updates", () async {
         List<Enum>? emitted;
-        final subscription =
-            featureFlags.enabledFeaturesChanges.listen((features) {
+        final subscription = featureFlags.enabledFeaturesChanges.listen((
+          features,
+        ) {
           emitted = features;
         });
 
@@ -105,32 +144,36 @@ void main() {
         await subscription.cancel();
       });
 
-      test("enabledFeaturesChanges works after listener cancellation",
-          () async {
-        List<Enum>? firstEmission;
-        final firstSubscription =
-            featureFlags.enabledFeaturesChanges.listen((features) {
-          firstEmission = features;
-        });
+      test(
+        "enabledFeaturesChanges works after listener cancellation",
+        () async {
+          List<Enum>? firstEmission;
+          final firstSubscription = featureFlags.enabledFeaturesChanges.listen((
+            features,
+          ) {
+            firstEmission = features;
+          });
 
-        featureFlags.enableFeature(MockFeature.test);
-        await Future<void>.delayed(Duration.zero);
-        expect(firstEmission, contains(MockFeature.test));
+          featureFlags.enableFeature(MockFeature.test);
+          await Future<void>.delayed(Duration.zero);
+          expect(firstEmission, contains(MockFeature.test));
 
-        await firstSubscription.cancel();
+          await firstSubscription.cancel();
 
-        List<Enum>? secondEmission;
-        final secondSubscription =
-            featureFlags.enabledFeaturesChanges.listen((features) {
-          secondEmission = features;
-        });
+          List<Enum>? secondEmission;
+          final secondSubscription = featureFlags.enabledFeaturesChanges.listen(
+            (features) {
+              secondEmission = features;
+            },
+          );
 
-        featureFlags.disableFeature(MockFeature.test);
-        await Future<void>.delayed(Duration.zero);
-        expect(secondEmission, isNot(contains(MockFeature.test)));
+          featureFlags.disableFeature(MockFeature.test);
+          await Future<void>.delayed(Duration.zero);
+          expect(secondEmission, isNot(contains(MockFeature.test)));
 
-        await secondSubscription.cancel();
-      });
+          await secondSubscription.cancel();
+        },
+      );
 
       test("enableFeature logs when logger is initialized", () async {
         final logger = FeatureFlagLoggingInterface();
@@ -163,18 +206,20 @@ void main() {
         );
       });
 
-      test("dispose closes stream and future subscribers still receive events",
-          () async {
-        featureFlags.dispose();
+      test(
+        "dispose closes stream and future subscribers still receive events",
+        () async {
+          featureFlags.dispose();
 
-        final event = expectLater(
-          featureFlags.enabledFeaturesChanges,
-          emitsThrough(contains(MockFeature.another)),
-        );
+          final event = expectLater(
+            featureFlags.enabledFeaturesChanges,
+            emitsThrough(contains(MockFeature.another)),
+          );
 
-        featureFlags.enableFeature(MockFeature.another);
-        await event;
-      });
+          featureFlags.enableFeature(MockFeature.another);
+          await event;
+        },
+      );
     });
   });
 }
