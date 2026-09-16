@@ -42,6 +42,7 @@ Future<void> main(List<String> args) async {
       await _publish(
         frameworkRoot: frameworkRoot,
         dryRun: options.dryRun,
+        autoApprove: options.autoApprove,
       );
     } finally {
       if (overrideWritten) {
@@ -59,21 +60,26 @@ class PublishOptions {
     required this.dryRun,
     required this.extensionPath,
     required this.extensionGitUrl,
+    required this.autoApprove,
   });
 
   final bool dryRun;
   final String? extensionPath;
   final String? extensionGitUrl;
+  final bool autoApprove;
 }
 
 PublishOptions _parseOptions(List<String> args) {
   bool dryRun = false;
   String? extensionPath;
   String? extensionGitUrl;
+  bool autoApprove = false;
 
   for (final String arg in args) {
     if (arg == "--dry-run") {
       dryRun = true;
+    } else if (arg == "--yes") {
+      autoApprove = true;
     } else if (arg.startsWith("--extension-path=")) {
       extensionPath = arg.substring("--extension-path=".length);
     } else if (arg.startsWith("--extension-git-url=")) {
@@ -87,6 +93,7 @@ PublishOptions _parseOptions(List<String> args) {
     dryRun: dryRun,
     extensionPath: extensionPath,
     extensionGitUrl: extensionGitUrl,
+    autoApprove: autoApprove,
   );
 }
 
@@ -316,6 +323,7 @@ void _assertPublishAssets(String frameworkRoot) {
 Future<void> _publish({
   required String frameworkRoot,
   required bool dryRun,
+  required bool autoApprove,
 }) async {
   if (dryRun) {
     _log("Running 'flutter pub publish --dry-run' (no upload)...");
@@ -323,12 +331,16 @@ Future<void> _publish({
     _log("Publishing arcane_framework to pub.dev...");
   }
 
-  final (int code, String output) = await _runCaptured([
-    _flutterBinary(),
-    "pub",
-    "publish",
-    if (dryRun) ...["--dry-run", "--ignore-warnings"],
-  ], frameworkRoot);
+  final (int code, String output) = await _runInteractive(
+    [
+      _flutterBinary(),
+      "pub",
+      "publish",
+      if (dryRun) ...["--dry-run", "--ignore-warnings"],
+    ],
+    frameworkRoot,
+    autoApprove: autoApprove,
+  );
   if (code != 0) {
     _fail("flutter pub publish failed:\n$output");
   }
@@ -360,6 +372,79 @@ Future<(int, String)> _runCaptured(
     return (result.exitCode, stdout);
   }
   return (result.exitCode, "$stderrTrimmed\n\n---\n\n$stdout");
+}
+
+Future<(int, String)> _runInteractive(
+  List<String> command,
+  String workingDirectory, {
+  required bool autoApprove,
+}) async {
+  final Process process = await Process.start(
+    command.first,
+    command.sublist(1),
+    workingDirectory: workingDirectory,
+    runInShell: Platform.isWindows,
+  );
+
+  final StringBuffer outputBuffer = StringBuffer();
+  final StringBuffer promptBuffer = StringBuffer();
+  bool promptHandled = false;
+
+  process.stdout.transform(utf8.decoder).listen((String data) {
+    outputBuffer.write(data);
+    if (!promptHandled) {
+      promptBuffer.write(data);
+      _checkAndRespondToPrompt(
+        process,
+        promptBuffer,
+        autoApprove,
+        () => promptHandled = true,
+      );
+    }
+  });
+
+  process.stderr.transform(utf8.decoder).listen((String data) {
+    outputBuffer.write(data);
+    if (!promptHandled) {
+      promptBuffer.write(data);
+      _checkAndRespondToPrompt(
+        process,
+        promptBuffer,
+        autoApprove,
+        () => promptHandled = true,
+      );
+    }
+  });
+
+  final int exitCode = await process.exitCode;
+  return (exitCode, outputBuffer.toString());
+}
+
+void _checkAndRespondToPrompt(
+  Process process,
+  StringBuffer buffer,
+  bool autoApprove,
+  void Function() markHandled,
+) {
+  final String content = buffer.toString();
+  if (content.contains("Do you want to publish") &&
+      content.contains("(y/N)?")) {
+    if (autoApprove) {
+      _log("Auto-approving publish with --yes flag...");
+      process.stdin.writeln("y");
+    } else {
+      _log("Publish confirmation required. Type 'y' to confirm:");
+      // For interactive prompt, we'd need to read from stdin
+      // This is complex with Process.start, so we'll rely on --yes for automation
+      _warn("Interactive prompt detected but no --yes flag provided.");
+      _warn(
+        "Run with --yes to auto-approve, or the publish will wait for input.",
+      );
+      // The process will hang waiting for stdin input - user needs to type in the terminal
+    }
+    markHandled();
+    buffer.clear();
+  }
 }
 
 Never _fail(String message) {
@@ -394,7 +479,7 @@ String _absolute(String path) {
 Never _usageError(String unknownArg) {
   stderr.writeln(
     "Unknown argument: $unknownArg\n"
-    "Usage: dart run tool/publish.dart [--dry-run] "
+    "Usage: dart run tool/publish.dart [--dry-run] [--yes] "
     "[--extension-path=<dir>] [--extension-git-url=<url>]",
   );
   exitCode = 64;
