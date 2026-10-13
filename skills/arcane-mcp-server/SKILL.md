@@ -6,7 +6,7 @@ description: Using the arcane_framework MCP server to discover running Flutter a
 # The arcane_framework MCP server
 
 Use this skill when you act as an MCP client (or write automation) against the
-arcane_framework server: `dart run arcane_mcp_server` over stdio, or the
+arcane_framework server: `dart run arcane_framework:arcane_mcp_server` over stdio, or the
 `ArcaneMcpServer` class embedded in a host process.
 
 ## Overview
@@ -19,7 +19,8 @@ mounts `ArcaneApp` registers the bridge extension automatically.
 Run it:
 
 ```sh
-dart run arcane_mcp_server
+dart run arcane_framework:arcane_mcp_server
+# Optional flags: --help, -h (show usage), --version
 ```
 
 ## Tools

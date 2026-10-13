@@ -1046,6 +1046,7 @@ The MCP server ships as the `arcane_mcp_server` executable inside this package (
 
 ```sh
 dart run arcane_framework:arcane_mcp_server
+# Optional flags: --help, -h (show usage), --version
 ```
 
 The package also ships agent skills under `skills/` that teach an AI coding agent how to build apps with arcane_framework, maintain the DevTools extension, and drive the MCP server. Install them into your agent's skill roots (opencode's `~/.agents/skills` and Claude Code's `~/.claude/skills`) with:
@@ -1053,7 +1054,7 @@ The package also ships agent skills under `skills/` that teach an AI coding agen
 ```sh
 dart run arcane_framework:register_skills
 # Optional flags: --target opencode|claude (repeatable), --home <dir>,
-# --source <dir>, --dry-run
+# --source <dir>, --dry-run, --help, -h
 ```
 
 The extension exposes read-only introspection for services, logs, feature flags, authentication, theme, and environment, plus narrow mutations:

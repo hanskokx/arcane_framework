@@ -1,27 +1,28 @@
 import "dart:io";
 
 import "package:arcane_framework/src/skills/register_skills.dart";
+import "package:arcane_framework/src/skills/register_skills_cli.dart";
 
 /// Installs the skills shipped with arcane_framework into agent skill roots.
 ///
 /// Usage:
-///   dart run register_skills [--target opencode|claude]... [--home <dir>]
+///   dart run arcane_framework:register_skills [--target opencode|claude]... [--home <dir>]
 ///     [--source <dir>] [--dry-run]
 ///
 /// With no arguments it installs into both opencode (`~/.agents/skills`) and
 /// Claude (`~/.claude/skills`), using the `skills/` directory next to this
 /// package.
 Future<void> main(List<String> arguments) async {
-  final ParseResult parsed = _parse(arguments);
+  final SkillsCliResult parsed = parseSkillsArgs(arguments);
   if (parsed.help) {
-    _printUsage();
+    stdout.writeln(skillsCliUsage());
     exit(0);
   }
   if (parsed.errors.isNotEmpty) {
     for (final String error in parsed.errors) {
       stderr.writeln("error: $error");
     }
-    _printUsage();
+    stdout.writeln(skillsCliUsage());
     exit(64);
   }
 
@@ -57,89 +58,6 @@ Future<void> main(List<String> arguments) async {
   }
 }
 
-/// The parsed command line.
-class ParseResult {
-  const ParseResult({
-    this.targets = const <String>[opencodeTarget, claudeTarget],
-    this.home,
-    this.source,
-    this.dryRun = false,
-    this.help = false,
-    this.errors = const <String>[],
-  });
-
-  final List<String> targets;
-  final String? home;
-  final String? source;
-  final bool dryRun;
-  final bool help;
-  final List<String> errors;
-}
-
-ParseResult _parse(List<String> arguments) {
-  final List<String> targets = <String>[];
-  final List<String> errors = <String>[];
-  String? home;
-  String? source;
-  bool dryRun = false;
-  bool help = false;
-  for (int i = 0; i < arguments.length; i++) {
-    final String argument = arguments[i];
-    switch (argument) {
-      case "--dry-run":
-      case "-n":
-        dryRun = true;
-      case "--help":
-      case "-h":
-        help = true;
-      case "--home":
-        home = _value(arguments, ++i);
-        if (home == null) {
-          errors.add("--home requires a path.");
-        }
-      case "--source":
-        source = _value(arguments, ++i);
-        if (source == null) {
-          errors.add("--source requires a path.");
-        }
-      default:
-        if (argument == "--target") {
-          final String? target = _value(arguments, ++i);
-          if (target == null || !skillTargets.contains(target)) {
-            errors.add(
-              "--target must be one of ${skillTargets.join(", ")}; got "
-              "'$target'.",
-            );
-          } else {
-            targets.add(target);
-          }
-        } else if (!argument.startsWith("-")) {
-          errors.add("Unknown argument '$argument'.");
-        } else {
-          errors.add("Unknown option '$argument'.");
-        }
-    }
-  }
-  return ParseResult(
-    targets:
-        targets.isEmpty
-            ? const <String>[opencodeTarget, claudeTarget]
-            : targets,
-    home: home,
-    source: source,
-    dryRun: dryRun,
-    help: help,
-    errors: errors,
-  );
-}
-
-/// The value that follows a `--flag` pair, or null if missing.
-String? _value(List<String> arguments, int index) {
-  if (index >= arguments.length) return null;
-  final String value = arguments[index];
-  return value.startsWith("-") ? null : value;
-}
-
 /// The `skills/` directory inside this package (or empty when not found).
 String _packageSkillsDir() {
   Directory current = File.fromUri(Platform.script).parent;
@@ -153,23 +71,4 @@ String _packageSkillsDir() {
     current = parent;
   }
   return "skills";
-}
-
-void _printUsage() {
-  stdout.writeln(
-    "Usage: dart run register_skills [options]\n"
-    "\n"
-    "Installs the arcane_framework skills into agent skill roots.\n"
-    "\n"
-    "Options:\n"
-    "  --target <opencode|claude>   Install for one target (repeatable).\n"
-    "                               Defaults to both.\n"
-    "  --home <dir>                 The user home directory to install under.\n"
-    "                               Defaults to \$HOME.\n"
-    "  --source <dir>               The directory containing the skills/ tree.\n"
-    "                               Defaults to this package's skills/.\n"
-    "  --dry-run, -n                Print what would be installed without\n"
-    "                               writing anything.\n"
-    "  --help, -h                   Show this help.\n",
-  );
 }

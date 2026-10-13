@@ -1,10 +1,13 @@
 import "dart:convert";
 
 import "package:arcane_framework/src/mcp/protocol.dart";
+import "package:arcane_framework/src/mcp/server/tools/log_tool.dart";
 import "package:dart_mcp/server.dart";
 import "package:stream_channel/stream_channel.dart";
 
 import "arcane_app_connection.dart";
+import "arcane_mcp_tool.dart";
+import "arcane_version.dart";
 import "dtd_discovery.dart";
 
 const String _serverInstructions =
@@ -54,7 +57,7 @@ base class ArcaneMcpServer extends MCPServer
          channel,
          implementation: Implementation(
            name: "arcane-framework",
-           version: "3.0.0-dev.1",
+           version: arcaneFrameworkVersion(),
            description: "Working with arcane_framework apps.",
          ),
          instructions: _serverInstructions,
@@ -75,25 +78,9 @@ base class ArcaneMcpServer extends MCPServer
   List<ArcaneAppConnection> get connections =>
       List<ArcaneAppConnection>.unmodifiable(_connections);
 
-  // -- Tools -------------------------------------------------------------- //
+  // * MARK: Tools
 
   void _registerTools() {
-    registerTool(
-      Tool(
-        name: "find_apps",
-        description:
-            "Discovers running Flutter apps through the Dart Tooling Daemon. "
-            "Returns each app's name and VM service URI. Pass dtdUri to "
-            "restrict discovery to one daemon.",
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.dtdUri: StringSchema(),
-          },
-          required: const <String>[],
-        ),
-      ),
-      _handleFindApps,
-    );
     registerTool(
       Tool(
         name: "connect_app",
@@ -133,7 +120,18 @@ base class ArcaneMcpServer extends MCPServer
             "(all, trace, debug, info, warning, error, fatal, off), module, "
             "search, limit.",
       ),
-      _handleGetLogs,
+      (CallToolRequest request) {
+        final (ArcaneAppConnection?, String?) resolved = _resolveConnection(
+          request.arguments ?? {},
+        );
+
+        final ArcaneAppConnection? connection = resolved.$1;
+
+        if (connection == null)
+          return ArcaneMcpTool().errorResult(resolved.$2!);
+
+        return LogTool().handleGetLogs(request, connection);
+      },
     );
     registerTool(
       _annotatedTool(
@@ -249,16 +247,6 @@ base class ArcaneMcpServer extends MCPServer
         ),
       );
 
-  Future<CallToolResult> _handleFindApps(CallToolRequest request) async {
-    final String? dtdUri =
-        (request.arguments ?? const <String, Object?>{})[ArcaneMcpParams.dtdUri]
-            ?.toString();
-    final List<DiscoveredApp> apps = await _discovery.discoverApps(
-      dtdUri: dtdUri,
-    );
-    return _textResult(_formatDiscoveredApps(apps));
-  }
-
   Future<CallToolResult> _handleConnectApp(CallToolRequest request) async {
     final Map<String, Object?> args =
         request.arguments ?? const <String, Object?>{};
@@ -324,29 +312,6 @@ base class ArcaneMcpServer extends MCPServer
     }
   }
 
-  Future<CallToolResult> _handleGetLogs(CallToolRequest request) async {
-    final Map<String, Object?> args =
-        request.arguments ?? const <String, Object?>{};
-    final (ArcaneAppConnection?, String?) resolved = _resolveConnection(args);
-    final ArcaneAppConnection? connection = resolved.$1;
-    if (connection == null) return _errorResult(resolved.$2!);
-    final Map<String, Object?> params = <String, Object?>{
-      if (args.containsKey(ArcaneMcpParams.level))
-        ArcaneMcpParams.level: args[ArcaneMcpParams.level],
-      if (args.containsKey(ArcaneMcpParams.module))
-        ArcaneMcpParams.module: args[ArcaneMcpParams.module],
-      if (args.containsKey(ArcaneMcpParams.search))
-        ArcaneMcpParams.search: args[ArcaneMcpParams.search],
-      if (args.containsKey(ArcaneMcpParams.limit))
-        ArcaneMcpParams.limit: args[ArcaneMcpParams.limit],
-    };
-    final ArcaneMcpResponse response = await connection.invoke(
-      ArcaneMcpMethods.logs,
-      params: params,
-    );
-    return _resultFromResponse(response);
-  }
-
   Future<CallToolResult> _invokeAndFormat(
     String method,
     CallToolRequest request,
@@ -363,7 +328,7 @@ base class ArcaneMcpServer extends MCPServer
     return _resultFromResponse(response);
   }
 
-  // -- Resources ---------------------------------------------------------- //
+  // * MARK: Resources
 
   void _registerResources() {
     _addResource(
@@ -469,7 +434,7 @@ base class ArcaneMcpServer extends MCPServer
         ],
       );
 
-  // -- Connection resolution ---------------------------------------------- //
+  // * MARK: Connection resolution
 
   /// Resolves the app targeted by [args] among the connected apps.
   ///
@@ -527,7 +492,7 @@ base class ArcaneMcpServer extends MCPServer
     return params;
   }
 
-  // -- Formatting --------------------------------------------------------- //
+  // * MARK: Formatting
 
   String _formatConnections() {
     if (_connections.isEmpty) {
@@ -544,25 +509,6 @@ base class ArcaneMcpServer extends MCPServer
     }
     return "Discovered apps (${apps.length}):\n"
         '${apps.map((DiscoveredApp app) => '  - ${app.name} (${app.appUri}) [DTD ${app.dtdUri}]').join('\n')}';
-  }
-
-  CallToolResult _textResult(String text) => CallToolResult(
-    content: <Content>[TextContent(text: text)],
-  );
-
-  CallToolResult _errorResult(String text) => CallToolResult(
-    content: <Content>[TextContent(text: text)],
-    isError: true,
-  );
-
-  CallToolResult _resultFromResponse(ArcaneMcpResponse response) {
-    if (response is ArcaneMcpOkResponse) {
-      return _textResult(
-        const JsonEncoder.withIndent("  ").convert(response.data),
-      );
-    }
-    final ArcaneMcpErrorResponse error = response as ArcaneMcpErrorResponse;
-    return _errorResult(error.message);
   }
 
   @override

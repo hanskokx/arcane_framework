@@ -7,6 +7,10 @@
 - [NEW] Added a DevTools extension for deeper insights into running `ArcaneApp` applications.
 - [DOC] To access the DevTools extension, start the app with `flutter run` and open DevTools (press `d` in the `flutter run` terminal or launch DevTools from your IDE). DevTools discovers the extension in this package's `extension/devtools` directory and shows an `arcane_framework` tab once the app is connected; the tab requires a running debug build of the app.
 - [SECURITY] The VM service extension and its log buffer are registered only when `kDebugMode` is true; profile and release apps never expose live runtime state on the VM service.
+- [FIX] `dart run arcane_framework:arcane_mcp_server --help` now prints usage and exits 0 (previously hung waiting on stdin).
+- [FIX] `dart run arcane_framework:arcane_mcp_server --version` now prints the correct pubspec version.
+- [FIX] MCP server no longer advertises a stale hardcoded version; it now reads `version:` from `pubspec.yaml` at runtime via the package config.
+- [FIX] `register_skills` parser moved to `lib/src/skills/register_skills_cli.dart` for test coverage; usage string now correctly shows `dart run arcane_framework:register_skills`.
 
 ## 3.0.0-dev.1
 
