@@ -11,11 +11,9 @@
 ///   [arcaneMcpParamsParameter]).
 /// * The method and parameter names shared by the framework's extension and
 ///   the server tools ([ArcaneMcpMethods], [ArcaneMcpParams]).
-/// * The response model and codec ([ArcaneMcpResponse], [arcaneMcpDecode],
+/// * The response model and the envelope builders ([ArcaneMcpResponse],
 ///   [arcaneMcpBuildResult], [arcaneMcpBuildError]).
 library;
-
-import "dart:convert";
 
 /// The VM service extension exposed by arcane_framework in the app.
 ///
@@ -143,30 +141,3 @@ Map<String, Object?> arcaneMcpBuildError(String message) => <String, Object?>{
   "type": "error",
   "error": message,
 };
-
-/// Decodes a JSON response produced by [arcaneMcpBuildResult] or
-/// [arcaneMcpBuildError].
-ArcaneMcpResponse arcaneMcpDecode(String json) {
-  final Object? decoded;
-  try {
-    decoded = jsonDecode(json);
-  } on FormatException {
-    return const ArcaneMcpErrorResponse(
-      "Bridge response body was not valid JSON.",
-    );
-  }
-  if (decoded is! Map<String, Object?>) {
-    return const ArcaneMcpErrorResponse(
-      "Bridge response body was not a JSON object.",
-    );
-  }
-  return switch (decoded["type"]) {
-    "result" => ArcaneMcpOkResponse(decoded["result"]),
-    "error" => ArcaneMcpErrorResponse(
-      decoded["error"]?.toString() ?? "Unknown bridge error.",
-    ),
-    _ => const ArcaneMcpErrorResponse(
-      "Bridge response had an unknown type.",
-    ),
-  };
-}

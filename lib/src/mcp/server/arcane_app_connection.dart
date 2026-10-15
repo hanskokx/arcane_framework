@@ -107,13 +107,13 @@ class VmServiceArcaneAppConnection implements ArcaneAppConnection {
         arcaneMcpParamsParameter: jsonEncode(params),
       },
     );
-    final String? data = response.json?["data"] as String?;
-    if (data == null) {
-      return const ArcaneMcpErrorResponse(
-        "The app returned an empty response for the invocation.",
-      );
+
+    final Map<String, Object?>? json = response.json;
+    final Object? error = json?["error"];
+    if (error != null) {
+      return ArcaneMcpErrorResponse(error.toString());
     }
-    return arcaneMcpDecode(data);
+    return ArcaneMcpOkResponse(json?["result"]);
   }
 
   @override

@@ -1,6 +1,8 @@
 import "dart:io";
 import "dart:isolate";
 
+import "package:arcane_framework/src/mcp/server/arcane_app_connection.dart";
+import "package:arcane_framework/src/mcp/server/arcane_mcp_server.dart";
 import "package:arcane_framework/src/mcp/tools/tool.dart";
 import "package:dart_mcp/server.dart";
 
@@ -13,7 +15,11 @@ class ArcaneVersionTool extends McpTool {
   );
 
   @override
-  CallToolResult handler(CallToolRequest request) {
+  Future<CallToolResult> handler(
+    CallToolRequest request,
+    ArcaneAppConnection? connection,
+    ArcaneMcpServer server,
+  ) async {
     String version;
     bool isError = false;
 

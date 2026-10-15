@@ -1,523 +1,144 @@
 import "dart:convert";
 
-import "package:arcane_framework/src/mcp/protocol.dart";
-import "package:arcane_framework/src/mcp/server/tools/log_tool.dart";
+import "package:arcane_framework/src/mcp/server/arcane_app_connection.dart";
+import "package:arcane_framework/src/mcp/tools/arcane_version_tool.dart";
+import "package:arcane_framework/src/mcp/tools/connect_tool.dart";
+import "package:arcane_framework/src/mcp/tools/log_tool.dart";
+import "package:arcane_helper_utils/arcane_helper_utils.dart";
+import "package:collection/collection.dart";
 import "package:dart_mcp/server.dart";
-import "package:stream_channel/stream_channel.dart";
+import "package:shelf/shelf.dart" as shelf;
+import "package:shelf/shelf_io.dart" as shelf_io;
 
-import "arcane_app_connection.dart";
-import "arcane_mcp_tool.dart";
-import "arcane_version.dart";
-import "dtd_discovery.dart";
+import "../tools/tool.dart";
 
-const String _serverInstructions =
-    "Connect to a running arcane_framework app with 'connect_app' (or by "
-    "passing vmServiceUri directly), then read state with the get_* tools and "
-    "the arcane://* resources. Use appName to target a specific app when "
-    "several are connected. Apps based on ArcaneApp expose the extension "
-    "automatically.";
+base class ArcaneMcpServer extends MCPServer with ToolsSupport {
+  static List<McpTool> tools = [
+    LogTool(),
+    ArcaneVersionTool(),
+    ConnectTool(),
+  ];
 
-/// A factory that opens an [ArcaneAppConnection] to a VM service URI.
-///
-/// Tests inject their own factory to script connections without a live app.
-typedef ArcaneConnectionFactory =
-    Future<ArcaneAppConnection> Function(
-      Uri uri, {
-      String? name,
-    });
+  ArcaneAppConnection? _connection;
 
-/// An MCP server exposing running arcane_framework apps.
-///
-/// Communicates over the [StreamChannel<String>] passed to the constructor
-/// (normally stdio created by `stdioChannel`, see `bin/arcane_mcp_server.dart`).
-/// The server discovers running apps with [ArcaneAppDiscovery], connects to a
-/// chosen app's VM service, and mirrors the app's bridge methods as MCP tools
-/// (`find_apps`, `connect_app`, `get_services`, `get_logs`,
-/// `get_feature_flags`, `set_feature_flag`, `get_authentication`, `get_theme`,
-/// `set_theme_mode`, `get_environment`, `set_environment`) and as
-/// `arcane://*` resources.
-base class ArcaneMcpServer extends MCPServer
-    with LoggingSupport, ToolsSupport, ResourcesSupport {
-  /// Creates the server on [channel].
-  ///
-  /// [discovery] discovers running apps (defaults to [ArcaneAppDiscovery]).
-  /// [connectionFactory] opens a connection for a VM service URI (defaults to
-  /// [VmServiceArcaneAppConnection.connect]). [initialConnections] attaches
-  /// pre-established connections (used by tests).
-  ArcaneMcpServer(
-    StreamChannel<String> channel, {
-    ArcaneAppDiscovery? discovery,
-    ArcaneConnectionFactory? connectionFactory,
-    List<ArcaneAppConnection> initialConnections =
-        const <ArcaneAppConnection>[],
-  }) : _discovery = discovery ?? ArcaneAppDiscovery(),
-       _connectionFactory =
-           connectionFactory ?? VmServiceArcaneAppConnection.connect,
-       super.fromStreamChannel(
-         channel,
-         implementation: Implementation(
-           name: "arcane-framework",
-           version: arcaneFrameworkVersion(),
-           description: "Working with arcane_framework apps.",
-         ),
-         instructions: _serverInstructions,
-       ) {
-    _connections.addAll(initialConnections);
-    _registerTools();
-    _registerResources();
-  }
-
-  final ArcaneAppDiscovery _discovery;
-  final ArcaneConnectionFactory _connectionFactory;
-  final List<ArcaneAppConnection> _connections = <ArcaneAppConnection>[];
-
-  /// The number of currently connected apps.
-  int get connectionCount => _connections.length;
-
-  /// The apps this server is currently connected to.
-  List<ArcaneAppConnection> get connections =>
-      List<ArcaneAppConnection>.unmodifiable(_connections);
-
-  // * MARK: Tools
-
-  void _registerTools() {
-    registerTool(
-      Tool(
-        name: "connect_app",
-        description:
-            "Connects to a running app. Pass either vmServiceUri for a direct "
-            "connection, or appName and/or appUri discovered with find_apps. "
-            "The app must be running and mount ArcaneApp so it exposes "
-            "ext.arcane.devtools.invoke.",
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.appName: StringSchema(),
-            ArcaneMcpParams.appUri: StringSchema(),
-            ArcaneMcpParams.dtdUri: StringSchema(),
-            ArcaneMcpParams.vmServiceUri: StringSchema(),
-          },
-          required: const <String>[],
+  ArcaneMcpServer(super.channel)
+    : super.fromStreamChannel(
+        implementation: Implementation(
+          name: "arcane-mcp-server",
+          version: ArcaneVersionTool.arcaneFrameworkVersion,
         ),
-      ),
-      _handleConnectApp,
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_services",
-        description:
-            "Lists the services registered on the connected app with a "
-            "per-type summary (feature flags, authentication, theme, "
-            "environment).",
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.services, request),
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_logs",
-        description:
-            "Returns the log events buffered by the app. Filters: level "
-            "(all, trace, debug, info, warning, error, fatal, off), module, "
-            "search, limit.",
-      ),
-      (CallToolRequest request) {
-        final (ArcaneAppConnection?, String?) resolved = _resolveConnection(
-          request.arguments ?? {},
+        instructions:
+            "Communicate with the current Arcane application using ${[
+              tools.map((e) => e.tool.name).toList(),
+            ].join(" ")}",
+      ) {
+    for (final tool in tools) {
+      try {
+        registerTool(
+          tool.tool,
+          (request) => tool.handler(request, _connection, this),
         );
-
-        final ArcaneAppConnection? connection = resolved.$1;
-
-        if (connection == null)
-          return ArcaneMcpTool().errorResult(resolved.$2!);
-
-        return LogTool().handleGetLogs(request, connection);
-      },
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_feature_flags",
-        description:
-            "Returns the app's enabled feature flags and the set of "
-            "known feature flags.",
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.featureFlags, request),
-    );
-    registerTool(
-      Tool(
-        name: "set_feature_flag",
-        description:
-            "Enables or disables a feature flag on the app by name. The flag "
-            "must be known to the app: the app has to enable or disable it in "
-            "code with Arcane.features.enableFeature/disableFeature at least "
-            "once.",
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.name: StringSchema(),
-            ArcaneMcpParams.enabled: BooleanSchema(),
-            ArcaneMcpParams.appName: StringSchema(),
-            ArcaneMcpParams.appUri: StringSchema(),
-          },
-          required: const <String>[
-            ArcaneMcpParams.name,
-            ArcaneMcpParams.enabled,
-          ],
-        ),
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.setFeatureFlag, request),
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_authentication",
-        description:
-            "Returns the app's authentication state. Pass includeTokens=true "
-            "to also reveal the access and refresh tokens; do not request "
-            "tokens unless required.",
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.authentication, request),
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_theme",
-        description:
-            "Returns the app's theme mode, active brightness, and the theme "
-            "primary colors.",
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.theme, request),
-    );
-    registerTool(
-      Tool(
-        name: "set_theme_mode",
-        description: "Sets the app's theme mode to light, dark, or system.",
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.mode: UntitledSingleSelectEnumSchema(
-              values: <String>["light", "dark", "system"],
-            ),
-            ArcaneMcpParams.appName: StringSchema(),
-            ArcaneMcpParams.appUri: StringSchema(),
-          },
-          required: const <String>[ArcaneMcpParams.mode],
-        ),
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.setThemeMode, request),
-    );
-    registerTool(
-      _annotatedTool(
-        name: "get_environment",
-        description: "Returns the app's current application environment.",
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.environment, request),
-    );
-    registerTool(
-      Tool(
-        name: "set_environment",
-        description:
-            "Sets the app's application environment by name (for example "
-            "'debug', 'normal', or a custom environment name).",
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.name: StringSchema(),
-            ArcaneMcpParams.appName: StringSchema(),
-            ArcaneMcpParams.appUri: StringSchema(),
-          },
-          required: const <String>[ArcaneMcpParams.name],
-        ),
-      ),
-      (CallToolRequest request) =>
-          _invokeAndFormat(ArcaneMcpMethods.setEnvironment, request),
-    );
-  }
-
-  Tool _annotatedTool({required String name, required String description}) =>
-      Tool(
-        name: name,
-        description: description,
-        inputSchema: ObjectSchema(
-          properties: <String, Schema>{
-            ArcaneMcpParams.appName: StringSchema(),
-            ArcaneMcpParams.appUri: StringSchema(),
-          },
-          required: const <String>[],
-        ),
-      );
-
-  Future<CallToolResult> _handleConnectApp(CallToolRequest request) async {
-    final Map<String, Object?> args =
-        request.arguments ?? const <String, Object?>{};
-    final String? appName = args[ArcaneMcpParams.appName]?.toString();
-    final String? appUri = args[ArcaneMcpParams.appUri]?.toString();
-    final String? dtdUri = args[ArcaneMcpParams.dtdUri]?.toString();
-    final String? vmServiceUri = args[ArcaneMcpParams.vmServiceUri]?.toString();
-
-    if (vmServiceUri != null) {
-      return _connectToUri(Uri.parse(vmServiceUri), name: appName);
-    }
-
-    final List<DiscoveredApp> apps = await _discovery.discoverApps(
-      dtdUri: dtdUri,
-    );
-    final List<DiscoveredApp> matches = <DiscoveredApp>[];
-    for (final DiscoveredApp app in apps) {
-      final bool nameMatches =
-          appName == null ||
-          app.name.toLowerCase().contains(appName.toLowerCase());
-      final bool uriMatches = appUri == null || app.appUri == appUri;
-      if (nameMatches && uriMatches) {
-        matches.add(app);
+      } catch (e) {
+        print("Failed to register tool ${tool.tool.name}:\n$e");
       }
     }
-    if (matches.isEmpty) {
-      return _errorResult(
-        "No running app matched $appName$appUri. "
-        "${_formatDiscoveredApps(apps)}",
-      );
-    }
-    if (matches.length > 1) {
-      return _errorResult(
-        "Multiple apps match. Disambiguate with appName or appUri:\n"
-        "${_formatDiscoveredApps(matches)}",
-      );
-    }
-    return _connectToUri(
-      Uri.parse(matches.single.appUri),
-      name: matches.single.name,
-    );
   }
 
-  Future<CallToolResult> _connectToUri(Uri uri, {String? name}) async {
-    try {
-      final ArcaneAppConnection connection = await _connectionFactory(
-        uri,
-        name: name,
-      );
-      _connections.add(connection);
-      log(
-        LoggingLevel.info,
-        "Connected to ${connection.name} (${connection.appUri}).",
-      );
-      return _textResult(
-        "Connected to ${connection.name} (${connection.appUri}).\n\n"
-        "${_formatConnections()}",
-      );
-    } on ArcaneAppNotSupportedException catch (error) {
-      return _errorResult(error.toString());
-    } catch (error) {
-      return _errorResult("Failed to connect to $uri: $error");
-    }
+  Future<void> connect(ArcaneAppConnection connection) async {
+    await _connection?.close();
+    _connection = connection;
   }
 
-  Future<CallToolResult> _invokeAndFormat(
-    String method,
-    CallToolRequest request,
-  ) async {
-    final Map<String, Object?> args =
-        request.arguments ?? const <String, Object?>{};
-    final (ArcaneAppConnection?, String?) resolved = _resolveConnection(args);
-    final ArcaneAppConnection? connection = resolved.$1;
-    if (connection == null) return _errorResult(resolved.$2!);
-    final ArcaneMcpResponse response = await connection.invoke(
-      method,
-      params: _bridgeParams(args),
-    );
-    return _resultFromResponse(response);
-  }
+  Future<void> serveHttp() async {
+    Future<shelf.Response> handler(shelf.Request request) async {
+      if (request.method != "POST") {
+        return shelf.Response(405);
+      }
+      final String body = await request.readAsString();
 
-  // * MARK: Resources
+      final jsonReq = jsonDecode(body) as Map<String, dynamic>?;
+      if (jsonReq == null) {
+        return shelf.Response(400);
+      }
+      final String method = jsonReq["method"] as String;
+      final Object? id = jsonReq["id"];
 
-  void _registerResources() {
-    _addResource(
-      "overview",
-      "Arcane overview",
-      "App and service summary plus logger state.",
-    );
-    _addResource(
-      "services",
-      "Registered services",
-      "The list of registered Arcane services with a per-type summary.",
-    );
-    _addResource(
-      "logs",
-      "Recent logs",
-      "The log events buffered by the app's Arcane logger.",
-    );
-    _addResource(
-      "feature_flags",
-      "Feature flags",
-      "The enabled feature flags and the set of known feature flags.",
-    );
-    _addResource(
-      "authentication",
-      "Authentication",
-      "The current authentication state.",
-    );
-    _addResource(
-      "theme",
-      "Theme",
-      "The current theme mode, brightness, and theme colors.",
-    );
-    _addResource(
-      "environment",
-      "Environment",
-      "The current application environment.",
-    );
-    addResourceTemplate(
-      ResourceTemplate(
-        uriTemplate: "arcane://{resource}",
-        name: "Arcane resource",
-        description:
-            "Any resource under the arcane:// scheme, including registered "
-            "resources rendered with the app's latest state.",
-        mimeType: "application/json",
-      ),
-      (ReadResourceRequest request) => _handleReadResource(request.uri),
-    );
-  }
+      // A JSON-RPC request with no id is a
+      // notification: the spec says send no reply.
+      if (id == null) {
+        return shelf.Response(202);
+      }
 
-  void _addResource(String slug, String name, String description) {
-    final String uri = "arcane://$slug";
-    addResource(
-      Resource(
-        uri: uri,
-        name: name,
-        description: description,
-        mimeType: "application/json",
-      ),
-      (ReadResourceRequest request) => _handleReadResource(uri),
-    );
-  }
-
-  Future<ReadResourceResult> _handleReadResource(String uri) async {
-    final String? method = switch (uri) {
-      "arcane://overview" => ArcaneMcpMethods.overview,
-      "arcane://services" => ArcaneMcpMethods.services,
-      "arcane://logs" => ArcaneMcpMethods.logs,
-      "arcane://feature_flags" => ArcaneMcpMethods.featureFlags,
-      "arcane://authentication" => ArcaneMcpMethods.authentication,
-      "arcane://theme" => ArcaneMcpMethods.theme,
-      "arcane://environment" => ArcaneMcpMethods.environment,
-      _ => null,
-    };
-    if (method == null) {
-      return _resourceResult(uri, text: "Unknown resource URI: $uri");
-    }
-    final (ArcaneAppConnection?, String?) resolved = _resolveConnection(
-      const <String, Object?>{},
-    );
-    final ArcaneAppConnection? connection = resolved.$1;
-    if (connection == null) {
-      return _resourceResult(
-        uri,
-        text: resolved.$2 ?? "No app connections.",
+      final params = jsonReq["params"] as Map<String, dynamic>? ?? {};
+      Map<String, dynamic> result;
+      switch (method) {
+        case "initialize":
+          result = {
+            // TODO(hans): Figure out what this should be
+            "protocolVersion": "2025-06-18",
+            "capabilities": {"tools": {}},
+            "serverInfo": {
+              "name": "arcane-mcp-server",
+              "version": ArcaneVersionTool.arcaneFrameworkVersion,
+            },
+          };
+        case "tools/list":
+          result = {
+            "tools": [
+              ...ArcaneMcpServer.tools
+                  .map(
+                    (e) => {
+                      "name": e.tool.name,
+                      "description": e.tool.description,
+                      "inputSchema": e.tool.inputSchema.toJsonValue(),
+                    },
+                  )
+                  .toList(),
+            ],
+          };
+        case "tools/call":
+          final tool = ArcaneMcpServer.tools.firstWhereOrNull(
+            (e) => e.tool.name == (params["name"] as String),
+          );
+          if (tool != null) {
+            final resultObj = await tool.handler(
+              CallToolRequest(
+                name: params["name"] as String,
+                arguments: params,
+              ),
+              _connection,
+              this,
+            );
+            result = Map<String, dynamic>.from(
+              resultObj.structuredContent ?? {},
+            );
+          } else {
+            result = {};
+          }
+        default:
+          result = {};
+      }
+      return shelf.Response.ok(
+        jsonEncode({
+          "jsonrpc": "2.0",
+          "id": id,
+          "result": result,
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
       );
     }
-    final ArcaneMcpResponse response = await connection.invoke(method);
-    if (response is ArcaneMcpOkResponse) {
-      return _resourceResult(
-        uri,
-        text: const JsonEncoder.withIndent("  ").convert(response.data),
-      );
-    }
-    final ArcaneMcpErrorResponse error = response as ArcaneMcpErrorResponse;
-    return _resourceResult(uri, text: "Error: ${error.message}");
-  }
 
-  ReadResourceResult _resourceResult(String uri, {required String text}) =>
-      ReadResourceResult(
-        contents: <ResourceContents>[
-          TextResourceContents(uri: uri, text: text),
-        ],
-      );
-
-  // * MARK: Connection resolution
-
-  /// Resolves the app targeted by [args] among the connected apps.
-  ///
-  /// Returns the connection on success, or `null` plus a human-readable
-  /// explanation when none (or an ambiguous set) matches.
-  (ArcaneAppConnection?, String?) _resolveConnection(
-    Map<String, Object?> args,
-  ) {
-    final String? appName = args[ArcaneMcpParams.appName]?.toString();
-    final String? appUri = args[ArcaneMcpParams.appUri]?.toString();
-    if (_connections.isEmpty) {
-      return (null, "No app connections. Run connect_app first.");
-    }
-    Iterable<ArcaneAppConnection> candidates = _connections;
-    if (appName != null) {
-      candidates = candidates.where(
-        (ArcaneAppConnection c) =>
-            c.name.toLowerCase().contains(appName.toLowerCase()),
-      );
-    }
-    if (appUri != null) {
-      candidates = candidates.where(
-        (ArcaneAppConnection c) => c.appUri == appUri,
-      );
-    }
-    final List<ArcaneAppConnection> matches = candidates.toList();
-    if (matches.isEmpty) {
-      return (
-        null,
-        "No connection matches appName=$appName appUri=$appUri.\n\n"
-            "${_formatConnections()}",
-      );
-    }
-    if (matches.length > 1) {
-      return (
-        null,
-        "Multiple apps match appName=$appName appUri=$appUri; pass a unique "
-            "appName.\n\n${_formatConnections()}",
-      );
-    }
-    return (matches.single, null);
-  }
-
-  Map<String, Object?> _bridgeParams(Map<String, Object?> args) {
-    final Map<String, Object?> params = <String, Object?>{};
-    for (final String key in <String>[
-      ArcaneMcpParams.name,
-      ArcaneMcpParams.enabled,
-      ArcaneMcpParams.mode,
-      ArcaneMcpParams.includeTokens,
-    ]) {
-      final Object? value = args[key];
-      if (value != null) params[key] = value;
-    }
-    return params;
-  }
-
-  // * MARK: Formatting
-
-  String _formatConnections() {
-    if (_connections.isEmpty) {
-      return "No app connections. Run connect_app first.";
-    }
-    return "Connected apps (${_connections.length}):\n"
-        '${_connections.map((ArcaneAppConnection c) => '  - ${c.name} (${c.appUri})').join('\n')}';
-  }
-
-  String _formatDiscoveredApps(List<DiscoveredApp> apps) {
-    if (apps.isEmpty) {
-      return "No running apps discovered. Start a Flutter app based on "
-          "ArcaneApp, then run connect_app.";
-    }
-    return "Discovered apps (${apps.length}):\n"
-        '${apps.map((DiscoveredApp app) => '  - ${app.name} (${app.appUri}) [DTD ${app.dtdUri}]').join('\n')}';
-  }
-
-  @override
-  Future<void> shutdown() async {
-    await Future.wait(<Future<void>>[
-      for (final ArcaneAppConnection connection in _connections)
-        connection.close(),
-    ]);
-    _connections.clear();
-    await super.shutdown();
+    final server = await shelf_io.serve(
+      handler,
+      "localhost",
+      8087,
+    );
+    print(
+      "MCP server running on "
+      "http://${server.address.host}:"
+      "${server.port}",
+    );
   }
 }

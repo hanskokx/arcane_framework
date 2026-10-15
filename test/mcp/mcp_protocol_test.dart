@@ -1,5 +1,3 @@
-import "dart:convert";
-
 import "package:arcane_framework/src/mcp/protocol.dart";
 import "package:test/test.dart";
 
@@ -30,52 +28,28 @@ void main() {
     });
   });
 
-  group("codec", () {
-    test("arcaneMcpBuildResult round-trips", () {
+  group("envelope builders", () {
+    test("arcaneMcpBuildResult nests the payload under result", () {
       const Map<String, Object?> payload = <String, Object?>{"mode": "light"};
-      final ArcaneMcpResponse response = arcaneMcpDecode(
-        jsonEncode(arcaneMcpBuildResult(payload)),
-      );
       expect(
-        response,
-        isA<ArcaneMcpOkResponse>().having(
-          (ArcaneMcpOkResponse r) => r.data,
-          "data",
-          payload,
-        ),
+        arcaneMcpBuildResult(payload),
+        <String, Object?>{"type": "result", "result": payload},
       );
     });
 
-    test("arcaneMcpBuildError round-trips", () {
+    test("arcaneMcpBuildResult carries a null payload", () {
+      expect(
+        arcaneMcpBuildResult(null),
+        <String, Object?>{"type": "result", "result": null},
+      );
+    });
+
+    test("arcaneMcpBuildError nests the message under error", () {
       const String message = "Something broke.";
-      final ArcaneMcpResponse response = arcaneMcpDecode(
-        jsonEncode(arcaneMcpBuildError(message)),
-      );
       expect(
-        response,
-        isA<ArcaneMcpErrorResponse>().having(
-          (ArcaneMcpErrorResponse r) => r.message,
-          "message",
-          message,
-        ),
+        arcaneMcpBuildError(message),
+        <String, Object?>{"type": "error", "error": message},
       );
-    });
-
-    test("decode rejects a body that is not JSON", () {
-      final ArcaneMcpResponse response = arcaneMcpDecode("not json");
-      expect(response, isA<ArcaneMcpErrorResponse>());
-    });
-
-    test("decode rejects a body that is not a JSON object", () {
-      final ArcaneMcpResponse response = arcaneMcpDecode("[1, 2, 3]");
-      expect(response, isA<ArcaneMcpErrorResponse>());
-    });
-
-    test("decode rejects an unknown response type", () {
-      final ArcaneMcpResponse response = arcaneMcpDecode(
-        '{"type": "wat", "result": {}}',
-      );
-      expect(response, isA<ArcaneMcpErrorResponse>());
     });
   });
 }

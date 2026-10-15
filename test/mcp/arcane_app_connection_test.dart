@@ -33,11 +33,16 @@ Map<String, Object?> _isolate({List<String>? extensions}) => <String, Object?>{
 };
 
 /// A VM service handler that serves arcane-framework apps.
+///
+/// The VM service unwraps the `{"type": "result", "result": ...}` envelope the
+/// app produces, so [invocationsResult] is the bare payload and a failure is
+/// reported as a top-level `error` string with no `result` key.
 Future<Map<String, Object?>> Function(Map<String, Object?> request)
 _arcaneHandler({
   List<String>? extensions = const <String>[arcaneMcpServiceExtension],
   List<Map<String, Object?>>? isolates,
-  String? invocationsData,
+  Object? invocationsResult,
+  String? invocationsError,
 }) {
   return (Map<String, Object?> request) async {
     return switch (request["method"]) {
@@ -45,7 +50,8 @@ _arcaneHandler({
       "getIsolate" => _isolate(extensions: extensions),
       arcaneMcpServiceExtension => <String, Object?>{
         "type": "Response",
-        if (invocationsData != null) "data": invocationsData,
+        if (invocationsError != null) "error": invocationsError,
+        if (invocationsError == null) "result": invocationsResult,
       },
       _ => throw StateError("unexpected request"),
     };
@@ -140,9 +146,7 @@ void main() {
   group("VmServiceArcaneAppConnection.invoke", () {
     test("calls the extension and decodes the result", () async {
       final FakeWireServer server = await FakeWireServer.start(
-        _arcaneHandler(
-          invocationsData: '{"type": "result", "result": {"ok": true}}',
-        ),
+        _arcaneHandler(invocationsResult: <String, Object?>{"ok": true}),
       );
       addTearDown(server.close);
       final VmServiceArcaneAppConnection connection =
@@ -175,9 +179,7 @@ void main() {
     test("forwards params and decodes an error response", () async {
       final Future<Map<String, Object?>> Function(Map<String, Object?> request)
       handler;
-      handler = _arcaneHandler(
-        invocationsData: '{"type": "error", "error": "flag rejected"}',
-      );
+      handler = _arcaneHandler(invocationsError: "flag rejected");
       final FakeWireServer server = await FakeWireServer.start(handler);
       addTearDown(server.close);
       final VmServiceArcaneAppConnection connection =
@@ -207,7 +209,7 @@ void main() {
       );
     });
 
-    test("reports an empty response body", () async {
+    test("treats a body without a result as a null payload", () async {
       final FakeWireServer server = await FakeWireServer.start(
         _arcaneHandler(),
       );
@@ -223,10 +225,10 @@ void main() {
       );
       expect(
         response,
-        isA<ArcaneMcpErrorResponse>().having(
-          (ArcaneMcpErrorResponse error) => error.message,
-          "message",
-          contains("empty response"),
+        isA<ArcaneMcpOkResponse>().having(
+          (ArcaneMcpOkResponse ok) => ok.data,
+          "data",
+          isNull,
         ),
       );
     });
