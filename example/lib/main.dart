@@ -78,7 +78,7 @@ Future<void> main() async {
     // It also performs initial platform theme synchronization automatically
     // via ArcaneThemeSwitcher.
     ArcaneApp(
-      builder: (context, _) => const MainApp(),
+      builder: (context) => const MainApp(),
     ),
   );
 }
@@ -174,7 +174,7 @@ class _ArcaneLoggingExampleState extends State<ArcaneLoggingExample> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
+    return ArcaneValueListenableBuilder(
       valueListenable: Arcane.features.notifier,
       builder: (context, enabledFeatures, _) {
         return Padding(
@@ -263,13 +263,13 @@ class ArcaneAuthExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
+    return ArcaneValueListenableBuilder(
       valueListenable: Arcane.features.notifier,
       builder: (context, enabledFeatures, _) {
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ValueListenableBuilder(
+            child: ArcaneValueListenableBuilder(
               valueListenable: Arcane.auth.isSignedIn,
               builder: (context, isSignedIn, _) {
                 return Column(
@@ -514,7 +514,7 @@ class ArcaneEnvironmentExample extends StatelessWidget {
               },
               child: const Text("Cycle environment"),
             ),
-            ValueListenableBuilder<Environment>(
+            ArcaneValueListenableBuilder<Environment>(
               valueListenable: Arcane.environment.notifier,
               builder: (context, environment, _) {
                 return Text(
@@ -545,9 +545,9 @@ class ArcaneServicesExample extends StatelessWidget {
       context,
     );
 
-    return ValueListenableBuilder<List<ArcaneService>>(
-      valueListenable: serviceProvider.notifier!,
-      builder: (context, _, __) {
+    return ListenableBuilder(
+      listenable: serviceProvider.notifier!,
+      builder: (context, _) {
         final FavoriteColorService? service =
             ArcaneServiceProvider.serviceOfType<FavoriteColorService>(context);
 

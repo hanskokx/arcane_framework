@@ -21,3 +21,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  arcane_auth:
+    path: "../packages/arcane_auth"
+  arcane_environment:
+    path: "../packages/arcane_environment"
+  arcane_feature_flags:
+    path: "../packages/arcane_feature_flags"
+  arcane_logger:
+    path: "../packages/arcane_logger"
+  arcane_service:
+    path: "../packages/arcane_service"
+  arcane_theme:
+    path: "../packages/arcane_theme"

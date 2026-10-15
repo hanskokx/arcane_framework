@@ -1,0 +1,18 @@
+name: arcane_feature_flags
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  arcane_logger:
+  arcane_service:
+
+dev_dependencies:
+  arcane_analysis:
+  test: ^1.25.0

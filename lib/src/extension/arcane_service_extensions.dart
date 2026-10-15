@@ -2,16 +2,13 @@ import "dart:async";
 import "dart:convert";
 import "dart:developer";
 
+import "package:arcane_auth/arcane_auth.dart";
+import "package:arcane_environment/arcane_environment.dart";
+import "package:arcane_feature_flags/arcane_feature_flags.dart";
 import "package:arcane_framework/src/arcane.dart";
 import "package:arcane_framework/src/mcp/protocol.dart";
-import "package:arcane_framework/src/service/arcane_service.dart";
-import "package:arcane_framework/src/services/authentication/authentication_service.dart";
-import "package:arcane_framework/src/services/environment/environment_interface.dart";
-import "package:arcane_framework/src/services/environment/environment_service.dart";
-import "package:arcane_framework/src/services/feature_flags/feature_flags_service.dart";
-import "package:arcane_framework/src/services/logging/logging_service.dart";
-import "package:arcane_framework/src/services/theme/theme_service.dart";
 import "package:flutter/foundation.dart";
+import "package:material_ui/material_ui.dart";
 
 import "arcane_log_buffer.dart";
 
@@ -129,7 +126,7 @@ abstract final class ArcaneServiceExtensions {
 
     _registerMethod(
       ArcaneMcpMethods.setThemeMode,
-      (Map<String, Object?> params) async => arcaneThemeDevToolsSetMode(params),
+      (Map<String, Object?> params) async => _setThemeModePayload(params),
     );
 
     _registerMethod(
@@ -348,7 +345,54 @@ abstract final class ArcaneServiceExtensions {
     };
   }
 
-  static Map<String, Object?> _themePayload() => arcaneThemeDevToolsState();
+  static Map<String, Object?> _themePayload() => _themeState();
+
+  static Map<String, Object?> _themeState() {
+    final ArcaneThemeService service = ArcaneThemeService.I;
+    return <String, Object?>{
+      "mode": service.currentThemeMode.name,
+      "followingSystem": service.isFollowingSystemTheme,
+      "customThemeRegistered":
+          // The theme service exposes this flag for framework internals.
+          // ignore: invalid_use_of_internal_member
+          service.themeOverriddenByUser,
+      "currentThemeMode": service.currentThemeMode.name,
+      "followsSystemTheme": service.isFollowingSystemTheme,
+      "systemThemeMode": service.systemThemeMode.name,
+      "activeBrightness": service.currentTheme.brightness.name,
+      "lightPrimaryColor": _colorHex(service.light.colorScheme.primary),
+      "darkPrimaryColor": _colorHex(service.dark.colorScheme.primary),
+    };
+  }
+
+  static String _colorHex(Color color) =>
+      "#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, "0").toUpperCase()}";
+
+  /// Applies a theme mode change for the DevTools
+  /// `ext.arcane.devtools.invoke` extension and returns the resulting theme
+  /// state.
+  ///
+  /// Throws an [ArgumentError] when [params] lacks a valid `mode` (one of
+  /// "light", "dark", or "system").
+  static Map<String, Object?> _setThemeModePayload(
+    Map<String, Object?> params,
+  ) {
+    switch (params["mode"]) {
+      case "light":
+        ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.light);
+      case "dark":
+        ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.dark);
+      case "system":
+        ArcaneThemeService.I.switchTheme(themeMode: ThemeMode.system);
+      default:
+        throw ArgumentError.value(
+          params["mode"],
+          "mode",
+          "Expected one of: light, dark, system.",
+        );
+    }
+    return _themeState();
+  }
 
   static Map<String, Object?> _environmentPayload() {
     final Environment environment = Arcane.environment.current;

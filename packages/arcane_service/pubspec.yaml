@@ -1,0 +1,18 @@
+name: arcane_service
+description: The Flutter-free core service model for the Arcane framework.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  collection:
+  meta: any
+
+dev_dependencies:
+  arcane_analysis:
+  test:

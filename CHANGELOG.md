@@ -12,6 +12,14 @@
 - [FIX] MCP server no longer advertises a stale hardcoded version; it now reads `version:` from `pubspec.yaml` at runtime via the package config.
 - [FIX] `register_skills` parser moved to `lib/src/skills/register_skills_cli.dart` for test coverage; usage string now correctly shows `dart run arcane_framework:register_skills`.
 
+### HANS ###
+
+- [BREAKING] `ArcaneApp`'s `builder` parameter signature was changed from `TransitionBuilder` to `WidgetBuilder` in an effort to simplify the constructor.
+
+#### Migration Steps
+
+1. Replace `builder: (context, _)` with `builder: (context)` in your `ArcaneApp` widget.
+
 ## 3.0.0-dev.1
 
 - [CHANGE] Migrated from `flutter/material.dart` to `material_ui`

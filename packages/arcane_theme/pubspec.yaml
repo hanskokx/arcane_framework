@@ -1,0 +1,21 @@
+name: arcane_theme
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  arcane_helper_utils:
+  arcane_service:
+  material_ui: ^1.0.0
+  meta:
+
+dev_dependencies:
+  arcane_analysis:
+  flutter_test:
+    sdk: flutter

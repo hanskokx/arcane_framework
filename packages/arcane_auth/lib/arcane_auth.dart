@@ -1,0 +1,329 @@
+/// Support for doing something awesome.
+///
+/// More dartdocs go here.
+library;
+
+import "dart:async";
+
+import "package:arcane_environment/arcane_environment.dart";
+import "package:arcane_service/arcane_service.dart";
+import "package:result_monad/result_monad.dart";
+
+import "src/authentication_enums.dart";
+import "src/authentication_interface.dart";
+
+export "package:result_monad/result_monad.dart" hide Error, Ok;
+
+export "src/authentication_enums.dart";
+export "src/authentication_interface.dart";
+
+/// Provides a standard interface to handle authentication-related tasks.
+///
+/// To get started, first ensure that an `ArcaneAuthInterface` has been
+/// registered.
+class ArcaneAuthenticationService extends ArcaneService {
+  ArcaneAuthenticationService._internal();
+
+  static final ArcaneAuthenticationService _instance =
+      ArcaneAuthenticationService._internal();
+
+  /// Provides access to the singleton instance of this service.
+  static ArcaneAuthenticationService get I => _instance;
+
+  final ArcaneValueNotifier<AuthenticationStatus> _notifier =
+      ArcaneValueNotifier<AuthenticationStatus>(AuthenticationStatus.unknown);
+
+  /// A notifier that emits the current `AuthenticationStatus`.
+  ArcaneValueNotifier<AuthenticationStatus> get notifier => _notifier;
+
+  StreamController<AuthenticationStatus>? _statusStreamController;
+
+  StreamController<AuthenticationStatus> get _statusController {
+    _statusStreamController ??=
+        StreamController<AuthenticationStatus>.broadcast();
+    return _statusStreamController!;
+  }
+
+  /// Stream of authentication status updates.
+  Stream<AuthenticationStatus> get statusChanges => I._statusController.stream;
+
+  /// Returns the current `AuthenticationStatus` as a snapshot value.
+  AuthenticationStatus get status => _notifier.value;
+
+  static ArcaneAuthInterface? _authInterface;
+
+  /// Provides direct access to the registered `ArcaneAuthInterface`, if one has
+  /// been registered.
+  ArcaneAuthInterface? get authInterface => _authInterface;
+
+  /// Returns `true` when the current status is authenticated.
+  bool get isAuthenticated => status.isAuthenticated;
+
+  final ArcaneValueNotifier<bool> _isSignedIn = ArcaneValueNotifier<bool>(
+    false,
+  );
+
+  /// A notifier that emits `true` if the user is currently signed in.
+  ArcaneValueNotifier<bool> get isSignedIn => _isSignedIn;
+
+  StreamController<bool>? _signedInStreamController;
+
+  StreamController<bool> get _signedInController {
+    _signedInStreamController ??= StreamController<bool>.broadcast();
+    return _signedInStreamController!;
+  }
+
+  /// Stream of signed-in boolean updates.
+  Stream<bool> get signedInChanges => I._signedInController.stream;
+
+  /// Returns a JWT access token if the registered `ArcaneAuthInterface`
+  /// provides one.
+  Future<String?> get accessToken async =>
+      authInterface?.accessToken ?? Future.value("");
+
+  /// Returns a JWT refresh token if the registered `ArcaneAuthInterface`
+  /// provides one.
+  Future<String?> get refreshToken async =>
+      authInterface?.refreshToken ?? Future.value("");
+
+  /// Removes any registered `ArcaneAuthInterface` and resets all values to
+  /// default.
+  Future<void> reset() async {
+    _authInterface = null;
+    _notifier.value = AuthenticationStatus.unknown;
+    _isSignedIn.value = isAuthenticated;
+    _statusController.add(_notifier.value);
+    _signedInController.add(_isSignedIn.value);
+  }
+
+  /// Registers an `ArcaneAuthInterface` within the `ArcaneAuthenticationService`.
+  Future<void> registerInterface(ArcaneAuthInterface authInterface) async {
+    if (_authInterface != null) {
+      throw Exception("ArcaneAuthInterface has already been registered");
+    }
+
+    _authInterface = authInterface;
+    await authInterface.init();
+  }
+
+  /// Enables the debug environment.
+  ///
+  /// This method does not mutate authentication status.
+  Future<void> setDebug({
+    Future<void> Function()? onDebugModeSet,
+  }) async {
+    final Environment previousEnvironment = ArcaneEnvironmentService.I.current;
+
+    if (previousEnvironment == Environment.debug) return;
+
+    ArcaneEnvironmentService.I.enableDebugMode();
+
+    if (onDebugModeSet != null) await onDebugModeSet();
+  }
+
+  /// Enables the normal environment.
+  ///
+  /// This method does not mutate authentication status.
+  Future<void> setNormal({
+    Future<void> Function()? onDebugModeUnset,
+  }) async {
+    final Environment previousEnvironment = ArcaneEnvironmentService.I.current;
+
+    if (previousEnvironment == Environment.normal) return;
+
+    ArcaneEnvironmentService.I.disableDebugMode();
+
+    if (onDebugModeUnset != null) await onDebugModeUnset();
+  }
+
+  /// Sets `status` to `AuthenticationStatus.authenticated`.
+  void setAuthenticated() {
+    _setStatus(AuthenticationStatus.authenticated);
+  }
+
+  /// Sets `status` to `AuthenticationStatus.unauthenticated`.
+  void setUnauthenticated() {
+    _setStatus(AuthenticationStatus.unauthenticated);
+  }
+
+  void _setStatus(AuthenticationStatus newStatus) {
+    if (_notifier.value != newStatus) {
+      _notifier.value = newStatus;
+      _isSignedIn.value = isAuthenticated;
+      _statusController.add(_notifier.value);
+      _signedInController.add(_isSignedIn.value);
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_statusStreamController?.close());
+    unawaited(_signedInStreamController?.close());
+    _statusStreamController = null;
+    _signedInStreamController = null;
+    super.dispose();
+  }
+
+  /// Logs the current user out.
+  Future<Result<void, String>> logOut({
+    Future<void> Function()? onLoggedOut,
+  }) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    if (!isAuthenticated) {
+      return const Result.error("User is not authenticated.");
+    }
+
+    final Result<void, String> loggedOut = await authInterface!.logout(
+      onLoggedOut: onLoggedOut,
+    );
+
+    if (loggedOut.isSuccess) {
+      setUnauthenticated();
+    }
+
+    return loggedOut;
+  }
+
+  /// Logs the user in using an optional, generic `T` type of input.
+  Future<Result<void, String>> login<T>({
+    T? input,
+    Future<void> Function()? onLoggedIn,
+  }) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    final Result<void, String> result = await authInterface!.login(
+      input: input,
+      onLoggedIn: onLoggedIn,
+    );
+
+    if (result.isSuccess) {
+      setAuthenticated();
+    }
+
+    return result;
+  }
+
+  /// Attempts to register a new account using user-defined input.
+  Future<Result<SignUpStep, String>> register<T>({T? input}) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return const Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
+    final Result<SignUpStep, String>? result = await auth.register(
+      input: input,
+    );
+
+    if (result == null) {
+      return const Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
+
+    return result;
+  }
+
+  /// Confirms the user's signup.
+  Future<Result<bool, String>> confirmSignup({
+    required String email,
+    required String confirmationCode,
+  }) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return const Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
+    final Result<bool, String>? result = await auth.confirmSignup(
+      username: email,
+      confirmationCode: confirmationCode,
+    );
+
+    if (result == null) {
+      return const Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
+
+    return result;
+  }
+
+  /// Re-sends a verification code to be used when confirming the user's
+  /// registration.
+  Future<Result<String, String>> resendVerificationCode(String email) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    if (authInterface is! ArcaneAuthAccountRegistration) {
+      return const Result.error(
+        "The provided ArcaneAuthInterface does not support account registration.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthAccountRegistration;
+
+    final Future<Result<String, String>>? result = auth.resendVerificationCode(
+      input: email,
+    );
+
+    if (result == null) {
+      return const Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
+
+    return result;
+  }
+
+  /// Attempts to reset the user's password.
+  Future<Result<bool, String>> resetPassword({
+    required String email,
+    String? newPassword,
+    String? confirmationCode,
+  }) async {
+    if (_authInterface == null) {
+      return const Result.error("No ArcaneAuthInterface has been registered");
+    }
+
+    if (authInterface is! ArcaneAuthPasswordManagement) {
+      return const Result.error(
+        "The provided ArcaneAuthInterface does not support password management.",
+      );
+    }
+
+    final auth = authInterface as ArcaneAuthPasswordManagement;
+
+    final Result<bool, String>? result = await auth.resetPassword(
+      email: email,
+      newPassword: newPassword,
+      code: confirmationCode,
+    );
+
+    if (result == null) {
+      return const Result.error(
+        "Registered ArcaneAuthInterface returned a null value.",
+      );
+    }
+
+    return result;
+  }
+}

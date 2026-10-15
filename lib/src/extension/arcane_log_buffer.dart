@@ -1,4 +1,4 @@
-import "package:arcane_framework/src/services/logging/logging_service.dart";
+import "package:arcane_logger/arcane_logger.dart";
 
 /// A [LoggingInterface] that buffers recent log events for the framework's
 /// runtime introspection extension.

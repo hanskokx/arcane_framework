@@ -16,7 +16,7 @@ void main() {
 
   setUp(() async {
     Arcane.logger.reset();
-    ArcaneFeatureFlagService.I.reset();
+    Arcane.features.reset();
     Arcane.theme.switchTheme(themeMode: ThemeMode.system);
     Arcane.environment.setEnvironment(Environment.normal);
 
@@ -33,7 +33,7 @@ void main() {
   });
 
   tearDown(() {
-    ArcaneFeatureFlagService.I.reset();
+    Arcane.features.reset();
     Arcane.theme.switchTheme(themeMode: ThemeMode.system);
     Arcane.environment.setEnvironment(Environment.normal);
     ArcaneServiceExtensions.logBuffer.clear();

@@ -1,0 +1,16 @@
+name: arcane_environment
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  arcane_service:
+
+dev_dependencies:
+  arcane_analysis:
+  test: ^1.25.0

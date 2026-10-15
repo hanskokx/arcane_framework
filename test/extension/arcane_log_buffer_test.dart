@@ -1,7 +1,7 @@
 import "dart:convert";
 
 import "package:arcane_framework/src/extension/arcane_log_buffer.dart";
-import "package:arcane_framework/src/services/logging/logging_service.dart";
+import "package:arcane_logger/arcane_logger.dart";
 import "package:flutter_test/flutter_test.dart";
 
 void main() {

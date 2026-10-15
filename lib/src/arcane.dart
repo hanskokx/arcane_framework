@@ -1,35 +1,27 @@
+import "package:arcane_auth/arcane_auth.dart";
+import "package:arcane_environment/arcane_environment.dart";
+import "package:arcane_feature_flags/arcane_feature_flags.dart";
+import "package:arcane_logger/arcane_logger.dart";
+import "package:arcane_service/arcane_service.dart";
+import "package:arcane_theme/arcane_theme.dart";
 import "package:flutter/foundation.dart";
 
-import "service/arcane_service.dart";
-import "services/authentication/authentication_service.dart";
-import "services/environment/environment_service.dart";
-import "services/feature_flags/feature_flags_service.dart";
-import "services/logging/logging_service.dart";
-import "services/theme/theme_service.dart";
+export "package:arcane_logger/arcane_logger.dart";
+export "package:arcane_service/arcane_service.dart";
+export "package:arcane_theme/arcane_theme.dart";
 
 /// A singleton class that acts as the central hub for various services in the
 /// Arcane framework.
 ///
 /// `Arcane` provides access to important services like logging, feature flags,
-/// authentication, theming, secure storage, and ID management. It also offers a
-/// convenient method for logging messages using the integrated logger.
+/// authentication, theming, and environment management. The set of available
+/// services is held by [ArcaneServices] (the registry/locator); `Arcane` simply
+/// exposes convenient typed getters over it.
 abstract class Arcane {
-  // Internal registry for service instances, set by ArcaneApp if present.
-  static ValueNotifier<List<ArcaneService>>? registry;
-
-  // Called by ArcaneApp to register the live service registry.
-  /// Called by ArcaneApp to register the live service registry.
-  static void setRegistry(ValueNotifier<List<ArcaneService>> r) {
-    registry = r;
-  }
-
-  // Called by ArcaneApp to clear the registry when disposed.
-  /// Called by ArcaneApp to clear the registry when disposed.
-  static void clearRegistry() {
-    registry = null;
-  }
-
-  // The built-in singleton services (used as fallback if no ArcaneApp is present).
+  // The built-in singleton services (used as fallback if no app registered
+  // services via `ArcaneApp`).
+  /// The services that ship with the framework.
+  @internal
   static List<ArcaneService> get builtInServices => List.unmodifiable([
     ArcaneFeatureFlagService.I,
     ArcaneAuthenticationService.I,
@@ -43,36 +35,29 @@ abstract class Arcane {
   /// Logger is not a service and is always the singleton.
   static ArcaneLogger get logger => ArcaneLogger.I;
 
-  /// Provides typed service lookups through `Arcane.service.ofType<T>(context)`.
-  static const ArcaneServiceLookup service = ArcaneServiceLookup();
+  /// The singleton service registry and locator.
+  static ArcaneServices get service => ArcaneServices.I;
 
-  /// Provides access to the feature flags service instance registered in ArcaneApp, or the singleton if not present.
-  static ArcaneFeatureFlagService get features =>
-      services.whereType<ArcaneFeatureFlagService>().firstOrNull ??
-      ArcaneFeatureFlagService.I;
+  /// Provides access to the feature flags service.
+  static ArcaneFeatureFlagService get features => ArcaneFeatureFlagService.I;
 
-  /// Provides access to the authentication service instance registered in ArcaneApp, or the singleton if not present.
-  static ArcaneAuthenticationService get auth =>
-      services.whereType<ArcaneAuthenticationService>().firstOrNull ??
-      ArcaneAuthenticationService.I;
+  /// Provides access to the authentication service.
+  static ArcaneAuthenticationService get auth => ArcaneAuthenticationService.I;
 
-  /// Provides access to the theme management service instance registered in ArcaneApp, or the singleton if not present.
-  /// Returns ArcaneThemeService, but is also assignable to ArcaneReactiveTheme for backward compatibility.
-  static ArcaneThemeService get theme =>
-      services.whereType<ArcaneThemeService>().firstOrNull ??
-      ArcaneThemeService.I;
+  /// Provides access to the theme management service.
+  static ArcaneThemeService get theme => ArcaneThemeService.I;
 
-  /// Provides access to the environment service instance registered in ArcaneApp, or the singleton if not present.
-  static ArcaneEnvironmentService get environment =>
-      services.whereType<ArcaneEnvironmentService>().firstOrNull ??
-      ArcaneEnvironmentService.I;
+  /// Provides access to the environment service.
+  static ArcaneEnvironmentService get environment => ArcaneEnvironmentService.I;
 
   /// Returns a list of all services available in the Arcane framework.
   ///
-  /// This list includes the feature flags, authentication, theme, and environment services.
-  /// If ArcaneApp is present, this reflects the live registry; otherwise, falls back to built-in singletons.
-  static List<ArcaneService> get services =>
-      List.unmodifiable(registry?.value ?? builtInServices);
+  /// When an app has registered services (via `ArcaneApp`) this reflects that
+  /// live registry; otherwise it falls back to the built-in singletons.
+  static List<ArcaneService> get services {
+    final List<ArcaneService> registered = ArcaneServices.I.services;
+    return List.unmodifiable(registered.isEmpty ? builtInServices : registered);
+  }
 
   /// Logs a message using the integrated logger.
   ///

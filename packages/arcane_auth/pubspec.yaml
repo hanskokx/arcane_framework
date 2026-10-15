@@ -1,0 +1,19 @@
+name: arcane_auth
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  arcane_environment:
+  arcane_service:
+  result_monad:
+
+dev_dependencies:
+  arcane_analysis:
+  mocktail: ^1.0.4
+  test: ^1.25.0

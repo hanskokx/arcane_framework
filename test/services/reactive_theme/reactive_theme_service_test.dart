@@ -3,16 +3,16 @@ import "package:flutter_test/flutter_test.dart";
 import "package:material_ui/material_ui.dart";
 
 void main() {
-  group("ArcaneReactiveTheme", () {
-    late ArcaneReactiveTheme theme;
+  group("ArcaneThemeService", () {
+    late ArcaneThemeService theme;
 
     setUp(() {
-      theme = ArcaneReactiveTheme.I;
+      theme = ArcaneThemeService.I;
       Arcane.theme.reset();
     });
 
     test("singleton instance is consistent", () {
-      expect(identical(ArcaneReactiveTheme.I, theme), true);
+      expect(identical(ArcaneThemeService.I, theme), true);
     });
 
     group("theme mode", () {

@@ -1,0 +1,29 @@
+import "package:arcane_auth/arcane_auth.dart";
+import "package:test/test.dart";
+
+void main() {
+  group("SignUpStep", () {
+    test("values are correct", () {
+      expect(SignUpStep.confirmSignUp.index, 0);
+      expect(SignUpStep.done.index, 1);
+    });
+  });
+
+  group("AuthenticationStatus", () {
+    test("isAuthenticated returns true only for authenticated", () {
+      expect(AuthenticationStatus.authenticated.isAuthenticated, isTrue);
+      expect(AuthenticationStatus.unauthenticated.isAuthenticated, isFalse);
+      expect(AuthenticationStatus.unknown.isAuthenticated, isFalse);
+    });
+    test("isUnauthenticated returns true for unauthenticated and unknown", () {
+      expect(AuthenticationStatus.authenticated.isUnauthenticated, isFalse);
+      expect(AuthenticationStatus.unauthenticated.isUnauthenticated, isTrue);
+      expect(AuthenticationStatus.unknown.isUnauthenticated, isTrue);
+    });
+    test("isUnknown returns true only for unknown", () {
+      expect(AuthenticationStatus.authenticated.isUnknown, isFalse);
+      expect(AuthenticationStatus.unauthenticated.isUnknown, isFalse);
+      expect(AuthenticationStatus.unknown.isUnknown, isTrue);
+    });
+  });
+}
